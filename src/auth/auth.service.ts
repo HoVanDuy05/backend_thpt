@@ -3,12 +3,17 @@ import { UsersService } from '../users/users.service';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { LoginDto } from './dto/login.dto';
+import { PrismaService } from '../prisma/prisma.service';
+import { MailService } from '../mail/mail.service';
+import { Request } from 'express';
 
 @Injectable()
 export class AuthService {
     constructor(
         private usersService: UsersService,
         private jwtService: JwtService,
+        private prisma: PrismaService,
+        private mailService: MailService,
     ) { }
 
     async validateUser(email: string, matKhau: string): Promise<any> {
@@ -33,11 +38,26 @@ export class AuthService {
         return null;
     }
 
-    async login(loginDto: LoginDto) {
+    async login(loginDto: LoginDto, req?: Request) {
         const user = await this.validateUser(loginDto.email, loginDto.matKhau);
+
         if (!user) {
+            // Failure logging would be good here too, but for now successful
             throw new UnauthorizedException('Thông tin đăng nhập không chính xác');
         }
+
+        // Record login history
+        if (req) {
+            await this.prisma.lichSuDangNhap.create({
+                data: {
+                    userId: user.id,
+                    ipAddress: req.ip,
+                    thietBi: req.headers['user-agent'] || 'Unknown',
+                    trangThai: true,
+                }
+            });
+        }
+
         const payload = { username: user.taiKhoan, sub: user.id, role: user.vaiTro, email: user.email };
         return {
             access_token: this.jwtService.sign(payload),
@@ -74,11 +94,10 @@ export class AuthService {
         );
 
         // In production: send email with reset link
-        console.log('Reset token:', resetToken);
+        await this.mailService.sendResetPasswordEmail(user, resetToken).catch(err => console.error('Reset email failed:', err));
 
         return {
             message: 'Nếu email tồn tại, link reset đã được gửi',
-            resetToken // Remove in production
         };
     }
 

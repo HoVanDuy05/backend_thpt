@@ -12,6 +12,9 @@ import { PortalModule } from './portal/portal.module';
 import { CommunicationModule } from './communication/communication.module';
 
 import { AuthModule } from './auth/auth.module';
+import { UploadModule } from './common/upload/upload.module';
+import { ExportModule } from './common/export/export.module';
+import { CalendarModule } from './academic/calendar/calendar.module';
 
 import { APP_GUARD } from '@nestjs/core';
 import { RolesGuard } from './common/guards/roles.guard';
@@ -25,11 +28,11 @@ import { RolesGuard } from './common/guards/roles.guard';
     SubmissionsModule,
     GradingModule,
     AuthModule,
-    GradingModule,
-    AuthModule,
-    MailModule,
     PortalModule,
-    CommunicationModule
+    CommunicationModule,
+    UploadModule,
+    ExportModule,
+    CalendarModule,
   ],
   controllers: [AppController],
   providers: [

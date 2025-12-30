@@ -20,6 +20,20 @@ export class MailService {
         });
     }
 
+    async sendResetPasswordEmail(user: any, token: string) {
+        const url = `http://localhost:3000/auth/reset-password?token=${token}`;
+
+        await this.mailerService.sendMail({
+            to: user.email,
+            subject: 'Khôi phục mật khẩu - Hệ thống Trường học 🔑',
+            template: './reset-password',
+            context: {
+                name: user.hoTen || user.taiKhoan,
+                url,
+            },
+        });
+    }
+
     async sendGradeNotification(submission: any, grade: any) {
         await this.mailerService.sendMail({
             to: submission.hocSinh.email || submission.hocSinh.taiKhoan,

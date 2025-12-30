@@ -56,6 +56,7 @@ model NguoiDung {
   thongBaos    ThongBao[]
   cacKenhChat  ThanhVienKenh[]
   tinNhans     TinNhan[]
+  lichSuDangNhap LichSuDangNhap[]
 
   @@map("nguoi_dung")
 }
@@ -79,7 +80,7 @@ model HoSoGiaoVien {
   // Chuyên môn
   trinhDo        TrinhDo   @default(DAI_HOC) @map("trinh_do")
   chuyenMon      String?   @map("chuyen_mon") @db.VarChar(50)
-  ngayVaoLam     DateTime? @default(now()) @map("ngay_vao_lam") @db.Date
+  ngayVaoLam     DateTime? @map("ngay_vao_lam") @db.Date
 
   // Relations
   nguoiDung      NguoiDung        @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -87,6 +88,7 @@ model HoSoGiaoVien {
   cauHoiTao      NganHangCauHoi[]
   deThiTao       DeKiemTra[]
   baiCham        KetQuaChamDiem[]
+  lichDay        LichHoc[]
 
   @@map("ho_so_giao_vien")
 }
@@ -121,7 +123,7 @@ model HoSoHocSinh {
   sdtMe           String?   @map("sdt_me") @db.VarChar(15)
 
   // Học vụ
-  ngayNhapHoc     DateTime? @default(now()) @map("ngay_nhap_hoc") @db.Date
+  ngayNhapHoc     DateTime? @map("ngay_nhap_hoc") @db.Date
   trangThai       TrangThaiHocTap @default(DANG_HOC) @map("trang_thai")
   
   lopId           Int?      @map("lop_id")
@@ -155,6 +157,7 @@ model MonHoc {
   // Relations
   nganHangCauHoi NganHangCauHoi[]
   deKiemTra      DeKiemTra[]
+  lichHocs       LichHoc[]
 
   @@map("mon_hoc")
 }
@@ -169,8 +172,28 @@ model LopHoc {
   namHoc         NamHoc?        @relation(fields: [namHocId], references: [id], onDelete: SetNull)
   gvChuNhiem     HoSoGiaoVien?  @relation(fields: [gvChuNhiemId], references: [id], onDelete: SetNull)
   hocSinhs       HoSoHocSinh[]
+  lichHocs       LichHoc[]
 
   @@map("lop_hoc")
+}
+
+model LichHoc {
+  id          Int      @id @default(autoincrement())
+  lopId       Int      @map("lop_id")
+  monHocId    Int      @map("mon_hoc_id")
+  gvDayId     Int?     @map("gv_day_id")
+  thu         Int      // Thứ trong tuần (2-7, 8 là Chủ nhật)
+  tietBatDau  Int      @map("tiet_bat_dau")
+  soTiet      Int      @map("so_tiet")
+  phongHoc    String?  @map("phong_hoc") @db.VarChar(50)
+  ngayTao     DateTime @default(now()) @map("ngay_tao")
+
+  // Relations
+  lopHoc      LopHoc   @relation(fields: [lopId], references: [id], onDelete: Cascade)
+  monHoc      MonHoc   @relation(fields: [monHocId], references: [id], onDelete: Cascade)
+  gvDay       HoSoGiaoVien? @relation(fields: [gvDayId], references: [id], onDelete: SetNull)
+
+  @@map("lich_hoc")
 }
 
 // ==========================================================
@@ -440,4 +463,22 @@ model TinNhan {
   nguoiGui     NguoiDung   @relation(fields: [nguoiGuiId], references: [id], onDelete: Cascade)
 
   @@map("tin_nhan")
+}
+
+// ==========================================================
+// NHÓM 8: HỆ THỐNG & KIỂM TRA (SYSTEM & AUDIT)
+// ==========================================================
+
+model LichSuDangNhap {
+  id          Int      @id @default(autoincrement())
+  userId      Int      @map("user_id")
+  thoiGian    DateTime @default(now()) @map("thoi_gian")
+  ipAddress   String?  @map("ip_address") @db.VarChar(50)
+  thietBi     String?  @map("thiet_bi") @db.Text
+  trangThai   Boolean  @default(true) @map("trang_thai") // Thành công/Thất bại
+
+  // Relations
+  nguoiDung   NguoiDung @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("lich_su_dang_nhap")
 }

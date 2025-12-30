@@ -5,11 +5,17 @@ import { CreatePostDto, UpdatePostDto } from '../dto/post.dto';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { LoaiBaiViet, VaiTro } from '@prisma/client';
 import { Public } from '../../common/decorators/public.decorator';
+import { ExportService } from '../../common/export/export.service';
+import { Response } from 'express';
+import { Res } from '@nestjs/common';
 
 @ApiTags('Portal - Posts')
 @Controller('portal/posts')
 export class PostController {
-    constructor(private readonly postService: PostService) { }
+    constructor(
+        private readonly postService: PostService,
+        private readonly exportService: ExportService,
+    ) { }
 
     @Post()
     @ApiBearerAuth()
@@ -17,6 +23,22 @@ export class PostController {
     @ApiOperation({ summary: 'Tạo bài viết mới (Admin/GiaoVien)' })
     create(@Request() req, @Body() createPostDto: CreatePostDto) {
         return this.postService.create(req.user.id, createPostDto);
+    }
+
+    @Get('export')
+    @ApiBearerAuth()
+    @Roles(VaiTro.ADMIN)
+    @ApiOperation({ summary: 'Xuất danh sách bài viết ra Excel' })
+    async exportPosts(@Res() res: Response) {
+        const posts = await this.postService.findAll(false);
+        const columns = [
+            { header: 'ID', key: 'id', width: 10 },
+            { header: 'Tiêu đề', key: 'tieuDe', width: 50 },
+            { header: 'Loại', key: 'loai', width: 15 },
+            { header: 'Đã xuất bản', key: 'daXuatBan', width: 15 },
+            { header: 'Ngày tạo', key: 'ngayTao', width: 20 },
+        ];
+        return this.exportService.exportToExcel(posts, columns, 'BaiViet', res, 'danh-sach-bai-viet');
     }
 
     @Get()

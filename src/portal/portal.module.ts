@@ -7,8 +7,10 @@ import { BannerService } from './services/banner.service';
 import { PostService } from './services/post.service';
 import { CommentService } from './services/comment.service';
 
+import { ExportModule } from '../common/export/export.module';
+
 @Module({
-    imports: [PrismaModule],
+    imports: [PrismaModule, ExportModule],
     controllers: [BannerController, PostController, CommentController],
     providers: [BannerService, PostService, CommentService],
     exports: [BannerService, PostService], // Export if needed
