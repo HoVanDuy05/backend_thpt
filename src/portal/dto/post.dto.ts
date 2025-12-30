@@ -9,6 +9,11 @@ export class CreatePostDto {
     @IsString()
     tieuDe: string;
 
+    @ApiProperty({ description: 'Đường dẫn tĩnh (Slug)' })
+    @IsNotEmpty()
+    @IsString()
+    duongDan: string;
+
     @ApiProperty({ description: 'Tóm tắt bài viết (Optional)' })
     @IsOptional()
     @IsString()

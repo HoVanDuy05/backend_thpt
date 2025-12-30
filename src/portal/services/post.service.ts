@@ -13,7 +13,7 @@ export class PostService {
     }
 
     async create(userId: number, createPostDto: CreatePostDto) {
-        const slug = this.generateSlug(createPostDto.tieuDe);
+        const slug = createPostDto.duongDan || this.generateSlug(createPostDto.tieuDe);
         return this.prisma.baiViet.create({
             data: {
                 ...createPostDto,
