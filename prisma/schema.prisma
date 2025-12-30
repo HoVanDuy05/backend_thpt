@@ -1,0 +1,443 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// ==========================================================
+// NHÓM 1: QUẢN LÝ CON NGƯỜI (IDENTITY & PROFILES)
+// ==========================================================
+
+enum VaiTro {
+  ADMIN
+  GIAO_VIEN
+  HOC_SINH
+  PHU_HUYNH
+}
+
+enum GioiTinh {
+  NAM
+  NU
+  KHAC
+}
+
+enum TrinhDo {
+  CAO_DANG
+  DAI_HOC
+  THAC_SI
+  TIEN_SI
+  KHAC
+}
+
+enum TrangThaiHocTap {
+  DANG_HOC
+  BAO_LUU
+  THOI_HOC
+  TOT_NGHIEP
+  CHUYEN_TRUONG
+}
+
+model NguoiDung {
+  id           Int      @id @default(autoincrement())
+  taiKhoan     String   @unique @map("tai_khoan") @db.VarChar(50)
+  matKhau      String   @map("mat_khau") @db.Text
+  email        String?  @unique @db.VarChar(100)
+  vaiTro       VaiTro   @map("vai_tro")
+  ngayTao      DateTime @default(now()) @map("ngay_tao")
+
+  // Relations
+  hoSoGiaoVien HoSoGiaoVien?
+  hoSoHocSinh  HoSoHocSinh?
+  baiViets     BaiViet[]
+  binhLuans    BinhLuan[]
+  thongBaos    ThongBao[]
+  cacKenhChat  ThanhVienKenh[]
+  tinNhans     TinNhan[]
+
+  @@map("nguoi_dung")
+}
+
+model HoSoGiaoVien {
+  id             Int     @id @default(autoincrement())
+  userId         Int     @unique @map("user_id")
+  maSoGv         String  @unique @map("ma_so_gv") @db.VarChar(20)
+  hoTen          String  @map("ho_ten") @db.VarChar(100)
+  ngaySinh       DateTime? @map("ngay_sinh") @db.Date
+  gioiTinh       GioiTinh  @default(NAM) @map("gioi_tinh")
+  diaChi         String?   @map("dia_chi") @db.VarChar(255)
+  soDienThoai    String?   @map("so_dien_thoai") @db.VarChar(15)
+  emailLienHe    String?   @map("email_lien_he") @db.VarChar(100)
+  
+  // Giấy tờ tùy thân
+  cccd           String?   @unique @map("cccd") @db.VarChar(20)
+  ngayCapCccd    DateTime? @map("ngay_cap_cccd") @db.Date
+  noiCapCccd     String?   @map("noi_cap_cccd") @db.VarChar(100)
+
+  // Chuyên môn
+  trinhDo        TrinhDo   @default(DAI_HOC) @map("trinh_do")
+  chuyenMon      String?   @map("chuyen_mon") @db.VarChar(50)
+  ngayVaoLam     DateTime? @default(now()) @map("ngay_vao_lam") @db.Date
+
+  // Relations
+  nguoiDung      NguoiDung        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lopChuNhiem    LopHoc[]
+  cauHoiTao      NganHangCauHoi[]
+  deThiTao       DeKiemTra[]
+  baiCham        KetQuaChamDiem[]
+
+  @@map("ho_so_giao_vien")
+}
+
+model HoSoHocSinh {
+  id            Int       @id @default(autoincrement())
+  userId        Int       @unique @map("user_id")
+  maSoHs        String    @unique @map("ma_so_hs") @db.VarChar(20)
+  hoTen           String    @map("ho_ten") @db.VarChar(100)
+  ngaySinh        DateTime? @map("ngay_sinh") @db.Date
+  gioiTinh        GioiTinh  @default(NAM) @map("gioi_tinh")
+  noiSinh         String?   @map("noi_sinh") @db.VarChar(100)
+  danToc          String?   @map("dan_toc") @db.VarChar(50)
+  tonGiao         String?   @map("ton_giao") @db.VarChar(50)
+  diaChiThuongTru String?   @map("dia_chi_thuong_tru") @db.VarChar(255)
+  diaChiTamTru    String?   @map("dia_chi_tam_tru") @db.VarChar(255)
+  soDienThoai     String?   @map("so_dien_thoai") @db.VarChar(15)
+
+  // Giấy tờ tùy thân
+  cccd            String?   @unique @map("cccd") @db.VarChar(20)
+  ngayCapCccd     DateTime? @map("ngay_cap_cccd") @db.Date
+  noiCapCccd      String?   @map("noi_cap_cccd") @db.VarChar(100)
+
+  // Thông tin Cha
+  hoTenCha        String?   @map("ho_ten_cha") @db.VarChar(100)
+  ngheNghiepCha   String?   @map("nghe_nghiep_cha") @db.VarChar(100)
+  sdtCha          String?   @map("sdt_cha") @db.VarChar(15)
+
+  // Thông tin Mẹ
+  hoTenMe         String?   @map("ho_ten_me") @db.VarChar(100)
+  ngheNghiepMe    String?   @map("nghe_nghiep_me") @db.VarChar(100)
+  sdtMe           String?   @map("sdt_me") @db.VarChar(15)
+
+  // Học vụ
+  ngayNhapHoc     DateTime? @default(now()) @map("ngay_nhap_hoc") @db.Date
+  trangThai       TrangThaiHocTap @default(DANG_HOC) @map("trang_thai")
+  
+  lopId           Int?      @map("lop_id")
+
+  // Relations
+  nguoiDung     NguoiDung       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lopHoc        LopHoc?         @relation(fields: [lopId], references: [id], onDelete: SetNull)
+  lichSuNopBai  LichSuNopBai[]
+
+  @@map("ho_so_hoc_sinh")
+}
+
+// ==========================================================
+// NHÓM 2: CẤU TRÚC TRƯỜNG LỚP (ACADEMIC STRUCTURE)
+// ==========================================================
+
+model NamHoc {
+  id        Int      @id @default(autoincrement())
+  tenNamHoc String   @map("ten_nam_hoc") @db.VarChar(20)
+  
+  // Relations
+  cacLop    LopHoc[]
+
+  @@map("nam_hoc")
+}
+
+model MonHoc {
+  id        Int              @id @default(autoincrement())
+  tenMon    String           @map("ten_mon") @db.VarChar(100)
+
+  // Relations
+  nganHangCauHoi NganHangCauHoi[]
+  deKiemTra      DeKiemTra[]
+
+  @@map("mon_hoc")
+}
+
+model LopHoc {
+  id             Int            @id @default(autoincrement())
+  namHocId       Int?           @map("nam_hoc_id")
+  tenLop         String         @map("ten_lop") @db.VarChar(20)
+  gvChuNhiemId   Int?           @map("gv_chu_nhiem_id")
+
+  // Relations
+  namHoc         NamHoc?        @relation(fields: [namHocId], references: [id], onDelete: SetNull)
+  gvChuNhiem     HoSoGiaoVien?  @relation(fields: [gvChuNhiemId], references: [id], onDelete: SetNull)
+  hocSinhs       HoSoHocSinh[]
+
+  @@map("lop_hoc")
+}
+
+// ==========================================================
+// NHÓM 3: NGÂN HÀNG CÂU HỎI & ĐỀ THI (ASSESSMENTS)
+// ==========================================================
+
+enum LoaiCauHoi {
+  TRAC_NGHIEM
+  TU_LUAN
+}
+
+model NganHangCauHoi {
+  id              Int            @id @default(autoincrement())
+  monHocId        Int            @map("mon_hoc_id")
+  gvTaoId         Int?           @map("gv_tao_id")
+  noiDungCauHoi   String         @map("noi_dung_cau_hoi") @db.Text
+  loaiCauHoi      LoaiCauHoi     @map("loai_cau_hoi")
+  dapAnDung       String?        @map("dap_an_dung") @db.Text
+  loiGiaiChiTiet  String?        @map("loi_giai_chi_tiet") @db.Text
+
+  // Relations
+  monHoc          MonHoc         @relation(fields: [monHocId], references: [id], onDelete: Cascade)
+  gvTao           HoSoGiaoVien?  @relation(fields: [gvTaoId], references: [id], onDelete: SetNull)
+  chiTietDeThis   ChiTietDeThi[]
+  chiTietTraLois  ChiTietTraLoiTracNghiem[]
+
+  @@map("ngan_hang_cau_hoi")
+}
+
+model DeKiemTra {
+  id              Int            @id @default(autoincrement())
+  monHocId        Int            @map("mon_hoc_id")
+  gvTaoId         Int?           @map("gv_tao_id")
+  tieuDe          String         @map("tieu_de") @db.VarChar(255)
+  loaiBaiThi      String?        @map("loai_bai_thi") @db.VarChar(50)
+  thoiGianLamBai  Int?           @map("thoi_gian_lam_bai") // Số phút
+  hanNopBai       DateTime?      @map("han_nop_bai")
+
+  // Relations
+  monHoc          MonHoc         @relation(fields: [monHocId], references: [id], onDelete: Cascade)
+  gvTao           HoSoGiaoVien?  @relation(fields: [gvTaoId], references: [id], onDelete: SetNull)
+  chiTietDeThis   ChiTietDeThi[]
+  lichSuNopBais   LichSuNopBai[]
+
+  @@map("de_kiem_tra")
+}
+
+model ChiTietDeThi {
+  deThiId    Int @map("de_thi_id")
+  cauHoiId   Int @map("cau_hoi_id")
+  thuTuCau   Int? @map("thu_tu_cau")
+
+  // Relations
+  deKiemTra       DeKiemTra      @relation(fields: [deThiId], references: [id], onDelete: Cascade)
+  nganHangCauHoi  NganHangCauHoi @relation(fields: [cauHoiId], references: [id], onDelete: Cascade)
+
+  @@id([deThiId, cauHoiId])
+  @@map("chi_tiet_de_thi")
+}
+
+// ==========================================================
+// NHÓM 4: NỘP BÀI VÀ LỊCH SỬ (SUBMISSIONS & LOGS)
+// ==========================================================
+
+model LichSuNopBai {
+  id             Int      @id @default(autoincrement())
+  deThiId        Int      @map("de_thi_id")
+  hocSinhId      Int      @map("hoc_sinh_id")
+  lanNop         Int?     @default(1) @map("lan_nop")
+  noiDungBaiLam  String?  @map("noi_dung_bai_lam") @db.Text
+  linkAnhChupBai String?  @map("link_anh_chup_bai") @db.Text
+  thoiGianNop    DateTime @default(now()) @map("thoi_gian_nop")
+  trangThai      String?  @default("CHO_CHAM") @map("trang_thai") @db.VarChar(20)
+
+  // Relations
+  deKiemTra      DeKiemTra      @relation(fields: [deThiId], references: [id], onDelete: Cascade)
+  hocSinh        HoSoHocSinh    @relation(fields: [hocSinhId], references: [id], onDelete: Cascade)
+  chiTietTraLois ChiTietTraLoiTracNghiem[]
+  ketQuaChamDiems KetQuaChamDiem[]
+
+  @@map("lich_su_nop_bai")
+}
+
+model ChiTietTraLoiTracNghiem {
+  id              Int            @id @default(autoincrement())
+  nopBaiId        Int            @map("nop_bai_id")
+  cauHoiId        Int            @map("cau_hoi_id")
+  cauTraLoiCuaHs  String?        @map("cau_tra_loi_cua_hs") @db.Text
+  laDung          Boolean?       @map("la_dung")
+
+  // Relations
+  lichSuNopBai    LichSuNopBai   @relation(fields: [nopBaiId], references: [id], onDelete: Cascade)
+  nganHangCauHoi  NganHangCauHoi @relation(fields: [cauHoiId], references: [id], onDelete: Cascade)
+
+  @@map("chi_tiet_tra_loi_trac_nghiem")
+}
+
+// ==========================================================
+// NHÓM 5: CHẤM ĐIỂM VÀ NHẬN XÉT (GRADING & FEEDBACK)
+// ==========================================================
+
+model KetQuaChamDiem {
+  id            Int      @id @default(autoincrement())
+  nopBaiId      Int      @map("nop_bai_id")
+  gvChamId      Int?     @map("gv_cham_id")
+  diemSo        Decimal? @map("diem_so") @db.Decimal(4, 2)
+  nhanXetCuaGv  String?  @map("nhan_xet_cua_gv") @db.Text
+  ngayCham      DateTime @default(now()) @map("ngay_cham")
+
+  // Relations
+  lichSuNopBai  LichSuNopBai   @relation(fields: [nopBaiId], references: [id], onDelete: Cascade)
+  gvCham        HoSoGiaoVien?  @relation(fields: [gvChamId], references: [id], onDelete: SetNull)
+
+  @@map("ket_qua_cham_diem")
+}
+
+// ==========================================================
+// NHÓM 6: CỔNG THÔNG TIN & TIN TỨC (PORTAL & NEWS)
+// ==========================================================
+
+model Banner {
+  id          Int      @id @default(autoincrement())
+  tieuDe      String?  @map("tieu_de") @db.VarChar(255)
+  moTa        String?  @map("mo_ta") @db.Text
+  hinhAnh     String   @map("hinh_anh") @db.VarChar(255)
+  lienKet     String?  @map("lien_ket") @db.VarChar(255)
+  thuTu       Int      @default(0) @map("thu_tu")
+  kichHoat    Boolean  @default(true) @map("kich_hoat")
+  ngayTao     DateTime @default(now()) @map("ngay_tao")
+  ngayCapNhat DateTime @updatedAt @map("ngay_cap_nhat")
+
+  @@map("banner")
+}
+
+enum LoaiBaiViet {
+  TIN_TUC
+  SU_KIEN
+  THONG_BAO_CHUNG
+  HUONG_DAN
+}
+
+model BaiViet {
+  id           Int           @id @default(autoincrement())
+  tieuDe       String        @map("tieu_de") @db.VarChar(255)
+  duongDan     String        @unique @map("duong_dan") @db.VarChar(255) // Slug
+  tomTat       String?       @map("tom_tat") @db.Text
+  noiDung      String        @map("noi_dung") @db.LongText
+  anhBia       String?       @map("anh_bia") @db.VarChar(255)
+  loai         LoaiBaiViet   @default(TIN_TUC) @map("loai")
+  daXuatBan    Boolean       @default(false) @map("da_xuat_ban")
+  luotXem      Int           @default(0) @map("luot_xem")
+  nguoiTaoId   Int?          @map("nguoi_tao_id")
+  ngayTao      DateTime      @default(now()) @map("ngay_tao")
+  ngayCapNhat  DateTime      @updatedAt @map("ngay_cap_nhat")
+
+  // Relations
+  nguoiTao     NguoiDung?    @relation(fields: [nguoiTaoId], references: [id], onDelete: SetNull)
+  binhLuans    BinhLuan[]
+
+  @@map("bai_viet")
+}
+
+model BinhLuan {
+  id           Int        @id @default(autoincrement())
+  baiVietId    Int        @map("bai_viet_id")
+  nguoiDungId  Int        @map("nguoi_dung_id")
+  noiDung      String     @map("noi_dung") @db.Text
+  binhLuanChaId Int?      @map("binh_luan_cha_id") // Parent comment for replies
+  ngayTao      DateTime   @default(now()) @map("ngay_tao")
+  ngayCapNhat  DateTime   @updatedAt @map("ngay_cap_nhat")
+
+  // Relations
+  baiViet      BaiViet    @relation(fields: [baiVietId], references: [id], onDelete: Cascade)
+  nguoiDung    NguoiDung  @relation(fields: [nguoiDungId], references: [id], onDelete: Cascade)
+  binhLuanCha  BinhLuan?  @relation("PhanHoi", fields: [binhLuanChaId], references: [id], onDelete: Cascade)
+  phanHoi      BinhLuan[] @relation("PhanHoi")
+
+  @@map("binh_luan")
+}
+
+// ==========================================================
+// NHÓM 7: GIAO TIẾP & THÔNG BÁO (COMMUNICATION)
+// ==========================================================
+
+enum LoaiThongBao {
+  HE_THONG
+  CA_NHAN
+  HOC_TAP
+  TIN_NHAN
+}
+
+model ThongBao {
+  id           Int           @id @default(autoincrement())
+  nguoiNhanId  Int           @map("nguoi_nhan_id")
+  tieuDe       String        @map("tieu_de") @db.VarChar(150)
+  noiDung      String        @map("noi_dung") @db.Text
+  loai         LoaiThongBao  @default(HE_THONG) @map("loai")
+  lienKet      String?       @map("lien_ket") @db.VarChar(255)
+  daDoc        Boolean       @default(false) @map("da_doc")
+  ngayTao      DateTime      @default(now()) @map("ngay_tao")
+
+  // Relations
+  nguoiNhan    NguoiDung     @relation(fields: [nguoiNhanId], references: [id], onDelete: Cascade)
+
+  @@map("thong_bao")
+}
+
+enum LoaiKenhChat {
+  CA_NHAN // 1-1
+  NHOM    // Group
+  LOP_HOC // Auto-generated for classes
+}
+
+model KenhChat {
+  id           Int           @id @default(autoincrement())
+  tenKenh      String?       @map("ten_kenh") @db.VarChar(100) // Null for direct messages
+  loaiKenh     LoaiKenhChat  @default(CA_NHAN) @map("loai_kenh")
+  anhDaiDien   String?       @map("anh_dai_dien") @db.VarChar(255)
+  ngayTao      DateTime      @default(now()) @map("ngay_tao")
+  ngayCapNhat  DateTime      @updatedAt @map("ngay_cap_nhat")
+
+  // Relations
+  thanhViens   ThanhVienKenh[]
+  tinNhans     TinNhan[]
+
+  @@map("kenh_chat")
+}
+
+enum VaiTroKenh {
+  QUAN_TRI
+  THANH_VIEN
+}
+
+model ThanhVienKenh {
+  id           Int         @id @default(autoincrement())
+  kenhChatId   Int         @map("kenh_chat_id")
+  nguoiDungId  Int         @map("nguoi_dung_id")
+  vaiTro       VaiTroKenh  @default(THANH_VIEN) @map("vai_tro")
+  ngayThamGia  DateTime    @default(now()) @map("ngay_tham_gia")
+
+  // Relations
+  kenhChat     KenhChat    @relation(fields: [kenhChatId], references: [id], onDelete: Cascade)
+  nguoiDung    NguoiDung   @relation(fields: [nguoiDungId], references: [id], onDelete: Cascade)
+
+  @@unique([kenhChatId, nguoiDungId])
+  @@map("thanh_vien_kenh")
+}
+
+enum LoaiTinNhan {
+  VAN_BAN
+  HINH_ANH
+  TEP_TIN
+}
+
+model TinNhan {
+  id           Int         @id @default(autoincrement())
+  kenhChatId   Int         @map("kenh_chat_id")
+  nguoiGuiId   Int         @map("nguoi_gui_id")
+  noiDung      String?     @map("noi_dung") @db.Text
+  loai         LoaiTinNhan @default(VAN_BAN) @map("loai")
+  duongDanTep  String?     @map("duong_dan_tep") @db.Text // URL for image/file
+  ngayGui      DateTime    @default(now()) @map("ngay_gui")
+  daSua        Boolean     @default(false) @map("da_sua")
+  
+  // Relations
+  kenhChat     KenhChat    @relation(fields: [kenhChatId], references: [id], onDelete: Cascade)
+  nguoiGui     NguoiDung   @relation(fields: [nguoiGuiId], references: [id], onDelete: Cascade)
+
+  @@map("tin_nhan")
+}

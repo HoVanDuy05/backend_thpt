@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; }
+        .container { width: 80%; margin: 20px auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px; background: #fff; }
+        .header { border-bottom: 2px solid #4caf50; padding-bottom: 10px; margin-bottom: 20px; color: #4caf50; }
+        .grade-box { background: #f1f8e9; border-left: 5px solid #4caf50; padding: 15px; margin: 15px 0; }
+        .footer { text-align: center; font-size: 0.8em; color: #777; border-top: 1px solid #eee; padding-top: 10px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h2>Kết quả bài kiểm tra 📔</h2>
+        </div>
+        <div class="content">
+            <p>Xin chào <strong><%= studentName %></strong>,</p>
+            <p>Giáo viên đã hoàn tất việc chấm điểm cho bài kiểm tra của bạn:</p>
+            <div class="grade-box">
+                <p><strong>Bài kiểm tra:</strong> <%= examTitle %></p>
+                <p><strong>Điểm số:</strong> <span style="font-size: 1.2em; color: #d32f2f;"><%= grade %></span></p>
+                <% if (comment) { %>
+                    <p><strong>Nhận xét:</strong> <%= comment %></p>
+                <% } %>
+            </div>
+            <p>Bạn có thể đăng nhập vào hệ thống để xem chi tiết bài làm.</p>
+        </div>
+        <div class="footer">
+            <p>&copy; 2025 Hệ thống Trường học. Cảm ơn bạn!</p>
+        </div>
+    </div>
+</body>
+</html>
