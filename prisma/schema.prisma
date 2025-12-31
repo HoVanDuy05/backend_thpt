@@ -58,6 +58,24 @@ model NguoiDung {
   tinNhans     TinNhan[]
   lichSuDangNhap LichSuDangNhap[]
 
+  // Approval & Social
+  cacDonPheDuyet DonPheDuyet[]
+  cacLichSuDuyet LichSuPheDuyet[]
+  threads        Thread[]
+  threadLikes    ThreadLike[]
+  threadReposts  ThreadRepost[]
+  following      FlowTheoDoi[]    @relation("Following")
+  followers      FlowTheoDoi[]    @relation("Followers")
+
+  // Friendship
+  yeuCauKetBanGui  KetBan[] @relation("YeuCauKetBanGui")
+  yeuCauKetBanNhan KetBan[] @relation("YeuCauKetBanNhan")
+
+  // Advanced Approval Flow
+  quyTrinhsTao          QuyTrinh[]               @relation("NguoiTaoQuyTrinh")
+  phienQuyTrinhsTao     PhienQuyTrinh[]          @relation("NguoiTaoPhien")
+  nhatKyPheDuyetQuyTrinh NhatKyPheDuyetQuyTrinh[] @relation("NguoiPheDuyetLog")
+
   @@map("nguoi_dung")
 }
 
@@ -481,4 +499,335 @@ model LichSuDangNhap {
   nguoiDung   NguoiDung @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("lich_su_dang_nhap")
+}
+
+// ==========================================================
+// NHÓM 9: QUY TRÌNH PHÊ DUYỆT (APPROVAL FLOW - DYNAMIC)
+// ==========================================================
+
+enum TrangThaiPheDuyet {
+  CHO_DUYET
+  DANG_XU_LY
+  DA_DUYET
+  TU_CHOI
+  HUY_BO
+}
+
+model LoaiPheDuyet {
+  id           Int      @id @default(autoincrement())
+  tenLoai      String   @map("ten_loai") @db.VarChar(100)
+  maLoai       String   @unique @map("ma_loai") @db.VarChar(50) // E.g., 'XUAT_BAN_BAI_VIET', 'XIN_NGHI_PHEP'
+  moTa         String?  @map("mo_ta") @db.Text
+  cauHinhForm  String?  @map("cau_hinh_form") @db.LongText // JSON string defining the dynamic fields/inputs
+  ngayTao      DateTime @default(now()) @map("ngay_tao")
+  ngayCapNhat  DateTime @updatedAt @map("ngay_cap_nhat")
+
+  // Relations
+  cacDonPheDuyet DonPheDuyet[]
+  cacBuoc        BuocPheDuyet[]
+
+  @@map("loai_phe_duyet")
+}
+
+model BuocPheDuyet {
+  id             Int      @id @default(autoincrement())
+  loaiPheDuyetId Int      @map("loai_phe_duyet_id")
+  tenBuoc        String   @map("ten_buoc") @db.VarChar(100)
+  thuTu          Int      @map("thu_tu") // Step 1, 2, 3...
+  vaiTroPheDuyet VaiTro   @map("vai_tro_phe_duyet") // Who can approve this step
+  
+  // Relations
+  loaiPheDuyet   LoaiPheDuyet @relation(fields: [loaiPheDuyetId], references: [id], onDelete: Cascade)
+  lichSuDuyet    LichSuPheDuyet[]
+
+  @@map("buoc_phe_duyet")
+}
+
+model DonPheDuyet {
+  id             Int               @id @default(autoincrement())
+  loaiPheDuyetId Int               @map("loai_phe_duyet_id")
+  nguoiYeuCauId  Int               @map("nguoi_yeu_cau_id")
+  nguoiDuyetId   Int?              @map("nguoi_duyet_id")
+  tieuDe         String            @map("tieu_de") @db.VarChar(255)
+  duLieuForm     String            @map("du_lieu_form") @db.LongText // JSON string containing submitted values
+  trangThai      TrangThaiPheDuyet @default(CHO_DUYET) @map("trang_thai")
+  buocHienTai    Int               @default(1) @map("buoc_hien_tai")
+  ngayTao        DateTime          @default(now()) @map("ngay_tao")
+  ngayCapNhat    DateTime          @updatedAt @map("ngay_cap_nhat")
+
+  // Relations
+  loaiPheDuyet   LoaiPheDuyet     @relation(fields: [loaiPheDuyetId], references: [id], onDelete: Cascade)
+  nguoiYeuCau    NguoiDung        @relation(fields: [nguoiYeuCauId], references: [id], onDelete: Cascade)
+  lichSuDuyet    LichSuPheDuyet[]
+
+  @@map("don_phe_duyet")
+}
+
+model LichSuPheDuyet {
+  id            Int               @id @default(autoincrement())
+  donId         Int               @map("don_id")
+  buocId        Int               @map("buoc_id")
+  nguoiDuyetId  Int?              @map("nguoi_duyet_id")
+  hanhDong      TrangThaiPheDuyet @map("hanh_dong")
+  ghiChu        String?           @map("ghi_chu") @db.Text
+  ngayTao       DateTime          @default(now()) @map("ngay_tao")
+
+  // Relations
+  donPheDuyet   DonPheDuyet       @relation(fields: [donId], references: [id], onDelete: Cascade)
+  buocPheDuyet  BuocPheDuyet      @relation(fields: [buocId], references: [id], onDelete: Cascade)
+  nguoiDuyet    NguoiDung?        @relation(fields: [nguoiDuyetId], references: [id], onDelete: SetNull)
+
+  @@map("lich_su_phe_duyet")
+}
+
+// ==========================================================
+// NHÓM 10: MẠNG XÃ HỘI (SOCIAL - THREADS STYLE)
+// ==========================================================
+
+model Thread {
+  id             Int      @id @default(autoincrement())
+  tacGiaId       Int      @map("tac_gia_id")
+  noiDung        String   @map("noi_dung") @db.LongText
+  hinhAnh        String?  @map("hinh_anh") @db.Text // JSON or comma separated URLs
+  threadChaId    Int?     @map("thread_cha_id") // For replies
+  luotXem        Int      @default(0) @map("luot_xem")
+  ngayTao        DateTime @default(now()) @map("ngay_tao")
+  ngayCapNhat    DateTime @updatedAt @map("ngay_cap_nhat")
+
+  // Relations
+  tacGia         NguoiDung  @relation(fields: [tacGiaId], references: [id], onDelete: Cascade)
+  threadCha      Thread?    @relation("ThreadReplies", fields: [threadChaId], references: [id], onDelete: Cascade)
+  replies        Thread[]   @relation("ThreadReplies")
+  likes          ThreadLike[]
+  reposts        ThreadRepost[]
+
+  @@map("thread")
+}
+
+model ThreadLike {
+  id           Int      @id @default(autoincrement())
+  threadId     Int      @map("thread_id")
+  nguoiDungId  Int      @map("nguoi_dung_id")
+  ngayTao      DateTime @default(now()) @map("ngay_tao")
+
+  // Relations
+  thread       Thread    @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  nguoiDung    NguoiDung @relation(fields: [nguoiDungId], references: [id], onDelete: Cascade)
+
+  @@unique([threadId, nguoiDungId])
+  @@map("thread_like")
+}
+
+model ThreadRepost {
+  id           Int      @id @default(autoincrement())
+  threadId     Int      @map("thread_id")
+  nguoiDungId  Int      @map("nguoi_dung_id")
+  ngayTao      DateTime @default(now()) @map("ngay_tao")
+
+  // Relations
+  thread       Thread    @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  nguoiDung    NguoiDung @relation(fields: [nguoiDungId], references: [id], onDelete: Cascade)
+
+  @@unique([threadId, nguoiDungId])
+  @@map("thread_repost")
+}
+
+model FlowTheoDoi {
+  id             Int      @id @default(autoincrement())
+  nguoiTheoDoiId Int      @map("nguoi_theo_doi_id")
+  nguoiDuocTheoDoiId Int  @map("nguoi_duoc_theo_doi_id")
+  ngayTao        DateTime @default(now()) @map("ngay_tao")
+
+  // Relations
+  nguoiTheoDoi     NguoiDung @relation("Following", fields: [nguoiTheoDoiId], references: [id], onDelete: Cascade)
+  nguoiDuocTheoDoi NguoiDung @relation("Followers", fields: [nguoiDuocTheoDoiId], references: [id], onDelete: Cascade)
+
+  @@unique([nguoiTheoDoiId, nguoiDuocTheoDoiId])
+  @@map("flow_theo_doi")
+}
+
+enum TrangThaiBanBe {
+  CHO_XAC_NHAN
+  DA_KET_BAN
+  BI_CHAN
+}
+
+model KetBan {
+  id            Int            @id @default(autoincrement())
+  nguoiGuiId    Int            @map("nguoi_gui_id")
+  nguoiNhanId   Int            @map("nguoi_nhan_id")
+  trangThai     TrangThaiBanBe @default(CHO_XAC_NHAN) @map("trang_thai")
+  ngayTao       DateTime       @default(now()) @map("ngay_tao")
+  ngayCapNhat   DateTime       @updatedAt @map("ngay_cap_nhat")
+
+  // Relations
+  nguoiGui      NguoiDung      @relation("YeuCauKetBanGui", fields: [nguoiGuiId], references: [id], onDelete: Cascade)
+  nguoiNhan     NguoiDung      @relation("YeuCauKetBanNhan", fields: [nguoiNhanId], references: [id], onDelete: Cascade)
+
+  @@unique([nguoiGuiId, nguoiNhanId])
+  @@map("ket_ban")
+}
+
+// ==========================================================
+// NHÓM 11: QUY TRÌNH PHÊ DUYỆT NÂNG CAO (ADVANCED APPROVAL FLOW)
+// ==========================================================
+
+enum TrangThaiQuyTrinh {
+  NHAP
+  HOAT_DONG
+  NGUNG_HOAT_DONG
+}
+
+enum LoaiQuyTacBuoc {
+  BAT_KY
+  TAT_CA
+}
+
+enum LoaiNguoiPheDuyet {
+  NGUOI_DUNG
+  VAI_TRO
+  NHOM
+}
+
+enum LoaiTruongForm {
+  TEXT
+  NUMBER
+  TEXTAREA
+  SELECT
+  DATE
+  DATETIME
+}
+
+enum TrangThaiPhien {
+  CHO_DUYET
+  DA_DUYET
+  TU_CHOI
+  HUY_BO
+}
+
+enum TrangThaiBuocPhien {
+  CHO_DUYET
+  DA_DUYET
+  TU_CHOI
+  BO_QUA
+}
+
+enum HanhDongPheDuyet {
+  PHE_DUYET
+  TU_CHOI
+  YEU_CAU_CHINH_SUA
+}
+
+model QuyTrinh {
+  id          Int               @id @default(autoincrement())
+  ten         String            @map("ten") @db.VarChar(255)
+  moTa        String?           @map("mo_ta") @db.Text
+  trangThai   TrangThaiQuyTrinh @default(NHAP) @map("trang_thai")
+  nguoiTaoId  Int               @map("nguoi_tao_id")
+  ngayTao     DateTime          @default(now()) @map("ngay_tao")
+  ngayCapNhat DateTime          @updatedAt @map("ngay_cap_nhat")
+
+  // Relations
+  nguoiTao    NguoiDung         @relation("NguoiTaoQuyTrinh", fields: [nguoiTaoId], references: [id])
+  cacBuoc     BuocQuyTrinh[]
+  cacTruong   TruongFormQuyTrinh[]
+  cacPhien    PhienQuyTrinh[]
+
+  @@map("quy_trinh")
+}
+
+model BuocQuyTrinh {
+  id          Int               @id @default(autoincrement())
+  quyTrinhId  Int               @map("quy_trinh_id")
+  thuTuBuoc   Int               @map("thu_tu_buoc")
+  ten         String            @map("ten") @db.VarChar(100)
+  loaiQuyTac  LoaiQuyTacBuoc    @default(BAT_KY) @map("loai_quy_tac")
+  ngayTao     DateTime          @default(now()) @map("ngay_tao")
+
+  // Relations
+  quyTrinh    QuyTrinh          @relation(fields: [quyTrinhId], references: [id], onDelete: Cascade)
+  nguoiDuyets NguoiPheDuyetBuoc[]
+  buocPhiens  BuocPhienQuyTrinh[]
+
+  @@map("buoc_quy_trinh")
+}
+
+model NguoiPheDuyetBuoc {
+  id                Int               @id @default(autoincrement())
+  buocId            Int               @map("buoc_id")
+  loaiNguoiPheDuyet LoaiNguoiPheDuyet @map("loai_nguoi_phe_duyet")
+  approverId        Int               @map("approver_id") // ID of User, Role, or Group
+  ngayTao           DateTime          @default(now()) @map("ngay_tao")
+
+  // Relations
+  buoc              BuocQuyTrinh      @relation(fields: [buocId], references: [id], onDelete: Cascade)
+
+  @@map("nguoi_phe_duyet_buoc")
+}
+
+model TruongFormQuyTrinh {
+  id          Int               @id @default(autoincrement())
+  quyTrinhId  Int               @map("quy_trinh_id")
+  tenTruong   String            @map("ten_truong") @db.VarChar(100) // field_key
+  nhan        String            @map("nhan") @db.VarChar(255) // label
+  loai        LoaiTruongForm    @map("loai")
+  batBuoc     Boolean           @default(false) @map("bat_buoc")
+  tuyChon     Json?             @map("tuy_chon") // options for select
+  thuTu       Int               @map("thu_tu")
+
+  // Relations
+  quyTrinh    QuyTrinh          @relation(fields: [quyTrinhId], references: [id], onDelete: Cascade)
+
+  @@map("truong_form_quy_trinh")
+}
+
+model PhienQuyTrinh {
+  id               Int               @id @default(autoincrement())
+  quyTrinhId       Int               @map("quy_trinh_id")
+  doiTuongLienQuan Json?             @map("doi_tuong_lien_quan") // target_id mapping
+  trangThai        TrangThaiPhien    @default(CHO_DUYET) @map("trang_thai")
+  buocHienTai      Int               @default(1) @map("buoc_hien_tai")
+  nguoiTaoId       Int               @map("nguoi_tao_id")
+  ngayTao          DateTime          @default(now()) @map("ngay_tao")
+
+  // Relations
+  quyTrinh         QuyTrinh          @relation(fields: [quyTrinhId], references: [id], onDelete: Cascade)
+  nguoiTao         NguoiDung         @relation("NguoiTaoPhien", fields: [nguoiTaoId], references: [id])
+  buocPhiens       BuocPhienQuyTrinh[]
+  nhatKy           NhatKyPheDuyetQuyTrinh[]
+
+  @@map("phien_quy_trinh")
+}
+
+model BuocPhienQuyTrinh {
+  id              Int               @id @default(autoincrement())
+  phienId         Int               @map("phien_id")
+  buocId          Int               @map("buoc_id")
+  trangThai       TrangThaiBuocPhien @default(CHO_DUYET) @map("trang_thai")
+  nguoiPheDuyetId Int?              @map("nguoi_phe_duyet_id")
+  ngayPheDuyet    DateTime?         @map("ngay_phe_duyet")
+  ghiChu          String?           @map("ghi_chu") @db.Text
+  ngayTao         DateTime          @default(now()) @map("ngay_tao")
+
+  // Relations
+  phien           PhienQuyTrinh     @relation(fields: [phienId], references: [id], onDelete: Cascade)
+  buoc            BuocQuyTrinh      @relation(fields: [buocId], references: [id], onDelete: Cascade)
+
+  @@map("buoc_phien_quy_trinh")
+}
+
+model NhatKyPheDuyetQuyTrinh {
+  id            Int               @id @default(autoincrement())
+  phienId       Int               @map("phien_id")
+  buocId        Int?              @map("buoc_id")
+  nguoiDungId   Int               @map("nguoi_dung_id")
+  hanhDong      HanhDongPheDuyet  @map("hanh_dong")
+  noiDung       String?           @map("noi_dung") @db.Text
+  ngayTao       DateTime          @default(now()) @map("ngay_tao")
+
+  // Relations
+  phien         PhienQuyTrinh      @relation(fields: [phienId], references: [id], onDelete: Cascade)
+  nguoiDung     NguoiDung          @relation("NguoiPheDuyetLog", fields: [nguoiDungId], references: [id])
+
+  @@map("nhat_ky_phe_duyet_quy_trinh")
 }

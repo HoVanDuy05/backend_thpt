@@ -1,14 +1,33 @@
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateChannelDto, CreateMessageDto } from '../dto/chat.dto';
-import { LoaiKenhChat } from '@prisma/client';
+import { LoaiKenhChat, TrangThaiBanBe } from '@prisma/client';
 
 @Injectable()
 export class ChatService {
     constructor(private prisma: PrismaService) { }
 
     async createChannel(userId: number, createChannelDto: CreateChannelDto) {
-        // Logic for specialized checks (e.g., existing 1-1 chat) could be added here
+        if (createChannelDto.loaiKenh === LoaiKenhChat.CA_NHAN) {
+            const friendId = createChannelDto.thanhVienIds?.find(id => id !== userId);
+            if (!friendId) {
+                // Special case for self-chat or missing IDs
+                // For now, let's just enforce friendId
+            } else {
+                const friendship = await this.prisma.ketBan.findFirst({
+                    where: {
+                        OR: [
+                            { nguoiGuiId: userId, nguoiNhanId: friendId, trangThai: TrangThaiBanBe.DA_KET_BAN },
+                            { nguoiGuiId: friendId, nguoiNhanId: userId, trangThai: TrangThaiBanBe.DA_KET_BAN }
+                        ]
+                    }
+                });
+
+                if (!friendship) {
+                    throw new ForbiddenException('Chỉ có thể nhắn tin cho người đã kết bạn');
+                }
+            }
+        }
 
         const members = [{ nguoiDungId: userId, vaiTro: 'QUAN_TRI' }]; // Creator is admin
         if (createChannelDto.thanhVienIds) {

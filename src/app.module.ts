@@ -10,6 +10,8 @@ import { MailModule } from './mail/mail.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { PortalModule } from './portal/portal.module';
 import { CommunicationModule } from './communication/communication.module';
+import { ApprovalsModule } from './approvals/approvals.module';
+import { SocialModule } from './social/social.module';
 
 import { AuthModule } from './auth/auth.module';
 import { UploadModule } from './common/upload/upload.module';
@@ -33,6 +35,8 @@ import { RolesGuard } from './common/guards/roles.guard';
     UploadModule,
     ExportModule,
     CalendarModule,
+    ApprovalsModule,
+    SocialModule,
   ],
   controllers: [AppController],
   providers: [
