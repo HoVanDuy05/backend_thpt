@@ -47,22 +47,20 @@ export class AuthController {
         const result = await this.authService.googleLogin(user, req);
 
         // Redirect to frontend with token
-        // Use FRONTEND_URL or dynamically detect from Referer/Origin if possible
-        const referer = req.headers.referer || req.headers.origin;
+        // Use FRONTEND_URL or dynamically detect from Host header
         let frontendUrl = process.env.FRONTEND_URL;
 
-        if (!frontendUrl && referer) {
-            try {
-                const url = new URL(referer);
-                frontendUrl = `${url.protocol}//${url.host}`;
-            } catch (e) {
-                frontendUrl = 'http://localhost:3000';
-            }
-        } else if (!frontendUrl) {
-            frontendUrl = 'http://localhost:3000';
+        if (!frontendUrl) {
+            const host = req.headers.host;
+            const protocol = req.headers['x-forwarded-proto'] || 'http';
+            frontendUrl = `${protocol}://${host}`;
+
+            // If it's Vercel, we might need to remove /api if the host includes it, 
+            // but usually host is just the domain.
+            // If the frontend is on the same domain, we are good.
         }
 
-        console.log(`[OAuth] Redirecting to: ${frontendUrl}/vi/auth/callback`);
+        console.log(`[OAuth] Detected host: ${req.headers.host}, Redirecting to: ${frontendUrl}/vi/auth/callback`);
         res.redirect(`${frontendUrl}/vi/auth/callback?token=${result.access_token}`);
     }
 }
