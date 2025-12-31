@@ -31,4 +31,19 @@ export class SocialController {
     follow(@Request() req: any, @Param('id') id: string) {
         return this.socialService.toggleFollow(req.user.id, +id);
     }
+
+    @Get('users/:id/threads')
+    getUserThreads(@Param('id') id: string, @Query('limit') limit?: string, @Query('cursor') cursor?: string) {
+        return this.socialService.getUserThreads(+id, limit ? +limit : 20, cursor ? +cursor : undefined);
+    }
+
+    @Get('search')
+    searchThreads(@Query('q') q: string, @Query('limit') limit?: string) {
+        return this.socialService.searchThreads(q || '', limit ? +limit : 20);
+    }
+
+    @Get('activity')
+    getActivity(@Request() req: any, @Query('limit') limit?: string) {
+        return this.socialService.getActivity(req.user.id, limit ? +limit : 20);
+    }
 }
