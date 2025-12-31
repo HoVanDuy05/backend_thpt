@@ -4,11 +4,15 @@ import {
     UploadedFile,
     UseInterceptors,
     BadRequestException,
+    UseGuards,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
 
+import { JwtAuthGuard } from '../../auth/jwt-auth.guard';
+
 @Controller('upload')
+@UseGuards(JwtAuthGuard)
 export class UploadController {
     constructor(private readonly cloudinaryService: CloudinaryService) { }
 

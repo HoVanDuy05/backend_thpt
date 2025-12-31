@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, Put, UseGuards, Request, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Put, UseGuards, Request, Query, Delete } from '@nestjs/common';
 import { ApprovalsService } from './approvals.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
@@ -14,6 +14,21 @@ export class ApprovalsController {
     @Get('flow')
     getAllFlows() {
         return this.approvalsService.getAllFlows();
+    }
+
+    @Get('categories')
+    getCategories() {
+        return this.approvalsService.getCategories();
+    }
+
+    @Post('categories')
+    createCategory(@Body() data: any) {
+        return this.approvalsService.createCategory(data);
+    }
+
+    @Delete('categories/:id')
+    deleteCategory(@Param('id') id: string) {
+        return this.approvalsService.deleteCategory(+id);
     }
 
     @Post('flow')

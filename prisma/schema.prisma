@@ -685,17 +685,21 @@ enum LoaiQuyTacBuoc {
 
 enum LoaiNguoiPheDuyet {
   NGUOI_DUNG
-  VAI_TRO
-  NHOM
+  VAI_TRO // Role-based: 'GVCN', 'TRUONG_KHOA'
+  NGUOI_DUNG_CU_THE
 }
 
 enum LoaiTruongForm {
   TEXT
+  LONG_TEXT
   NUMBER
   TEXTAREA
   SELECT
+  CHECKBOX
+  RADIO
   DATE
-  DATETIME
+  TIME
+  FILE
 }
 
 enum TrangThaiPhien {
@@ -722,18 +726,32 @@ model QuyTrinh {
   id          Int               @id @default(autoincrement())
   ten         String            @map("ten") @db.VarChar(255)
   moTa        String?           @map("mo_ta") @db.Text
+  danhMucId   Int?              @map("danh_muc_id")
   trangThai   TrangThaiQuyTrinh @default(NHAP) @map("trang_thai")
   nguoiTaoId  Int               @map("nguoi_tao_id")
   ngayTao     DateTime          @default(now()) @map("ngay_tao")
   ngayCapNhat DateTime          @updatedAt @map("ngay_cap_nhat")
 
   // Relations
+  danhMuc     DanhMucQuyTrinh?  @relation(fields: [danhMucId], references: [id], onDelete: SetNull)
   nguoiTao    NguoiDung         @relation("NguoiTaoQuyTrinh", fields: [nguoiTaoId], references: [id])
   cacBuoc     BuocQuyTrinh[]
   cacTruong   TruongFormQuyTrinh[]
   cacPhien    PhienQuyTrinh[]
 
   @@map("quy_trinh")
+}
+
+model DanhMucQuyTrinh {
+  id          Int       @id @default(autoincrement())
+  ten         String    @map("ten") @db.VarChar(100)
+  moTa        String?   @map("mo_ta") @db.Text
+  ngayTao     DateTime  @default(now()) @map("ngay_tao")
+
+  // Relations
+  quyTrinhs   QuyTrinh[]
+
+  @@map("danh_muc_quy_trinh")
 }
 
 model BuocQuyTrinh {
@@ -756,7 +774,8 @@ model NguoiPheDuyetBuoc {
   id                Int               @id @default(autoincrement())
   buocId            Int               @map("buoc_id")
   loaiNguoiPheDuyet LoaiNguoiPheDuyet @map("loai_nguoi_phe_duyet")
-  approverId        Int               @map("approver_id") // ID of User, Role, or Group
+  approverId        Int?              @map("approver_id") // ID of User if SPECIFIC_USER
+  approverRole      String?           @map("approver_role") // "GVCN", "ADMIN"...
   ngayTao           DateTime          @default(now()) @map("ngay_tao")
 
   // Relations

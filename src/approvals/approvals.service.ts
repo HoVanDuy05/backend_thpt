@@ -8,10 +8,14 @@ import {
     HanhDongPheDuyet,
     LoaiNguoiPheDuyet
 } from '@prisma/client';
+import { MailService } from '../mail/mail.service';
 
 @Injectable()
 export class ApprovalsService {
-    constructor(private prisma: PrismaService) { }
+    constructor(
+        private prisma: PrismaService,
+        private mailService: MailService
+    ) { }
 
     // ==========================================
     // FLOW MANAGEMENT (ADMIN)
@@ -22,9 +26,36 @@ export class ApprovalsService {
             data: {
                 ten: data.name,
                 moTa: data.description,
+                danhMucId: data.category_id ? Number(data.category_id) : null,
                 trangThai: data.status?.toUpperCase() || TrangThaiQuyTrinh.NHAP,
                 nguoiTaoId: userId,
+                cacBuoc: {
+                    create: data.steps?.map((step: any, index: number) => ({
+                        thuTuBuoc: index + 1,
+                        ten: step.name || `Cấp duyệt ${index + 1}`,
+                        loaiQuyTac: step.rule === 'all' ? LoaiQuyTacBuoc.TAT_CA : LoaiQuyTacBuoc.BAT_KY,
+                        // Initialize first step approver if provided in step definition (simplified)
+                        nguoiDuyets: step.approverType ? {
+                            create: {
+                                loaiNguoiPheDuyet: step.approverType, // ROLE_GVCN etc
+                                approverRole: step.approverType.startsWith('ROLE_') ? step.approverType.replace('ROLE_', '') : null,
+                                approverId: step.specificUser,
+                            }
+                        } : undefined
+                    }))
+                },
+                cacTruong: {
+                    create: data.fields?.map((field: any, index: number) => ({
+                        tenTruong: field.label,
+                        nhan: field.label,
+                        loai: field.type,
+                        batBuoc: field.required || false,
+                        tuyChon: field.options,
+                        thuTu: index + 1,
+                    }))
+                }
             },
+            include: { cacBuoc: true, cacTruong: true }
         });
     }
 
@@ -54,7 +85,8 @@ export class ApprovalsService {
         return this.prisma.nguoiPheDuyetBuoc.create({
             data: {
                 buocId: stepId,
-                loaiNguoiPheDuyet: data.approver_type?.toUpperCase() || LoaiNguoiPheDuyet.NGUOI_DUNG,
+                loaiNguoiPheDuyet: data.approver_type, // VAI_TRO, NGUOI_DUNG_CU_THE, NGUOI_DUNG
+                approverRole: data.approver_role, // 'GVCN', 'TRUONG_KHOA'
                 approverId: data.approver_id,
             },
         });
@@ -83,7 +115,38 @@ export class ApprovalsService {
 
     async getAllFlows() {
         return this.prisma.quyTrinh.findMany({
-            include: { _count: { select: { cacBuoc: true } } },
+            include: {
+                _count: { select: { cacBuoc: true } },
+                danhMuc: true // Include category info
+            },
+            orderBy: { ngayTao: 'desc' }
+        });
+    }
+
+    // ==========================================
+    // CATEGORY MANAGEMENT
+    // ==========================================
+
+    async createCategory(data: any) {
+        return this.prisma.danhMucQuyTrinh.create({
+            data: {
+                ten: data.name,
+                moTa: data.description
+            }
+        });
+    }
+
+    async getCategories() {
+        return this.prisma.danhMucQuyTrinh.findMany({
+            include: {
+                _count: { select: { quyTrinhs: true } }
+            }
+        });
+    }
+
+    async deleteCategory(id: number) {
+        return this.prisma.danhMucQuyTrinh.delete({
+            where: { id }
         });
     }
 
@@ -103,7 +166,7 @@ export class ApprovalsService {
         }
 
         // 1. Validate form fields
-        this.validateForm(flow.cacTruong, data.target_id);
+        this.validateForm(flow.cacTruong, data.data);
 
         // 2. Create Instance
         const firstStep = flow.cacBuoc[0];
@@ -117,6 +180,7 @@ export class ApprovalsService {
                 buocHienTai: firstStep.thuTuBuoc,
                 nguoiTaoId: userId,
             },
+            include: { nguoiTao: true, quyTrinh: true }
         });
 
         // 3. Create initial instance step
@@ -132,6 +196,15 @@ export class ApprovalsService {
         const approvers = await this.prisma.nguoiPheDuyetBuoc.findMany({
             where: { buocId: firstStep.id },
         });
+
+        // Send notification to Creator (Confirmation)
+        if (instance.nguoiTao?.email) {
+            await this.mailService.sendApprovalNotification(instance.nguoiTao.email, {
+                title: flow.ten,
+                status: 'Đã gửi yêu cầu',
+                link: `http://localhost:3000/portal/approvals/${instance.id}`
+            });
+        }
 
         return {
             instance,
@@ -170,6 +243,7 @@ export class ApprovalsService {
         const instance = await this.prisma.phienQuyTrinh.findUnique({
             where: { id: instanceId },
             include: {
+                nguoiTao: true,
                 quyTrinh: { include: { cacBuoc: true } },
                 buocPhiens: { where: { trangThai: TrangThaiBuocPhien.CHO_DUYET } }
             },
@@ -225,6 +299,15 @@ export class ApprovalsService {
                 },
             });
 
+            // Notify creator
+            if (instance.nguoiTao?.email) {
+                await this.mailService.sendApprovalNotification(instance.nguoiTao.email, {
+                    title: instance.quyTrinh.ten,
+                    status: 'Đã được duyệt bước ' + stepDefinition.ten,
+                    link: `http://localhost:3000/portal/approvals/${instanceId}`
+                });
+            }
+
             // Move to next step
             const nextStep = instance.quyTrinh.cacBuoc.find(b => b.thuTuBuoc === instance.buocHienTai + 1);
             if (nextStep) {
@@ -245,6 +328,16 @@ export class ApprovalsService {
                     where: { id: instanceId },
                     data: { trangThai: TrangThaiPhien.DA_DUYET },
                 });
+
+                // Notify final success
+                if (instance.nguoiTao?.email) {
+                    await this.mailService.sendApprovalNotification(instance.nguoiTao.email, {
+                        title: instance.quyTrinh.ten,
+                        status: 'Đã được duyệt hoàn toàn! 🎉',
+                        link: `http://localhost:3000/portal/approvals/${instanceId}`
+                    });
+                }
+
                 return { status: 'approved_completely' };
             }
         }
@@ -298,5 +391,6 @@ export class ApprovalsService {
 
     private validateForm(fields: any[], submittedData: any) {
         if (!submittedData) throw new BadRequestException('Form data is required');
+        // TODO: Implement actual validation based on field definitions
     }
 }

@@ -47,4 +47,18 @@ export class MailService {
             },
         });
     }
+
+    async sendApprovalNotification(to: string, data: { title: string, status: string, approverName?: string, link: string }) {
+        await this.mailerService.sendMail({
+            to,
+            subject: `Cập nhật trạng thái phê duyệt: ${data.title} 📝`,
+            template: './approval-status', // We need to create this template or use a generic one
+            context: {
+                title: data.title,
+                status: data.status,
+                approverName: data.approverName || 'Hệ thống',
+                link: data.link,
+            },
+        });
+    }
 }
