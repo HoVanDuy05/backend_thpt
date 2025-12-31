@@ -1,11 +1,19 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException, Inject, forwardRef } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateChannelDto, CreateMessageDto } from '../dto/chat.dto';
 import { LoaiKenhChat, TrangThaiBanBe } from '@prisma/client';
+import { WebsocketGateway } from '../websocket.gateway';
+import { NotificationService } from './notification.service';
 
 @Injectable()
 export class ChatService {
-    constructor(private prisma: PrismaService) { }
+    constructor(
+        private prisma: PrismaService,
+        @Inject(forwardRef(() => WebsocketGateway))
+        private websocketGateway: WebsocketGateway,
+        @Inject(forwardRef(() => NotificationService))
+        private notificationService: NotificationService
+    ) { }
 
     async createChannel(userId: number, createChannelDto: CreateChannelDto) {
         if (createChannelDto.loaiKenh === LoaiKenhChat.CA_NHAN) {
@@ -168,11 +176,55 @@ export class ChatService {
         });
         if (!isMember) throw new ForbiddenException('You are not a member of this channel');
 
-        return this.prisma.tinNhan.create({
+        // Create message
+        const message = await this.prisma.tinNhan.create({
             data: {
                 ...createMessageDto,
                 nguoiGuiId: userId
+            },
+            include: {
+                nguoiGui: {
+                    select: { id: true, taiKhoan: true, hoSoHocSinh: { select: { hoTen: true } }, hoSoGiaoVien: { select: { hoTen: true } } }
+                },
+                kenhChat: {
+                    select: { id: true, loaiKenh: true },
+                    include: {
+                        thanhViens: {
+                            select: { nguoiDungId: true }
+                        }
+                    }
+                }
             }
         });
+
+        // Emit real-time message to channel
+        this.websocketGateway.emitNewMessage(createMessageDto.kenhChatId, message);
+
+        // Create notifications for other members (for direct messages)
+        if (message.kenhChat.loaiKenh === LoaiKenhChat.CA_NHAN) {
+            const otherMembers = message.kenhChat.thanhViens
+                .filter(member => member.nguoiDungId !== userId)
+                .map(member => member.nguoiDungId);
+
+            for (const memberId of otherMembers) {
+                // Create notification
+                await this.notificationService.create({
+                    tieuDe: 'Tin nhắn mới',
+                    noiDung: `${message.nguoiGui.hoSoHocSinh?.hoTen || message.nguoiGui.hoSoGiaoVien?.hoTen || message.nguoiGui.taiKhoan} đã gửi cho bạn một tin nhắn`,
+                    nguoiNhanId: memberId,
+                    lienKet: `/chat?channel=${message.kenhChatId}`,
+                    loai: 'TIN_NHAN' as any
+                });
+
+                // Send real-time notification
+                this.websocketGateway.emitToUser(memberId, 'notification:new', {
+                    type: 'message',
+                    message: message,
+                    channel: message.kenhChat
+                });
+            }
+        }
+
+        return message;
     }
 }
