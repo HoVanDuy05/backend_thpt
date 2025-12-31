@@ -11,8 +11,6 @@ export class AuthController {
 
     @Public()
     @HttpCode(HttpStatus.OK)
-    @Public()
-    @HttpCode(HttpStatus.OK)
     @Post('login')
     async signIn(@Body() loginDto: LoginDto, @Request() req) {
         try {
@@ -49,7 +47,22 @@ export class AuthController {
         const result = await this.authService.googleLogin(user, req);
 
         // Redirect to frontend with token
-        const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+        // Use FRONTEND_URL or dynamically detect from Referer/Origin if possible
+        const referer = req.headers.referer || req.headers.origin;
+        let frontendUrl = process.env.FRONTEND_URL;
+
+        if (!frontendUrl && referer) {
+            try {
+                const url = new URL(referer);
+                frontendUrl = `${url.protocol}//${url.host}`;
+            } catch (e) {
+                frontendUrl = 'http://localhost:3000';
+            }
+        } else if (!frontendUrl) {
+            frontendUrl = 'http://localhost:3000';
+        }
+
+        console.log(`[OAuth] Redirecting to: ${frontendUrl}/vi/auth/callback`);
         res.redirect(`${frontendUrl}/vi/auth/callback?token=${result.access_token}`);
     }
 }
