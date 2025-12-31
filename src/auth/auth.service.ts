@@ -98,30 +98,117 @@ export class AuthService {
         // In production: send email with reset link
         await this.mailService.sendResetPasswordEmail(user, resetToken).catch(err => console.error('Reset email failed:', err));
 
-        return {
-            message: 'Nếu email tồn tại, link reset đã được gửi',
-        };
+        return { message: 'Nếu email tồn tại, link reset đã được gửi' };
     }
 
     async resetPassword(token: string, newPassword: string) {
         try {
-            const payload = this.jwtService.verify(token);
-            if (payload.purpose !== 'reset') {
+            const decoded = this.jwtService.verify(token);
+            if (decoded.purpose !== 'reset') {
                 throw new UnauthorizedException('Token không hợp lệ');
             }
 
-            const user = await this.usersService.findByEmail(payload.email);
+            const user = await this.usersService.findByEmail(decoded.email);
             if (!user) {
                 throw new UnauthorizedException('User không tồn tại');
             }
 
-            // Update password
-            await this.usersService.update(user.id, { matKhau: newPassword });
+            // Update password (in production, hash it)
+            await this.prisma.nguoiDung.update({
+                where: { id: user.id },
+                data: { matKhau: newPassword }
+            });
 
             return { message: 'Mật khẩu đã được cập nhật' };
-        } catch (e) {
+        } catch (error) {
             throw new UnauthorizedException('Token không hợp lệ hoặc đã hết hạn');
         }
+    }
+
+    // Google OAuth methods
+    async validateGoogleUser(googleProfile: any) {
+        const { googleId, email, hoTen, anhDaiDien } = googleProfile;
+
+        // Try to find user by googleId
+        let user = await this.prisma.nguoiDung.findUnique({
+            where: { googleId },
+            include: {
+                hoSoGiaoVien: true,
+                hoSoHocSinh: true,
+            }
+        });
+
+        // If not found, try by email
+        if (!user && email) {
+            user = await this.prisma.nguoiDung.findUnique({
+                where: { email },
+                include: {
+                    hoSoGiaoVien: true,
+                    hoSoHocSinh: true,
+                }
+            });
+
+            // Link Google account to existing user
+            if (user) {
+                user = await this.prisma.nguoiDung.update({
+                    where: { id: user.id },
+                    data: { googleId },
+                    include: {
+                        hoSoGiaoVien: true,
+                        hoSoHocSinh: true,
+                    }
+                });
+            }
+        }
+
+        // Create new user if not found
+        if (!user) {
+            const taiKhoan = email.split('@')[0] + '_' + Date.now();
+            user = await this.prisma.nguoiDung.create({
+                data: {
+                    taiKhoan,
+                    email,
+                    googleId,
+                    vaiTro: 'HOC_SINH', // Default role
+                    // matKhau is optional, omit it for Google-only users
+                },
+                include: {
+                    hoSoGiaoVien: true,
+                    hoSoHocSinh: true,
+                }
+            });
+
+            // Create student profile
+            await this.prisma.hoSoHocSinh.create({
+                data: {
+                    userId: user.id,
+                    maSoHs: `HS${Date.now()}`,
+                    hoTen: hoTen || email.split('@')[0],
+                }
+            });
+        }
+
+        return user;
+    }
+
+    async googleLogin(user: any, req?: Request) {
+        // Record login history
+        if (req) {
+            await this.prisma.lichSuDangNhap.create({
+                data: {
+                    userId: user.id,
+                    ipAddress: req.ip,
+                    thietBi: req.headers['user-agent'] || 'Unknown',
+                    trangThai: true,
+                }
+            });
+        }
+
+        const payload = { username: user.taiKhoan, sub: user.id, role: user.vaiTro, email: user.email };
+        return {
+            access_token: this.jwtService.sign(payload),
+            user: user,
+        };
     }
 
     async getProfile(userId: number) {
