@@ -48,6 +48,8 @@ model NguoiDung {
   email        String?  @unique @db.VarChar(100)
   googleId     String?  @unique @map("google_id") @db.VarChar(255)
   vaiTro       VaiTro   @map("vai_tro")
+  hoTen        String?  @map("ho_ten") @db.VarChar(100)
+  avatar       String?  @map("avatar") @db.Text
   ngayTao      DateTime @default(now()) @map("ngay_tao")
 
   // Relations

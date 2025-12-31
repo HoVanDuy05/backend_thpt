@@ -192,7 +192,7 @@ export class SocialService {
             ...follows.map(f => ({ type: 'FOLLOW', data: f, date: f.ngayTao })),
             ...likes.map(l => ({ type: 'LIKE', data: l, date: l.ngayTao })),
             ...replies.map(r => ({ type: 'REPLY', data: r, date: r.ngayTao })),
-        ].sort((a, b) => b.date.getTime() - a.date.getTime()).slice(0, limit);
+        ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, limit);
 
         return activity;
     }

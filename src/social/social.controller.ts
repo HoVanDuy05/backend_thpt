@@ -9,12 +9,12 @@ export class SocialController {
 
     @Post('threads')
     createThread(@Request() req: any, @Body() data: any) {
-        return this.socialService.createThread(req.user.id, data);
+        return this.socialService.createThread(req.user.userId, data);
     }
 
     @Get('feed')
     getFeed(@Request() req: any, @Query('limit') limit?: string, @Query('cursor') cursor?: string) {
-        return this.socialService.getFeed(req.user.id, limit ? +limit : 20, cursor ? +cursor : undefined);
+        return this.socialService.getFeed(req.user.userId, limit ? +limit : 20, cursor ? +cursor : undefined);
     }
 
     @Get('threads/:id')
@@ -24,12 +24,12 @@ export class SocialController {
 
     @Post('threads/:id/like')
     like(@Request() req: any, @Param('id') id: string) {
-        return this.socialService.toggleLike(req.user.id, +id);
+        return this.socialService.toggleLike(req.user.userId, +id);
     }
 
     @Post('users/:id/follow')
     follow(@Request() req: any, @Param('id') id: string) {
-        return this.socialService.toggleFollow(req.user.id, +id);
+        return this.socialService.toggleFollow(req.user.userId, +id);
     }
 
     @Get('users/:id/threads')
@@ -44,6 +44,6 @@ export class SocialController {
 
     @Get('activity')
     getActivity(@Request() req: any, @Query('limit') limit?: string) {
-        return this.socialService.getActivity(req.user.id, limit ? +limit : 20);
+        return this.socialService.getActivity(req.user.userId, limit ? +limit : 20);
     }
 }
