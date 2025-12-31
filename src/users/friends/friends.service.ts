@@ -131,15 +131,15 @@ export class FriendsService {
             },
             include: {
                 nguoiGui: {
-                    select: { id: true, taiKhoan: true, hoSoHocSinh: { select: { hoTen: true } }, hoSoGiaoVien: { select: { hoTen: true } } }
+                    select: { id: true, taiKhoan: true, avatar: true, hoTen: true }
                 },
                 nguoiNhan: {
-                    select: { id: true, taiKhoan: true, hoSoHocSinh: { select: { hoTen: true } }, hoSoGiaoVien: { select: { hoTen: true } } }
+                    select: { id: true, taiKhoan: true, avatar: true, hoTen: true }
                 }
             }
         });
 
-        return friendships.map(f => f.nguoiGuiId === userId ? f.nguoiNhan : f.nguoiGui);
+        return friendships.map((f: any) => f.nguoiGuiId === userId ? f.nguoiNhan : f.nguoiGui);
     }
 
     async getPendingRequests(userId: number) {
@@ -150,7 +150,7 @@ export class FriendsService {
             },
             include: {
                 nguoiGui: {
-                    select: { id: true, taiKhoan: true, hoSoHocSinh: { select: { hoTen: true } }, hoSoGiaoVien: { select: { hoTen: true } } }
+                    select: { id: true, taiKhoan: true, avatar: true, hoTen: true }
                 }
             },
             orderBy: { ngayTao: 'desc' }
@@ -173,5 +173,26 @@ export class FriendsService {
 
         if (friendship.nguoiGuiId === userId) return { status: 'SENT' };
         return { status: 'RECEIVED' };
+    }
+
+    async searchUsers(userId: number, q: string) {
+        return this.prisma.nguoiDung.findMany({
+            where: {
+                id: { not: userId },
+                OR: [
+                    { hoTen: { contains: q, } },
+                    { taiKhoan: { contains: q } },
+                    { email: { contains: q } }
+                ]
+            },
+            select: {
+                id: true,
+                taiKhoan: true,
+                hoTen: true,
+                avatar: true,
+                vaiTro: true
+            },
+            take: 20
+        });
     }
 }

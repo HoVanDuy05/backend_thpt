@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, Put, Delete, UseGuards, Request } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Put, Delete, UseGuards, Request, Query } from '@nestjs/common';
 import { FriendsService } from './friends.service';
 import { JwtAuthGuard } from '../../auth/jwt-auth.guard';
 import { FriendAction, HandleFriendRequestDto } from './dto/friends.dto';
@@ -10,22 +10,27 @@ export class FriendsController {
 
     @Get()
     getFriends(@Request() req: any) {
-        return this.friendsService.getFriends(req.user.id);
+        return this.friendsService.getFriends(req.user.userId);
+    }
+
+    @Get('search')
+    searchUsers(@Request() req: any, @Query('q') q: string) {
+        return this.friendsService.searchUsers(req.user.userId, q || '');
     }
 
     @Get('pending')
     getPending(@Request() req: any) {
-        return this.friendsService.getPendingRequests(req.user.id);
+        return this.friendsService.getPendingRequests(req.user.userId);
     }
 
     @Get('status/:id')
     getStatus(@Request() req: any, @Param('id') targetId: string) {
-        return this.friendsService.checkStatus(req.user.id, +targetId);
+        return this.friendsService.checkStatus(req.user.userId, +targetId);
     }
 
     @Post('request/:id')
     sendRequest(@Request() req: any, @Param('id') receiverId: string) {
-        return this.friendsService.sendRequest(req.user.id, +receiverId);
+        return this.friendsService.sendRequest(req.user.userId, +receiverId);
     }
 
     @Put('request/:id')
@@ -35,17 +40,16 @@ export class FriendsController {
         @Body() body: HandleFriendRequestDto
     ) {
         if (body.action === FriendAction.ACCEPT) {
-            return this.friendsService.acceptRequest(req.user.id, +requesterId);
+            return this.friendsService.acceptRequest(req.user.userId, +requesterId);
         } else if (body.action === FriendAction.DECLINE) {
-            return this.friendsService.declineRequest(req.user.id, +requesterId);
+            return this.friendsService.declineRequest(req.user.userId, +requesterId);
         } else if (body.action === FriendAction.CANCEL) {
-            // In case the sender wants to cancel
-            return this.friendsService.cancelRequest(req.user.id, +requesterId);
+            return this.friendsService.cancelRequest(req.user.userId, +requesterId);
         }
     }
 
     @Delete(':id')
     unfriend(@Request() req: any, @Param('id') friendId: string) {
-        return this.friendsService.unfriend(req.user.id, +friendId);
+        return this.friendsService.unfriend(req.user.userId, +friendId);
     }
 }

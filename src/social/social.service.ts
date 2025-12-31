@@ -35,7 +35,7 @@ export class SocialService {
             },
             include: {
                 tacGia: {
-                    select: { id: true, taiKhoan: true, email: true },
+                    select: { id: true, taiKhoan: true, email: true, avatar: true, hoTen: true },
                 },
                 _count: {
                     select: { likes: true, replies: true, reposts: true },
@@ -52,11 +52,11 @@ export class SocialService {
             where: { id },
             include: {
                 tacGia: {
-                    select: { id: true, taiKhoan: true, email: true },
+                    select: { id: true, taiKhoan: true, email: true, avatar: true, hoTen: true },
                 },
                 replies: {
                     include: {
-                        tacGia: { select: { id: true, taiKhoan: true, email: true } },
+                        tacGia: { select: { id: true, taiKhoan: true, email: true, avatar: true, hoTen: true } },
                         _count: { select: { likes: true, replies: true } },
                     },
                     orderBy: { ngayTao: 'asc' },
@@ -123,7 +123,7 @@ export class SocialService {
             },
             include: {
                 tacGia: {
-                    select: { id: true, taiKhoan: true, email: true },
+                    select: { id: true, taiKhoan: true, email: true, avatar: true, hoTen: true },
                 },
                 _count: {
                     select: { likes: true, replies: true, reposts: true },
@@ -143,7 +143,7 @@ export class SocialService {
             },
             include: {
                 tacGia: {
-                    select: { id: true, taiKhoan: true, email: true },
+                    select: { id: true, taiKhoan: true, email: true, avatar: true, hoTen: true },
                 },
                 _count: {
                     select: { likes: true, replies: true, reposts: true },
@@ -160,7 +160,7 @@ export class SocialService {
         // 1. New followers
         const follows = await this.prisma.flowTheoDoi.findMany({
             where: { nguoiDuocTheoDoiId: userId },
-            include: { nguoiTheoDoi: { select: { id: true, taiKhoan: true, email: true } } },
+            include: { nguoiTheoDoi: { select: { id: true, taiKhoan: true, email: true, avatar: true, hoTen: true } } },
             orderBy: { ngayTao: 'desc' },
             take: limit,
         });
@@ -169,7 +169,7 @@ export class SocialService {
         const likes = await this.prisma.threadLike.findMany({
             where: { thread: { tacGiaId: userId } },
             include: {
-                nguoiDung: { select: { id: true, taiKhoan: true, email: true } },
+                nguoiDung: { select: { id: true, taiKhoan: true, email: true, avatar: true, hoTen: true } },
                 thread: { select: { id: true, noiDung: true } }
             },
             orderBy: { ngayTao: 'desc' },
@@ -180,7 +180,7 @@ export class SocialService {
         const replies = await this.prisma.thread.findMany({
             where: { threadCha: { tacGiaId: userId } },
             include: {
-                tacGia: { select: { id: true, taiKhoan: true, email: true } },
+                tacGia: { select: { id: true, taiKhoan: true, email: true, avatar: true, hoTen: true } },
                 threadCha: { select: { id: true, noiDung: true } }
             },
             orderBy: { ngayTao: 'desc' },
