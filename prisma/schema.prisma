@@ -704,6 +704,7 @@ enum LoaiTruongForm {
 
 enum TrangThaiPhien {
   CHO_DUYET
+  DANG_XU_LY
   DA_DUYET
   TU_CHOI
   HUY_BO
@@ -806,6 +807,7 @@ model PhienQuyTrinh {
   doiTuongLienQuan Json?             @map("doi_tuong_lien_quan") // target_id mapping
   trangThai        TrangThaiPhien    @default(CHO_DUYET) @map("trang_thai")
   buocHienTai      Int               @default(1) @map("buoc_hien_tai")
+  duLieuForm       String?           @map("du_lieu_form") @db.LongText
   nguoiTaoId       Int               @map("nguoi_tao_id")
   ngayTao          DateTime          @default(now()) @map("ngay_tao")
 

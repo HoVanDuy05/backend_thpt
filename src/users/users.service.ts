@@ -14,8 +14,14 @@ export class UsersService {
   ) { }
 
   async create(createUserDto: CreateUserDto) {
+    // Generate taiKhoan from email (username part before @)
+    const taiKhoan = createUserDto.email.split('@')[0];
+
     const user = await this.prisma.nguoiDung.create({
-      data: createUserDto,
+      data: {
+        ...createUserDto,
+        taiKhoan,
+      },
     });
     // Send welcome email (non-blocking)
     this.mailService.sendWelcomeEmail(user).catch(err => console.error('Email failed:', err));
@@ -34,6 +40,63 @@ export class UsersService {
         ...dto,
         ngaySinh: dto.ngaySinh ? new Date(dto.ngaySinh) : null,
       },
+    });
+  }
+
+  async createFullStudent(dto: any) { // Type as CreateStudentAccountDto
+    const { email, matKhau, ...profileData } = dto;
+    // Generate taiKhoan from email (username part before @)
+    const taiKhoan = email.split('@')[0];
+
+    return this.prisma.$transaction(async (tx) => {
+      const user = await tx.nguoiDung.create({
+        data: {
+          taiKhoan,
+          matKhau, // In a real app, hash this!
+          email,
+          vaiTro: 'HOC_SINH'
+        }
+      });
+
+      const student = await tx.hoSoHocSinh.create({
+        data: {
+          userId: user.id,
+          maSoHs: profileData.maSoHs,
+          hoTen: profileData.hoTen,
+          ngaySinh: profileData.ngaySinh ? new Date(profileData.ngaySinh) : null,
+          lopId: profileData.lopId
+        }
+      });
+
+      return { ...user, studentProfile: student };
+    });
+  }
+
+  async createFullTeacher(dto: any) {
+    const { email, matKhau, ...profileData } = dto;
+    // Generate taiKhoan from email (username part before @)
+    const taiKhoan = email.split('@')[0];
+
+    return this.prisma.$transaction(async (tx) => {
+      const user = await tx.nguoiDung.create({
+        data: {
+          taiKhoan,
+          matKhau, // In a real app, hash this!
+          email,
+          vaiTro: 'GIAO_VIEN'
+        }
+      });
+
+      const teacher = await tx.hoSoGiaoVien.create({
+        data: {
+          userId: user.id,
+          maSoGv: profileData.maSoGv,
+          hoTen: profileData.hoTen,
+          chuyenMon: profileData.chuyenMon
+        }
+      });
+
+      return { ...user, teacherProfile: teacher };
     });
   }
 

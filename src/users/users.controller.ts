@@ -17,12 +17,18 @@ export class UsersController {
   }
 
   @Post('teachers')
-  createTeacher(@Body() dto: CreateTeacherDto) {
+  createTeacher(@Body() dto: any) {
+    if ('taiKhoan' in dto) {
+      return this.usersService.createFullTeacher(dto);
+    }
     return this.usersService.createTeacherProfile(dto);
   }
 
   @Post('students')
-  createStudent(@Body() dto: CreateStudentDto) {
+  createStudent(@Body() dto: any) { // Temporarily using any to bypass DTO strict check check for now, can implement DTO switching logic or just use new endpoint
+    if ('taiKhoan' in dto) {
+      return this.usersService.createFullStudent(dto);
+    }
     return this.usersService.createStudentProfile(dto);
   }
 

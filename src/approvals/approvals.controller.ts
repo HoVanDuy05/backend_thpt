@@ -65,6 +65,11 @@ export class ApprovalsController {
     // Submit & approval flow
     // ==========================================
 
+    @Get('pending')
+    getPending(@Request() req: any) {
+        return this.approvalsService.getPendingApprovals(req.user.userId);
+    }
+
     @Post('submit-flow')
     submitInstance(@Request() req: any, @Body() data: any) {
         return this.approvalsService.submitFlowInstance(req.user.userId, data);

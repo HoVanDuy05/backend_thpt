@@ -65,17 +65,19 @@ export class AuthService {
         };
     }
 
-    async register(registerDto: { taiKhoan: string; matKhau: string; email: string }) {
+    async register(registerDto: { email: string; matKhau: string }) {
         // Simple registration - in production, hash password with bcrypt
-        const existingUser = await this.usersService.findByTaiKhoan(registerDto.taiKhoan);
+        const existingUser = await this.usersService.findByEmail(registerDto.email);
         if (existingUser) {
-            throw new UnauthorizedException('Tài khoản đã tồn tại');
+            throw new UnauthorizedException('Email đã được sử dụng');
         }
 
+        // Generate taiKhoan from email
+        const taiKhoan = registerDto.email.split('@')[0];
+
         return this.usersService.create({
-            taiKhoan: registerDto.taiKhoan,
-            matKhau: registerDto.matKhau,
             email: registerDto.email,
+            matKhau: registerDto.matKhau,
             vaiTro: 'HOC_SINH' as any,
         });
     }
