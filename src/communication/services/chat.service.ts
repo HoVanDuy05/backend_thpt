@@ -68,6 +68,57 @@ export class ChatService {
         });
     }
 
+    async createDirectMessageChannel(userId1: number, userId2: number) {
+        // Check if channel already exists
+        const existingChannel = await this.prisma.kenhChat.findFirst({
+            where: {
+                loaiKenh: LoaiKenhChat.CA_NHAN,
+                AND: [
+                    { thanhViens: { some: { nguoiDungId: userId1 } } },
+                    { thanhViens: { some: { nguoiDungId: userId2 } } }
+                ]
+            },
+            include: { thanhViens: true }
+        });
+
+        if (existingChannel) {
+            return existingChannel;
+        }
+
+        // Create new direct message channel
+        return this.prisma.kenhChat.create({
+            data: {
+                loaiKenh: LoaiKenhChat.CA_NHAN,
+                thanhViens: {
+                    create: [
+                        {
+                            nguoiDungId: userId1,
+                            vaiTro: 'QUAN_TRI' as any
+                        },
+                        {
+                            nguoiDungId: userId2,
+                            vaiTro: 'THANH_VIEN' as any
+                        }
+                    ]
+                }
+            },
+            include: {
+                thanhViens: {
+                    include: {
+                        nguoiDung: {
+                            select: {
+                                id: true,
+                                taiKhoan: true,
+                                hoTen: true,
+                                avatar: true
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
     async getUserChannels(userId: number) {
         return this.prisma.thanhVienKenh.findMany({
             where: { nguoiDungId: userId },

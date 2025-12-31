@@ -1,10 +1,14 @@
 import { Controller, Get, Post, Body, Param, Put, UseGuards, Request, Query } from '@nestjs/common';
 import { SocialService } from './social.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { FriendsService } from '../users/friends/friends.service';
 
 @Controller('social')
 export class SocialController {
-    constructor(private readonly socialService: SocialService) { }
+    constructor(
+        private readonly socialService: SocialService,
+        private readonly friendsService: FriendsService
+    ) { }
 
     @Post('threads')
     createThread(@Request() req: any, @Body() data: any) {
@@ -49,5 +53,16 @@ export class SocialController {
     @Get('users/profile/:id')
     getUserProfile(@Param('id') id: string) {
         return this.socialService.getUserSocialProfile(+id);
+    }
+
+    // Friend Requests endpoints
+    @Get('friend-requests/received')
+    getReceivedFriendRequests(@Request() req: any) {
+        return this.friendsService.getPendingRequests(req.user.userId);
+    }
+
+    @Get('friend-requests/sent')
+    getSentFriendRequests(@Request() req: any) {
+        return this.friendsService.getSentRequests(req.user.userId);
     }
 }

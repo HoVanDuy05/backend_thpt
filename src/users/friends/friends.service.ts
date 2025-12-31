@@ -1,10 +1,15 @@
-import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
+import { Injectable, BadRequestException, NotFoundException, Inject, forwardRef } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { TrangThaiBanBe } from '@prisma/client';
+import { ChatService } from '../../communication/services/chat.service';
 
 @Injectable()
 export class FriendsService {
-    constructor(private prisma: PrismaService) { }
+    constructor(
+        private prisma: PrismaService,
+        @Inject(forwardRef(() => ChatService))
+        private chatService: ChatService
+    ) { }
 
     async sendRequest(senderId: number, receiverId: number) {
         if (senderId === receiverId) {
@@ -58,10 +63,16 @@ export class FriendsService {
             throw new NotFoundException('Không tìm thấy lời mời kết bạn phù hợp');
         }
 
-        return this.prisma.ketBan.update({
+        // Update friendship status
+        const friendship = await this.prisma.ketBan.update({
             where: { id: request.id },
             data: { trangThai: TrangThaiBanBe.DA_KET_BAN }
         });
+
+        // Create chat channel for the new friends
+        await this.chatService.createDirectMessageChannel(requesterId, userId);
+
+        return friendship;
     }
 
     async declineRequest(userId: number, requesterId: number) {
@@ -150,6 +161,21 @@ export class FriendsService {
             },
             include: {
                 nguoiGui: {
+                    select: { id: true, taiKhoan: true, avatar: true, hoTen: true }
+                }
+            },
+            orderBy: { ngayTao: 'desc' }
+        });
+    }
+
+    async getSentRequests(userId: number) {
+        return this.prisma.ketBan.findMany({
+            where: {
+                nguoiGuiId: userId,
+                trangThai: TrangThaiBanBe.CHO_XAC_NHAN
+            },
+            include: {
+                nguoiNhan: {
                     select: { id: true, taiKhoan: true, avatar: true, hoTen: true }
                 }
             },
