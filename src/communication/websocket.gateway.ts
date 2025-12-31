@@ -1,0 +1,124 @@
+import {
+    WebSocketGateway,
+    WebSocketServer,
+    SubscribeMessage,
+    OnGatewayConnection,
+    OnGatewayDisconnect,
+    ConnectedSocket,
+    MessageBody,
+} from '@nestjs/websockets';
+import { Server, Socket } from 'socket.io';
+import { UseGuards } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
+
+@WebSocketGateway({
+    cors: {
+        origin: '*',
+        credentials: true,
+    },
+})
+export class WebsocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
+    @WebSocketServer()
+    server: Server;
+
+    private userSockets: Map<number, string> = new Map();
+
+    constructor(private jwtService: JwtService) { }
+
+    async handleConnection(client: Socket) {
+        try {
+            const token = client.handshake.auth.token || client.handshake.headers.authorization?.split(' ')[1];
+
+            if (!token) {
+                client.disconnect();
+                return;
+            }
+
+            const payload = await this.jwtService.verifyAsync(token);
+            const userId = payload.sub;
+
+            this.userSockets.set(userId, client.id);
+            client.data.userId = userId;
+
+            console.log(`User ${userId} connected with socket ${client.id}`);
+        } catch (error) {
+            console.error('WebSocket authentication failed:', error);
+            client.disconnect();
+        }
+    }
+
+    handleDisconnect(client: Socket) {
+        const userId = client.data.userId;
+        if (userId) {
+            this.userSockets.delete(userId);
+            console.log(`User ${userId} disconnected`);
+        }
+    }
+
+    @SubscribeMessage('join:channel')
+    handleJoinChannel(
+        @ConnectedSocket() client: Socket,
+        @MessageBody() channelId: number,
+    ) {
+        client.join(`channel:${channelId}`);
+        console.log(`User ${client.data.userId} joined channel ${channelId}`);
+    }
+
+    @SubscribeMessage('leave:channel')
+    handleLeaveChannel(
+        @ConnectedSocket() client: Socket,
+        @MessageBody() channelId: number,
+    ) {
+        client.leave(`channel:${channelId}`);
+        console.log(`User ${client.data.userId} left channel ${channelId}`);
+    }
+
+    @SubscribeMessage('typing:start')
+    handleTypingStart(
+        @ConnectedSocket() client: Socket,
+        @MessageBody() data: { channelId: number; userName: string },
+    ) {
+        client.to(`channel:${data.channelId}`).emit('typing:start', {
+            userId: client.data.userId,
+            userName: data.userName,
+        });
+    }
+
+    @SubscribeMessage('typing:stop')
+    handleTypingStop(
+        @ConnectedSocket() client: Socket,
+        @MessageBody() channelId: number,
+    ) {
+        client.to(`channel:${channelId}`).emit('typing:stop', {
+            userId: client.data.userId,
+        });
+    }
+
+    // Emit events from services
+    emitNewMessage(channelId: number, message: any) {
+        this.server.to(`channel:${channelId}`).emit('message:new', message);
+    }
+
+    emitMessageRead(channelId: number, data: any) {
+        this.server.to(`channel:${channelId}`).emit('message:read', data);
+    }
+
+    emitNewThread(thread: any) {
+        this.server.emit('thread:new', thread);
+    }
+
+    emitThreadLike(threadId: number, data: any) {
+        this.server.emit('thread:like', { threadId, ...data });
+    }
+
+    emitThreadReply(threadId: number, reply: any) {
+        this.server.emit('thread:reply', { threadId, reply });
+    }
+
+    emitToUser(userId: number, event: string, data: any) {
+        const socketId = this.userSockets.get(userId);
+        if (socketId) {
+            this.server.to(socketId).emit(event, data);
+        }
+    }
+}
