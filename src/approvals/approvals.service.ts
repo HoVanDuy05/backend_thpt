@@ -62,7 +62,7 @@ export class ApprovalsService {
                 },
                 cacTruong: {
                     create: data.fields?.map((field: any, index: number) => ({
-                        tenTruong: field.label, // Simplified key generation
+                        tenTruong: field.label,
                         nhan: field.label,
                         loai: field.type,
                         batBuoc: field.required || false,

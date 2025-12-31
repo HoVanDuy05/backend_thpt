@@ -25,16 +25,32 @@ export class UsersController {
   }
 
   @Post('students')
-  createStudent(@Body() dto: any) { // Temporarily using any to bypass DTO strict check check for now, can implement DTO switching logic or just use new endpoint
-    if ('taiKhoan' in dto) {
+  createStudent(@Body() dto: any) {
+    if ('taiKhoan' in dto || 'email' in dto) {
       return this.usersService.createFullStudent(dto);
     }
     return this.usersService.createStudentProfile(dto);
   }
 
+  @Post('staff')
+  createStaff(@Body() dto: any) {
+    if ('taiKhoan' in dto || 'email' in dto) {
+      return this.usersService.createFullStaff(dto);
+    }
+    // Fixed: Using usersService instead of non-existent this.prisma
+    return this.usersService.createStaffProfile(dto);
+  }
+
   @Get()
   findAll() {
-    return this.usersService.findAll();
+    // Automatically include profiles for admin view
+    return this.usersService.findAll({
+      include: {
+        hoSoHocSinh: true,
+        hoSoGiaoVien: true,
+        hoSoNhanVien: true,
+      }
+    });
   }
 
   @Get(':id')

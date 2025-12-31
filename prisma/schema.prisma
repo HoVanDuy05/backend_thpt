@@ -13,6 +13,7 @@ datasource db {
 
 enum VaiTro {
   ADMIN
+  NHAN_VIEN
   GIAO_VIEN
   HOC_SINH
   PHU_HUYNH
@@ -52,6 +53,7 @@ model NguoiDung {
   // Relations
   hoSoGiaoVien HoSoGiaoVien?
   hoSoHocSinh  HoSoHocSinh?
+  hoSoNhanVien HoSoNhanVien?
   baiViets     BaiViet[]
   binhLuans    BinhLuan[]
   thongBaos    ThongBao[]
@@ -153,6 +155,24 @@ model HoSoHocSinh {
   lichSuNopBai  LichSuNopBai[]
 
   @@map("ho_so_hoc_sinh")
+}
+
+model HoSoNhanVien {
+  id             Int     @id @default(autoincrement())
+  userId         Int     @unique @map("user_id")
+  maSo           String  @unique @map("ma_so") @db.VarChar(20)
+  hoTen          String  @map("ho_ten") @db.VarChar(100)
+  ngaySinh       DateTime? @map("ngay_sinh") @db.Date
+  gioiTinh       GioiTinh  @default(NAM) @map("gioi_tinh")
+  diaChi         String?   @map("dia_chi") @db.VarChar(255)
+  soDienThoai    String?   @map("so_dien_thoai") @db.VarChar(15)
+  emailLienHe    String?   @map("email_lien_he") @db.VarChar(100)
+  cccd           String?   @unique @map("cccd") @db.VarChar(20)
+
+  // Relations
+  nguoiDung      NguoiDung @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("ho_so_nhan_vien")
 }
 
 // ==========================================================
@@ -805,7 +825,7 @@ model TruongFormQuyTrinh {
 model PhienQuyTrinh {
   id               Int               @id @default(autoincrement())
   quyTrinhId       Int               @map("quy_trinh_id")
-  doiTuongLienQuan Json?             @map("doi_tuong_lien_quan") // target_id mapping
+  doiTuongLienQuan Json?             @map("doi_tuong_lien_quan")
   trangThai        TrangThaiPhien    @default(CHO_DUYET) @map("trang_thai")
   buocHienTai      Int               @default(1) @map("buoc_hien_tai")
   duLieuForm       String?           @map("du_lieu_form") @db.LongText
@@ -818,6 +838,8 @@ model PhienQuyTrinh {
   buocPhiens       BuocPhienQuyTrinh[]
   nhatKy           NhatKyPheDuyetQuyTrinh[]
 
+  @@index([quyTrinhId])
+  @@index([nguoiTaoId])
   @@map("phien_quy_trinh")
 }
 
@@ -835,6 +857,8 @@ model BuocPhienQuyTrinh {
   phien           PhienQuyTrinh     @relation(fields: [phienId], references: [id], onDelete: Cascade)
   buoc            BuocQuyTrinh      @relation(fields: [buocId], references: [id], onDelete: Cascade)
 
+  @@index([phienId])
+  @@index([buocId])
   @@map("buoc_phien_quy_trinh")
 }
 
@@ -851,5 +875,7 @@ model NhatKyPheDuyetQuyTrinh {
   phien         PhienQuyTrinh      @relation(fields: [phienId], references: [id], onDelete: Cascade)
   nguoiDung     NguoiDung          @relation("NguoiPheDuyetLog", fields: [nguoiDungId], references: [id])
 
+  @@index([phienId])
+  @@index([nguoiDungId])
   @@map("nhat_ky_phe_duyet_quy_trinh")
 }

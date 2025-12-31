@@ -131,10 +131,11 @@ export class AuthService {
 
         // Try to find user by googleId
         let user = await this.prisma.nguoiDung.findUnique({
-            where: { googleId },
+            where: { googleId: googleId },
             include: {
                 hoSoGiaoVien: true,
                 hoSoHocSinh: true,
+                hoSoNhanVien: true,
             }
         });
 
@@ -145,6 +146,7 @@ export class AuthService {
                 include: {
                     hoSoGiaoVien: true,
                     hoSoHocSinh: true,
+                    hoSoNhanVien: true,
                 }
             });
 
@@ -156,6 +158,7 @@ export class AuthService {
                     include: {
                         hoSoGiaoVien: true,
                         hoSoHocSinh: true,
+                        hoSoNhanVien: true,
                     }
                 });
             }
@@ -170,11 +173,11 @@ export class AuthService {
                     email,
                     googleId,
                     vaiTro: 'HOC_SINH', // Default role
-                    // matKhau is optional, omit it for Google-only users
                 },
                 include: {
                     hoSoGiaoVien: true,
                     hoSoHocSinh: true,
+                    hoSoNhanVien: true,
                 }
             });
 

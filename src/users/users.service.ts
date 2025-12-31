@@ -74,14 +74,13 @@ export class UsersService {
 
   async createFullTeacher(dto: any) {
     const { email, matKhau, ...profileData } = dto;
-    // Generate taiKhoan from email (username part before @)
     const taiKhoan = email.split('@')[0];
 
     return this.prisma.$transaction(async (tx) => {
       const user = await tx.nguoiDung.create({
         data: {
           taiKhoan,
-          matKhau, // In a real app, hash this!
+          matKhau,
           email,
           vaiTro: 'GIAO_VIEN'
         }
@@ -97,6 +96,34 @@ export class UsersService {
       });
 
       return { ...user, teacherProfile: teacher };
+    });
+  }
+
+  async createFullStaff(dto: any) {
+    const { email, matKhau, ...profileData } = dto;
+    const taiKhoan = email.split('@')[0];
+
+    return this.prisma.$transaction(async (tx) => {
+      const user = await tx.nguoiDung.create({
+        data: {
+          taiKhoan,
+          matKhau,
+          email,
+          vaiTro: 'NHAN_VIEN'
+        }
+      });
+
+      const staff = await tx.hoSoNhanVien.create({
+        data: {
+          userId: user.id,
+          maSo: profileData.maSo,
+          hoTen: profileData.hoTen,
+          soDienThoai: profileData.soDienThoai,
+          cccd: profileData.cccd
+        }
+      });
+
+      return { ...user, staffProfile: staff };
     });
   }
 
@@ -154,8 +181,14 @@ export class UsersService {
             lopChuNhiem: true,
           },
         },
-        // Include other profile-related data if needed
+        hoSoNhanVien: true,
       },
+    });
+  }
+
+  createStaffProfile(dto: any) {
+    return this.prisma.hoSoNhanVien.create({
+      data: dto,
     });
   }
 }
