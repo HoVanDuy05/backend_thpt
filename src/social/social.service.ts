@@ -196,4 +196,27 @@ export class SocialService {
 
         return activity;
     }
+
+    async getUserSocialProfile(userId: number) {
+        const user = await this.prisma.nguoiDung.findUnique({
+            where: { id: userId },
+            select: {
+                id: true,
+                taiKhoan: true,
+                hoTen: true,
+                avatar: true,
+                vaiTro: true,
+                _count: {
+                    select: {
+                        threads: true,
+                        followers: true,
+                        following: true
+                    }
+                }
+            }
+        });
+
+        if (!user) throw new NotFoundException('Không tìm thấy người dùng');
+        return user;
+    }
 }

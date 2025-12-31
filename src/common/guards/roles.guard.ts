@@ -29,6 +29,8 @@ export class RolesGuard extends AuthGuard('jwt') implements CanActivate {
             return true;
         }
 
+        // console.log('RolesGuard: Checking path', path, request.headers?.authorization ? 'Has Auth Header' : 'No Auth Header');
+
         // 2. Validate JWT (AuthGuard logic)
         // This executes the JwtStrategy.validate()
         const canActivate = await super.canActivate(context);
@@ -54,6 +56,7 @@ export class RolesGuard extends AuthGuard('jwt') implements CanActivate {
     // Handle errors from AuthGuard
     handleRequest(err, user, info) {
         if (err || !user) {
+            // console.log('RolesGuard: Unauthorized', { err, user, info: info?.message });
             throw err || new UnauthorizedException();
         }
         return user;

@@ -26,6 +26,19 @@ export class ChatService {
                 if (!friendship) {
                     throw new ForbiddenException('Chỉ có thể nhắn tin cho người đã kết bạn');
                 }
+
+                // Check existing 1-1 channel
+                const existingChannel = await this.prisma.kenhChat.findFirst({
+                    where: {
+                        loaiKenh: LoaiKenhChat.CA_NHAN,
+                        AND: [
+                            { thanhViens: { some: { nguoiDungId: userId } } },
+                            { thanhViens: { some: { nguoiDungId: friendId } } }
+                        ]
+                    },
+                    include: { thanhViens: true }
+                });
+                if (existingChannel) return existingChannel;
             }
         }
 

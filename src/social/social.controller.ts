@@ -3,7 +3,6 @@ import { SocialService } from './social.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
 @Controller('social')
-@UseGuards(JwtAuthGuard)
 export class SocialController {
     constructor(private readonly socialService: SocialService) { }
 
@@ -45,5 +44,10 @@ export class SocialController {
     @Get('activity')
     getActivity(@Request() req: any, @Query('limit') limit?: string) {
         return this.socialService.getActivity(req.user.userId, limit ? +limit : 20);
+    }
+
+    @Get('users/profile/:id')
+    getUserProfile(@Param('id') id: string) {
+        return this.socialService.getUserSocialProfile(+id);
     }
 }

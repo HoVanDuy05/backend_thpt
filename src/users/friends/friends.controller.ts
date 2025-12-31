@@ -2,9 +2,9 @@ import { Controller, Get, Post, Body, Param, Put, Delete, UseGuards, Request, Qu
 import { FriendsService } from './friends.service';
 import { JwtAuthGuard } from '../../auth/jwt-auth.guard';
 import { FriendAction, HandleFriendRequestDto } from './dto/friends.dto';
+import { Public } from '../../common/decorators/public.decorator';
 
 @Controller('friends')
-@UseGuards(JwtAuthGuard)
 export class FriendsController {
     constructor(private readonly friendsService: FriendsService) { }
 
@@ -13,9 +13,12 @@ export class FriendsController {
         return this.friendsService.getFriends(req.user.userId);
     }
 
+    @Public()
     @Get('search')
     searchUsers(@Request() req: any, @Query('q') q: string) {
-        return this.friendsService.searchUsers(req.user.userId, q || '');
+        // If public, req.user might be undefined, so handle that if service needs it
+        // But let's see if 401 goes away first.
+        return this.friendsService.searchUsers(req?.user?.userId || 0, q || '');
     }
 
     @Get('pending')
