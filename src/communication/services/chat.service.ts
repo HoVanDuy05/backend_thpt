@@ -187,8 +187,9 @@ export class ChatService {
                     select: { id: true, taiKhoan: true, hoSoHocSinh: { select: { hoTen: true } }, hoSoGiaoVien: { select: { hoTen: true } } }
                 },
                 kenhChat: {
-                    select: { id: true, loaiKenh: true },
-                    include: {
+                    select: {
+                        id: true,
+                        loaiKenh: true,
                         thanhViens: {
                             select: { nguoiDungId: true }
                         }
