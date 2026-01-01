@@ -138,7 +138,18 @@ export class ChatService {
                             take: 1
                         },
                         thanhViens: {
-                            include: { nguoiDung: { select: { id: true, taiKhoan: true, hoSoHocSinh: { select: { hoTen: true } }, hoSoGiaoVien: { select: { hoTen: true } } } } }
+                            include: {
+                                nguoiDung: {
+                                    select: {
+                                        id: true,
+                                        taiKhoan: true,
+                                        hoTen: true,
+                                        avatar: true,
+                                        hoSoHocSinh: { select: { hoTen: true } },
+                                        hoSoGiaoVien: { select: { hoTen: true } }
+                                    }
+                                }
+                            }
                         }
                     }
                 }
@@ -200,6 +211,18 @@ export class ChatService {
 
         // Emit real-time message to channel
         this.websocketGateway.emitNewMessage(createMessageDto.kenhChatId, message);
+
+        // Also emit to each member directly (so it works even if they haven't joined the room yet)
+        try {
+            const members = (message as any)?.kenhChat?.thanhViens || [];
+            for (const m of members) {
+                const memberId = m?.nguoiDungId;
+                if (!memberId || memberId === userId) continue;
+                this.websocketGateway.emitToUser(memberId, 'message:new', message);
+            }
+        } catch {
+            // ignore socket delivery errors
+        }
 
         // Create notifications for other members (for direct messages)
         if (message.kenhChat.loaiKenh === LoaiKenhChat.CA_NHAN) {

@@ -22,6 +22,7 @@ export class WebsocketGateway implements OnGatewayConnection, OnGatewayDisconnec
     server: Server;
 
     private userSockets: Map<number, string> = new Map();
+    private userLastSeen: Map<number, string> = new Map();
 
     constructor(private jwtService: JwtService) { }
 
@@ -35,10 +36,22 @@ export class WebsocketGateway implements OnGatewayConnection, OnGatewayDisconnec
             }
 
             const payload = await this.jwtService.verifyAsync(token);
-            const userId = payload.sub;
+            const userId = Number(payload?.sub);
+
+            if (!userId || Number.isNaN(userId)) {
+                console.error('WebSocket authentication failed: invalid token payload.sub');
+                client.disconnect();
+                return;
+            }
 
             this.userSockets.set(userId, client.id);
             client.data.userId = userId;
+
+            this.server.emit('presence:update', {
+                userId,
+                online: true,
+                lastSeen: this.userLastSeen.get(userId) || null,
+            });
 
             console.log(`User ${userId} connected with socket ${client.id}`);
         } catch (error) {
@@ -51,6 +64,14 @@ export class WebsocketGateway implements OnGatewayConnection, OnGatewayDisconnec
         const userId = client.data.userId;
         if (userId) {
             this.userSockets.delete(userId);
+            const lastSeen = new Date().toISOString();
+            this.userLastSeen.set(userId, lastSeen);
+
+            this.server.emit('presence:update', {
+                userId,
+                online: false,
+                lastSeen,
+            });
             console.log(`User ${userId} disconnected`);
         }
     }
@@ -91,6 +112,36 @@ export class WebsocketGateway implements OnGatewayConnection, OnGatewayDisconnec
     ) {
         client.to(`channel:${channelId}`).emit('typing:stop', {
             userId: client.data.userId,
+        });
+    }
+
+    @SubscribeMessage('message:delivered')
+    handleMessageDelivered(
+        @ConnectedSocket() client: Socket,
+        @MessageBody() data: { channelId: number; messageId: number },
+    ) {
+        if (!data?.channelId || !data?.messageId) return;
+
+        this.server.to(`channel:${data.channelId}`).emit('message:delivered', {
+            channelId: data.channelId,
+            messageId: data.messageId,
+            userId: client.data.userId,
+            at: new Date().toISOString(),
+        });
+    }
+
+    @SubscribeMessage('message:seen')
+    handleMessageSeen(
+        @ConnectedSocket() client: Socket,
+        @MessageBody() data: { channelId: number; messageId: number },
+    ) {
+        if (!data?.channelId || !data?.messageId) return;
+
+        this.server.to(`channel:${data.channelId}`).emit('message:seen', {
+            channelId: data.channelId,
+            messageId: data.messageId,
+            userId: client.data.userId,
+            at: new Date().toISOString(),
         });
     }
 
