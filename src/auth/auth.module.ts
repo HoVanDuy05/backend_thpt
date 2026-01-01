@@ -9,6 +9,7 @@ import { AuthController } from './auth.controller';
 import { PrismaModule } from '../prisma/prisma.module';
 import { MailModule } from '../mail/mail.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { CloudinaryModule } from '../common/cloudinary/cloudinary.module';
 
 @Global()
 @Module({
@@ -16,6 +17,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
         UsersModule,
         PrismaModule,
         MailModule,
+        CloudinaryModule,
         ConfigModule,
         PassportModule,
         JwtModule.registerAsync({

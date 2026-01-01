@@ -1,13 +1,16 @@
-import { Controller, Post, Body, HttpCode, HttpStatus, Get, Request, UseGuards, Res, Req } from '@nestjs/common';
+import { Controller, Post, Body, HttpCode, HttpStatus, Get, Request, UseGuards, Res, Req, Patch, UploadedFiles, BadRequestException } from '@nestjs/common';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import { Public } from '../common/decorators/public.decorator';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { AuthGuard } from '@nestjs/passport';
+import { UseInterceptors } from '@nestjs/common';
+import { FileFieldsInterceptor } from '@nestjs/platform-express';
+import { CloudinaryService } from '../common/cloudinary/cloudinary.service';
 
 @Controller('auth')
 export class AuthController {
-    constructor(private authService: AuthService) { }
+    constructor(private authService: AuthService, private cloudinaryService: CloudinaryService) { }
 
     @Public()
     @HttpCode(HttpStatus.OK)
@@ -25,7 +28,48 @@ export class AuthController {
     @Get('profile')
     getProfile(@Request() req) {
         // req.user is set by JwtStrategy
-        return this.authService.getProfile(req.user.userId);
+        const userId = Number(req.user?.userId);
+        if (!userId || Number.isNaN(userId)) {
+            throw new BadRequestException('Invalid user id');
+        }
+        return this.authService.getProfile(userId);
+    }
+
+    @UseGuards(JwtAuthGuard)
+    @Patch('profile')
+    updateProfile(@Request() req, @Body() body: any) {
+        const userId = Number(req.user?.userId);
+        if (!userId || Number.isNaN(userId)) {
+            throw new BadRequestException('Invalid user id');
+        }
+        return this.authService.updateProfile(userId, body);
+    }
+
+    @UseGuards(JwtAuthGuard)
+    @Post('avatar')
+    @UseInterceptors(FileFieldsInterceptor([
+        { name: 'avatar', maxCount: 1 },
+        { name: 'file', maxCount: 1 },
+    ]))
+    async uploadAvatar(@Request() req, @UploadedFiles() files: { avatar?: Express.Multer.File[]; file?: Express.Multer.File[] }) {
+        const userId = Number(req.user?.userId);
+        if (!userId || Number.isNaN(userId)) {
+            throw new BadRequestException('Invalid user id');
+        }
+        const file = files?.avatar?.[0] || files?.file?.[0];
+        if (!file) {
+            throw new BadRequestException('Vui lòng chọn file');
+        }
+
+        const result = await this.cloudinaryService.uploadFile(file, 'upload/avatars');
+        const url = (result as any)?.secure_url;
+        if (!url) throw new BadRequestException('Upload failed');
+
+        await this.authService.updateAvatar(userId, url);
+
+        return {
+            avatar: url,
+        };
     }
 
     // Google OAuth

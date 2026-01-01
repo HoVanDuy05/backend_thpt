@@ -223,4 +223,83 @@ export class AuthService {
         const { matKhau, ...result } = user;
         return result;
     }
+
+    async updateProfile(userId: number, dto: any) {
+        // Update base user fields
+        const dataNguoiDung: any = {};
+        if (typeof dto?.hoTen === 'string') dataNguoiDung.hoTen = dto.hoTen;
+        if (typeof dto?.email === 'string') dataNguoiDung.email = dto.email;
+        if (typeof dto?.avatar === 'string') dataNguoiDung.avatar = dto.avatar;
+
+        if (Object.keys(dataNguoiDung).length > 0) {
+            await this.prisma.nguoiDung.update({
+                where: { id: userId },
+                data: dataNguoiDung,
+            });
+        }
+
+        // Update role-specific profiles if exist
+        const user = await this.prisma.nguoiDung.findUnique({ where: { id: userId } });
+        if (!user) throw new UnauthorizedException('Không tìm thấy thông tin người dùng.');
+
+        const ngaySinh = dto?.ngaySinh ? new Date(dto.ngaySinh) : undefined;
+
+        if (user.vaiTro === 'GIAO_VIEN') {
+            const data: any = {};
+            if (ngaySinh) data.ngaySinh = ngaySinh;
+            if (dto?.gioiTinh) data.gioiTinh = dto.gioiTinh;
+            if (typeof dto?.diaChi === 'string') data.diaChi = dto.diaChi;
+            if (typeof dto?.soDienThoai === 'string') data.soDienThoai = dto.soDienThoai;
+            if (typeof dto?.email === 'string') data.emailLienHe = dto.email;
+            if (typeof dto?.chuyenMon === 'string') data.chuyenMon = dto.chuyenMon;
+            if (Object.keys(data).length > 0) {
+                await this.prisma.hoSoGiaoVien.updateMany({
+                    where: { userId },
+                    data,
+                });
+            }
+        }
+
+        if (user.vaiTro === 'HOC_SINH') {
+            const data: any = {};
+            if (typeof dto?.hoTen === 'string') data.hoTen = dto.hoTen;
+            if (ngaySinh) data.ngaySinh = ngaySinh;
+            if (dto?.gioiTinh) data.gioiTinh = dto.gioiTinh;
+            if (typeof dto?.soDienThoai === 'string') data.soDienThoai = dto.soDienThoai;
+            if (typeof dto?.diaChi === 'string') data.diaChiThuongTru = dto.diaChi;
+            if (dto?.lopHocId) data.lopId = Number(dto.lopHocId);
+            if (Object.keys(data).length > 0) {
+                await this.prisma.hoSoHocSinh.updateMany({
+                    where: { userId },
+                    data,
+                });
+            }
+        }
+
+        if (user.vaiTro === 'NHAN_VIEN') {
+            const data: any = {};
+            if (ngaySinh) data.ngaySinh = ngaySinh;
+            if (dto?.gioiTinh) data.gioiTinh = dto.gioiTinh;
+            if (typeof dto?.diaChi === 'string') data.diaChi = dto.diaChi;
+            if (typeof dto?.soDienThoai === 'string') data.soDienThoai = dto.soDienThoai;
+            if (typeof dto?.email === 'string') data.emailLienHe = dto.email;
+            if (Object.keys(data).length > 0) {
+                await this.prisma.hoSoNhanVien.updateMany({
+                    where: { userId },
+                    data,
+                });
+            }
+        }
+
+        return this.getProfile(userId);
+    }
+
+    async updateAvatar(userId: number, avatarUrl: string) {
+        if (!avatarUrl) throw new UnauthorizedException('Avatar không hợp lệ.');
+        await this.prisma.nguoiDung.update({
+            where: { id: userId },
+            data: { avatar: avatarUrl },
+        });
+        return this.getProfile(userId);
+    }
 }

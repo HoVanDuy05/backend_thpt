@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { CreateTeacherDto } from './dto/create-teacher.dto';
@@ -144,12 +144,18 @@ export class UsersService {
   }
 
   findOne(id: number) {
+    if (!id || Number.isNaN(id)) {
+      throw new BadRequestException('Invalid user id');
+    }
     return this.prisma.nguoiDung.findUnique({
       where: { id },
     });
   }
 
   update(id: number, updateUserDto: UpdateUserDto) {
+    if (!id || Number.isNaN(id)) {
+      throw new BadRequestException('Invalid user id');
+    }
     return this.prisma.nguoiDung.update({
       where: { id },
       data: updateUserDto,
@@ -157,6 +163,9 @@ export class UsersService {
   }
 
   remove(id: number) {
+    if (!id || Number.isNaN(id)) {
+      throw new BadRequestException('Invalid user id');
+    }
     return this.prisma.nguoiDung.delete({
       where: { id },
     });
