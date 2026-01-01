@@ -14,7 +14,7 @@ import { JwtService } from '@nestjs/jwt';
 @WebSocketGateway({
     cors: {
         origin: '*',
-        credentials: true,
+        credentials: false,
     },
 })
 export class WebsocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
