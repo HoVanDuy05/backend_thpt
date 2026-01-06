@@ -28,7 +28,7 @@ export class SocialService {
         const followingIds = following.map(f => f.nguoiDuocTheoDoiId);
         followingIds.push(userId); // Bao gồm cả bản thân
 
-        return this.prisma.thread.findMany({
+        const threads = await this.prisma.thread.findMany({
             where: {
                 tacGiaId: { in: followingIds },
                 threadChaId: null, // Chỉ lấy bài gốc
@@ -40,15 +40,25 @@ export class SocialService {
                 _count: {
                     select: { likes: true, replies: true, reposts: true },
                 },
+                likes: {
+                    where: { nguoiDungId: userId },
+                    select: { nguoiDungId: true }
+                }
             },
             orderBy: { ngayTao: 'desc' },
             take: limit,
             ...(cursor ? { skip: 1, cursor: { id: cursor } } : {}),
         });
+
+        return threads.map(t => ({
+            ...t,
+            liked: t.likes.length > 0,
+            likes: undefined // Hide the relation data
+        }));
     }
 
-    async getThreadDetail(id: number) {
-        return this.prisma.thread.findUnique({
+    async getThreadDetail(id: number, userId?: number) {
+        const thread = await this.prisma.thread.findUnique({
             where: { id },
             include: {
                 tacGia: {
@@ -58,14 +68,35 @@ export class SocialService {
                     include: {
                         tacGia: { select: { id: true, taiKhoan: true, email: true, avatar: true, hoTen: true } },
                         _count: { select: { likes: true, replies: true } },
+                        likes: userId ? {
+                            where: { nguoiDungId: userId },
+                            select: { nguoiDungId: true }
+                        } : false
                     },
                     orderBy: { ngayTao: 'asc' },
                 },
                 _count: {
                     select: { likes: true, replies: true, reposts: true },
                 },
+                likes: userId ? {
+                    where: { nguoiDungId: userId },
+                    select: { nguoiDungId: true }
+                } : false
             },
         });
+
+        if (!thread) return null;
+
+        return {
+            ...thread,
+            liked: userId ? thread.likes.length > 0 : false,
+            likes: undefined,
+            replies: thread.replies.map(r => ({
+                ...r,
+                liked: userId ? r.likes.length > 0 : false,
+                likes: undefined
+            }))
+        };
     }
 
     // --- INTERACTIONS ---
@@ -115,8 +146,8 @@ export class SocialService {
             return { following: true };
         }
     }
-    async getUserThreads(userId: number, limit = 20, cursor?: number) {
-        return this.prisma.thread.findMany({
+    async getUserThreads(userId: number, requesterId?: number, limit = 20, cursor?: number) {
+        const threads = await this.prisma.thread.findMany({
             where: {
                 tacGiaId: userId,
                 threadChaId: null,
@@ -128,15 +159,25 @@ export class SocialService {
                 _count: {
                     select: { likes: true, replies: true, reposts: true },
                 },
+                likes: requesterId ? {
+                    where: { nguoiDungId: requesterId },
+                    select: { nguoiDungId: true }
+                } : false
             },
             orderBy: { ngayTao: 'desc' },
             take: limit,
             ...(cursor ? { skip: 1, cursor: { id: cursor } } : {}),
         });
+
+        return threads.map(t => ({
+            ...t,
+            liked: requesterId ? t.likes.length > 0 : false,
+            likes: undefined
+        }));
     }
 
-    async searchThreads(query: string, limit = 20) {
-        return this.prisma.thread.findMany({
+    async searchThreads(query: string, userId?: number, limit = 20) {
+        const threads = await this.prisma.thread.findMany({
             where: {
                 noiDung: { contains: query },
                 threadChaId: null,
@@ -148,10 +189,20 @@ export class SocialService {
                 _count: {
                     select: { likes: true, replies: true, reposts: true },
                 },
+                likes: userId ? {
+                    where: { nguoiDungId: userId },
+                    select: { nguoiDungId: true }
+                } : false
             },
             take: limit,
             orderBy: { ngayTao: 'desc' },
         });
+
+        return threads.map(t => ({
+            ...t,
+            liked: userId ? t.likes.length > 0 : false,
+            likes: undefined
+        }));
     }
 
     async getActivity(userId: number, limit = 20) {
