@@ -52,12 +52,12 @@ export class MailService {
         await this.mailerService.sendMail({
             to,
             subject: `Cập nhật trạng thái phê duyệt: ${data.title} 📝`,
-            template: './approval-status', // We need to create this template or use a generic one
+            template: './approval-status',
             context: {
-                title: data.title,
+                title: data.title || 'Hồ sơ',
                 status: data.status,
                 approverName: data.approverName || 'Hệ thống',
-                link: data.link,
+                url: data.link,
             },
         });
     }

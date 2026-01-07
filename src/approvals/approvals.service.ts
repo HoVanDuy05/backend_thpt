@@ -209,7 +209,23 @@ export class ApprovalsService {
             include: {
                 _count: { select: { cacBuoc: true } },
                 danhMuc: true, // Include category info
-                cacBuoc: { include: { nguoiDuyets: true }, orderBy: { thuTuBuoc: 'asc' } },
+                cacBuoc: {
+                    include: {
+                        nguoiDuyets: {
+                            include: {
+                                user: {
+                                    select: {
+                                        id: true,
+                                        hoTen: true,
+                                        taiKhoan: true,
+                                        email: true
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    orderBy: { thuTuBuoc: 'asc' }
+                },
                 cacTruong: { orderBy: { thuTu: 'asc' } }
             },
             orderBy: { ngayTao: 'desc' }

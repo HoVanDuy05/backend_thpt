@@ -80,6 +80,7 @@ model NguoiDung {
   quyTrinhsTao          QuyTrinh[]               @relation("NguoiTaoQuyTrinh")
   phienQuyTrinhsTao     PhienQuyTrinh[]          @relation("NguoiTaoPhien")
   nhatKyPheDuyetQuyTrinh NhatKyPheDuyetQuyTrinh[] @relation("NguoiPheDuyetLog")
+  cacBuocPheDuyetDuocGiao NguoiPheDuyetBuoc[]
   pushSubscriptions     PushSubscription[]
 
   @@map("nguoi_dung")
@@ -821,6 +822,7 @@ model NguoiPheDuyetBuoc {
 
   // Relations
   buoc              BuocQuyTrinh      @relation(fields: [buocId], references: [id], onDelete: Cascade)
+  user              NguoiDung?        @relation(fields: [approverId], references: [id], onDelete: SetNull)
 
   @@map("nguoi_phe_duyet_buoc")
 }
