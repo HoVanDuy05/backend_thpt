@@ -80,8 +80,24 @@ model NguoiDung {
   quyTrinhsTao          QuyTrinh[]               @relation("NguoiTaoQuyTrinh")
   phienQuyTrinhsTao     PhienQuyTrinh[]          @relation("NguoiTaoPhien")
   nhatKyPheDuyetQuyTrinh NhatKyPheDuyetQuyTrinh[] @relation("NguoiPheDuyetLog")
+  pushSubscriptions     PushSubscription[]
 
   @@map("nguoi_dung")
+}
+
+model PushSubscription {
+  id              Int      @id @default(autoincrement())
+  userId          Int      @map("user_id")
+  endpoint        String   @map("endpoint") @db.Text
+  p256dh          String   @map("p256dh") @db.Text
+  auth            String   @map("auth") @db.Text
+  thietBi         String?  @map("thiet_bi") @db.Text
+  ngayTao         DateTime @default(now()) @map("ngay_tao")
+
+  // Relations
+  nguoiDung       NguoiDung @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("push_subscriptions")
 }
 
 model HoSoGiaoVien {
