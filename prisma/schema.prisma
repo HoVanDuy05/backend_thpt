@@ -852,7 +852,6 @@ model PhienQuyTrinh {
   duLieuForm       String?           @map("du_lieu_form") @db.LongText
   nguoiTaoId       Int               @map("nguoi_tao_id")
   ngayTao          DateTime          @default(now()) @map("ngay_tao")
-  ngayCapNhat      DateTime          @updatedAt @map("ngay_cap_nhat")
 
   // Relations
   quyTrinh         QuyTrinh          @relation(fields: [quyTrinhId], references: [id], onDelete: Cascade)
