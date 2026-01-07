@@ -76,14 +76,15 @@ export class ApprovalsService {
     }
 
     async updateFlow(id: number, data: any) {
-        // Simple update for renaming/description. Full update is complex for dynamic flows.
+        const updateData: any = {};
+        if (data.name !== undefined) updateData.ten = data.name;
+        if (data.description !== undefined) updateData.moTa = data.description;
+        if (data.danhMucId !== undefined) updateData.danhMucId = data.danhMucId ? Number(data.danhMucId) : null;
+        if (data.trangThai || data.status) updateData.trangThai = (data.trangThai || data.status).toUpperCase();
+
         return this.prisma.quyTrinh.update({
             where: { id },
-            data: {
-                ten: data.name,
-                moTa: data.description,
-                trangThai: data.status?.toUpperCase(),
-            },
+            data: updateData,
         });
     }
 
@@ -134,7 +135,9 @@ export class ApprovalsService {
         return this.prisma.quyTrinh.findMany({
             include: {
                 _count: { select: { cacBuoc: true } },
-                danhMuc: true // Include category info
+                danhMuc: true, // Include category info
+                cacBuoc: { include: { nguoiDuyets: true }, orderBy: { thuTuBuoc: 'asc' } },
+                cacTruong: { orderBy: { thuTu: 'asc' } }
             },
             orderBy: { ngayTao: 'desc' }
         });
