@@ -75,17 +75,27 @@ export class ApprovalsService {
         });
     }
 
-    async updateFlow(id: number, data: any) {
+    async updateFlow(id: number, payload: any) {
+        // Frontend sends { data: {...}, urlParams: {...} }, extract the actual data
+        const data = payload.data || payload;
+
         const updateData: any = {};
         if (data.name !== undefined) updateData.ten = data.name;
         if (data.description !== undefined) updateData.moTa = data.description;
         if (data.danhMucId !== undefined) updateData.danhMucId = data.danhMucId ? Number(data.danhMucId) : null;
-        if (data.trangThai || data.status) updateData.trangThai = (data.trangThai || data.status).toUpperCase();
+        if (data.trangThai !== undefined || data.status !== undefined) {
+            updateData.trangThai = (data.trangThai || data.status).toUpperCase();
+        }
 
-        return this.prisma.quyTrinh.update({
+        console.log('Updating flow:', id, 'with data:', updateData);
+
+        const result = await this.prisma.quyTrinh.update({
             where: { id },
             data: updateData,
         });
+
+        console.log('Update result:', result);
+        return result;
     }
 
     async addFlowStep(flowId: number, data: any) {
