@@ -329,7 +329,10 @@ export class ApprovalsService {
                 nguoiTaoId: userId,
                 ...(status ? { trangThai: status.toUpperCase() as any } : {}),
             },
-            include: { quyTrinh: true },
+            include: {
+                quyTrinh: { include: { danhMuc: true } },
+                nguoiTao: { select: { id: true, taiKhoan: true, hoTen: true, email: true } }
+            },
             orderBy: { ngayTao: 'desc' },
         });
     }
@@ -338,12 +341,27 @@ export class ApprovalsService {
         return this.prisma.phienQuyTrinh.findUnique({
             where: { id },
             include: {
-                quyTrinh: true,
+                quyTrinh: {
+                    include: {
+                        danhMuc: true,
+                        cacBuoc: {
+                            include: {
+                                nguoiDuyets: {
+                                    include: {
+                                        user: { select: { id: true, hoTen: true, taiKhoan: true, email: true } }
+                                    }
+                                }
+                            },
+                            orderBy: { thuTuBuoc: 'asc' }
+                        }
+                    }
+                },
+                nguoiTao: { select: { id: true, hoTen: true, taiKhoan: true, email: true } },
                 buocPhiens: {
                     include: { buoc: true },
                 },
                 nhatKy: {
-                    include: { nguoiDung: { select: { id: true, taiKhoan: true } } },
+                    include: { nguoiDung: { select: { id: true, hoTen: true, taiKhoan: true } } },
                     orderBy: { ngayTao: 'asc' },
                 },
             },
