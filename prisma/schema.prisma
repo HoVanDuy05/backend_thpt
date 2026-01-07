@@ -487,6 +487,7 @@ enum LoaiTinNhan {
   VAN_BAN
   HINH_ANH
   TEP_TIN
+  GHI_AM
 }
 
 model TinNhan {

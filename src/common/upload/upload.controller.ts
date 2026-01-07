@@ -41,4 +41,17 @@ export class UploadController {
             public_id: result.public_id,
         };
     }
+
+    @Post('audio')
+    @UseInterceptors(FileInterceptor('file'))
+    async uploadAudio(@UploadedFile() file: Express.Multer.File) {
+        if (!file) {
+            throw new BadRequestException('Vui lòng chọn file');
+        }
+        const result = await this.cloudinaryService.uploadFile(file, 'upload/audio');
+        return {
+            url: result.secure_url,
+            public_id: result.public_id,
+        };
+    }
 }
