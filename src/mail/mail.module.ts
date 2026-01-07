@@ -12,14 +12,18 @@ import { join } from 'path';
             // or
             transport: {
                 host: process.env.MAIL_HOST || 'smtp.example.com',
-                secure: false,
+                port: parseInt(process.env.MAIL_PORT || '587'),
+                secure: process.env.MAIL_SECURE === 'true', // true for 465, false for 587
                 auth: {
                     user: process.env.MAIL_USER || 'user@example.com',
                     pass: process.env.MAIL_PASS || 'password',
                 },
+                tls: {
+                    rejectUnauthorized: false // Helps with some SMTP providers
+                }
             },
             defaults: {
-                from: '"Hệ thống Trường học" <noreply@school.com>',
+                from: `"${process.env.MAIL_FROM_NAME || 'NHers Academy'}" <${process.env.MAIL_FROM_EMAIL || 'noreply@school.com'}>`,
             },
             template: {
                 dir: join(__dirname, 'templates'),
