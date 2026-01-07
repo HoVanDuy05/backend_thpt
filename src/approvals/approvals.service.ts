@@ -87,15 +87,78 @@ export class ApprovalsService {
             updateData.trangThai = (data.trangThai || data.status).toUpperCase();
         }
 
-        console.log('Updating flow:', id, 'with data:', updateData);
+        console.log('Updating flow:', id, 'with basic info:', updateData);
 
-        const result = await this.prisma.quyTrinh.update({
-            where: { id },
-            data: updateData,
+        // We use a transaction to ensure atomic update of steps and fields
+        return this.prisma.$transaction(async (tx) => {
+            // 1. Update basic info
+            const result = await tx.quyTrinh.update({
+                where: { id },
+                data: updateData,
+            });
+
+            // 2. Sync Steps if provided
+            if (data.steps) {
+                console.log('Syncing steps for flow:', id);
+                // Simple approach: Delete and recreate
+                await tx.buocQuyTrinh.deleteMany({ where: { quyTrinhId: id } });
+
+                for (const [index, step] of data.steps.entries()) {
+                    const isSpecificUser = !isNaN(Number(step.approverType));
+                    let approverConfig = {};
+
+                    if (step.approverType) {
+                        if (isSpecificUser) {
+                            approverConfig = {
+                                create: {
+                                    loaiNguoiPheDuyet: LoaiNguoiPheDuyet.NGUOI_DUNG_CU_THE,
+                                    approverId: Number(step.approverType),
+                                }
+                            };
+                        } else {
+                            approverConfig = {
+                                create: {
+                                    loaiNguoiPheDuyet: LoaiNguoiPheDuyet.VAI_TRO,
+                                    approverRole: step.approverType.replace('ROLE_', ''),
+                                }
+                            };
+                        }
+                    }
+
+                    await tx.buocQuyTrinh.create({
+                        data: {
+                            quyTrinhId: id,
+                            thuTuBuoc: index + 1,
+                            ten: step.name || `Cấp duyệt ${index + 1}`,
+                            loaiQuyTac: step.rule === 'all' ? LoaiQuyTacBuoc.TAT_CA : LoaiQuyTacBuoc.BAT_KY,
+                            nguoiDuyets: approverConfig
+                        }
+                    });
+                }
+            }
+
+            // 3. Sync Fields if provided
+            if (data.fields) {
+                console.log('Syncing fields for flow:', id);
+                await tx.truongFormQuyTrinh.deleteMany({ where: { quyTrinhId: id } });
+
+                for (const [index, field] of data.fields.entries()) {
+                    await tx.truongFormQuyTrinh.create({
+                        data: {
+                            quyTrinhId: id,
+                            tenTruong: field.label,
+                            nhan: field.label,
+                            loai: field.type,
+                            batBuoc: field.required || false,
+                            tuyChon: (field.options as any) || undefined,
+                            thuTu: index + 1,
+                        }
+                    });
+                }
+            }
+
+            return result;
         });
-
-        console.log('Update result:', result);
-        return result;
     }
 
     async addFlowStep(flowId: number, data: any) {
