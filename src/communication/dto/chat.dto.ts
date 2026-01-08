@@ -39,4 +39,9 @@ export class CreateMessageDto {
     @IsOptional()
     @IsString()
     duongDanTep?: string;
+
+    @ApiProperty({ description: 'ID tin nhắn gốc (Nếu là phản hồi)' })
+    @IsOptional()
+    @IsNumber()
+    tinNhanGocId?: number;
 }

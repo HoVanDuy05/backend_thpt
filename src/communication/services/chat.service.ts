@@ -187,11 +187,18 @@ export class ChatService {
         });
         if (!isMember) throw new ForbiddenException('You are not a member of this channel');
 
+        const { tinNhanGocId, ...messageData } = createMessageDto;
+
         // Create message
         const message = await this.prisma.tinNhan.create({
             data: {
-                ...createMessageDto,
-                nguoiGuiId: userId
+                ...messageData,
+                nguoiGuiId: userId,
+                ...(tinNhanGocId ? {
+                    tinNhanGoc: {
+                        connect: { id: tinNhanGocId }
+                    }
+                } : {})
             },
             include: {
                 nguoiGui: {
