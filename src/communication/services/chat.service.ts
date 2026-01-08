@@ -231,29 +231,40 @@ export class ChatService {
             console.error('Socket emit error:', error);
         }
 
-        // Create notifications for other members (for direct messages)
-        if (message.kenhChat.loaiKenh === LoaiKenhChat.CA_NHAN) {
-            const otherMembers = message.kenhChat.thanhViens
-                .filter(member => member.nguoiDungId !== userId)
-                .map(member => member.nguoiDungId);
+        // Create notifications for other members
+        const otherMembers = message.kenhChat.thanhViens
+            .filter(member => member.nguoiDungId !== userId)
+            .map(member => member.nguoiDungId);
 
-            for (const memberId of otherMembers) {
-                // Create notification
-                await this.notificationService.create({
-                    tieuDe: 'Tin nhắn mới',
-                    noiDung: `${message.nguoiGui.hoSoHocSinh?.hoTen || message.nguoiGui.hoSoGiaoVien?.hoTen || message.nguoiGui.taiKhoan} đã gửi cho bạn một tin nhắn`,
-                    nguoiNhanId: memberId,
-                    lienKet: `/${locale}/chat?id=${message.kenhChatId}`,
-                    loai: 'TIN_NHAN' as any
-                });
+        for (const memberId of otherMembers) {
+            const senderName = message.nguoiGui.hoSoHocSinh?.hoTen ||
+                message.nguoiGui.hoSoGiaoVien?.hoTen ||
+                message.nguoiGui.taiKhoan;
 
-                // Send real-time notification
-                this.websocketGateway.emitToUser(memberId, 'notification:new', {
-                    type: 'message',
-                    message: message,
-                    channel: message.kenhChat
-                });
-            }
+            const isGroup = message.kenhChat.loaiKenh === LoaiKenhChat.NHOM;
+            const channelName = isGroup ? (message.kenhChat as any).tenKenh : '';
+
+            const notificationContent = message.loai === 'VAN_BAN'
+                ? (message.noiDung ?? '')
+                : message.loai === 'HINH_ANH' ? '📷 Ảnh' :
+                    message.loai === 'GHI_AM' ? '🎤 Tin nhắn thoại' : '📎 Tệp đính kèm';
+
+            // Create notification record
+            await this.notificationService.create({
+                tieuDe: isGroup ? `${senderName} trong ${channelName}` : senderName,
+                noiDung: notificationContent,
+                nguoiNhanId: memberId,
+                lienKet: `/${locale}/chat?id=${message.kenhChatId}`,
+                loai: 'TIN_NHAN' as any
+            });
+
+            // Send real-time notification (already handled by websocketGateway emitting to user in step 2 above)
+            // But we can add a specific notification event if needed for non-chat pages
+            this.websocketGateway.emitToUser(memberId, 'notification:new', {
+                type: 'message',
+                message: message,
+                channel: message.kenhChat
+            });
         }
 
         return message;
