@@ -11,14 +11,15 @@ export class PushService {
         private configService: ConfigService,
         private prisma: PrismaService,
     ) {
-        const publicKey = this.configService.get<string>('VAPID_PUBLIC_KEY');
+        const publicKey = this.configService.get<string>('VAPID_PUBLIC_KEY') || 'BLwohOk-X447v2Y097jpn9f6QHAZh6pQAptJ-UMHmjjdDVUqWk3x8zBSG7j1N5NpHzCDA6zc_Wfq-I3HHUgOWXw';
         const privateKey = this.configService.get<string>('VAPID_PRIVATE_KEY');
-        const email = this.configService.get<string>('VAPID_EMAIL') || 'mailto:admin@example.com';
+        const email = this.configService.get<string>('VAPID_EMAIL') || 'mailto:admin@thpt-nguyenhue.edu.vn';
 
         if (publicKey && privateKey) {
             webpush.setVapidDetails(email, publicKey, privateKey);
+            this.logger.log('VAPID details configured successfully.');
         } else {
-            this.logger.warn('VAPID keys are not configured. Background push notifications will not work.');
+            this.logger.warn('VAPID keys (especially private key) are not fully configured. Background push notifications may not reach users.');
         }
     }
 

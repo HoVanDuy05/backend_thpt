@@ -209,19 +209,19 @@ export class ChatService {
             }
         });
 
-        // Emit real-time message to channel
+        // 1. Emit to channel (for active chat windows)
         this.websocketGateway.emitNewMessage(createMessageDto.kenhChatId, message);
 
-        // Also emit to each member directly (so it works even if they haven't joined the room yet)
+        // 2. Emit to each member (for sidebar updates & multi-device sync)
         try {
             const members = (message as any)?.kenhChat?.thanhViens || [];
             for (const m of members) {
                 const memberId = m?.nguoiDungId;
-                if (!memberId || memberId === userId) continue;
+                if (!memberId) continue;
                 this.websocketGateway.emitToUser(memberId, 'message:new', message);
             }
-        } catch {
-            // ignore socket delivery errors
+        } catch (error) {
+            console.error('Socket emit error:', error);
         }
 
         // Create notifications for other members (for direct messages)

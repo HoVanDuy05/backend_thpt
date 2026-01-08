@@ -47,6 +47,9 @@ export class WebsocketGateway implements OnGatewayConnection, OnGatewayDisconnec
             this.userSockets.set(userId, client.id);
             client.data.userId = userId;
 
+            // Join user-specific room for multi-device support
+            client.join(`user:${userId}`);
+
             this.server.emit('presence:update', {
                 userId,
                 online: true,
@@ -147,6 +150,7 @@ export class WebsocketGateway implements OnGatewayConnection, OnGatewayDisconnec
 
     // Emit events from services
     emitNewMessage(channelId: number, message: any) {
+        // Emit to channel room (active listeners)
         this.server.to(`channel:${channelId}`).emit('message:new', message);
     }
 
@@ -167,9 +171,7 @@ export class WebsocketGateway implements OnGatewayConnection, OnGatewayDisconnec
     }
 
     emitToUser(userId: number, event: string, data: any) {
-        const socketId = this.userSockets.get(userId);
-        if (socketId) {
-            this.server.to(socketId).emit(event, data);
-        }
+        // Emit to all devices of this user
+        this.server.to(`user:${userId}`).emit(event, data);
     }
 }

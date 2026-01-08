@@ -29,8 +29,8 @@ export class PushController {
             data: {
                 userId,
                 endpoint,
-                p256dh: keys?.p256dh,
-                auth: keys?.auth,
+                p256dh: keys?.p256dh || subscription.p256dh,
+                auth: keys?.auth || subscription.auth,
                 thietBi: thietBi || 'Unknown Device',
             },
         });
