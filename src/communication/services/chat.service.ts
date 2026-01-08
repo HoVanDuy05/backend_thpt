@@ -244,8 +244,8 @@ export class ChatService {
             const isGroup = message.kenhChat.loaiKenh === LoaiKenhChat.NHOM;
             const channelName = isGroup ? (message.kenhChat as any).tenKenh : '';
 
-            const notificationContent = message.loai === 'VAN_BAN'
-                ? (message.noiDung ?? '')
+            const notificationContent: string = message.loai === 'VAN_BAN'
+                ? (message.noiDung || '')
                 : message.loai === 'HINH_ANH' ? '📷 Ảnh' :
                     message.loai === 'GHI_AM' ? '🎤 Tin nhắn thoại' : '📎 Tệp đính kèm';
 
