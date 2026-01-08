@@ -31,6 +31,8 @@ export class ChatController {
     @Post('messages')
     @ApiOperation({ summary: 'Gửi tin nhắn' })
     sendMessage(@Request() req, @Body() createMessageDto: CreateMessageDto) {
-        return this.chatService.sendMessage(req.user.userId, createMessageDto);
+        const referer = req.headers.referer || '';
+        const locale = referer.includes('/en/') ? 'en' : 'vi';
+        return this.chatService.sendMessage(req.user.userId, createMessageDto, locale);
     }
 }

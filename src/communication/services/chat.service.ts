@@ -180,7 +180,7 @@ export class ChatService {
         });
     }
 
-    async sendMessage(userId: number, createMessageDto: CreateMessageDto) {
+    async sendMessage(userId: number, createMessageDto: CreateMessageDto, locale: string = 'vi') {
         // Check membership
         const isMember = await this.prisma.thanhVienKenh.findUnique({
             where: { kenhChatId_nguoiDungId: { kenhChatId: createMessageDto.kenhChatId, nguoiDungId: userId } }
@@ -236,7 +236,7 @@ export class ChatService {
                     tieuDe: 'Tin nhắn mới',
                     noiDung: `${message.nguoiGui.hoSoHocSinh?.hoTen || message.nguoiGui.hoSoGiaoVien?.hoTen || message.nguoiGui.taiKhoan} đã gửi cho bạn một tin nhắn`,
                     nguoiNhanId: memberId,
-                    lienKet: `/chat?channel=${message.kenhChatId}`,
+                    lienKet: `/${locale}/chat?id=${message.kenhChatId}`,
                     loai: 'TIN_NHAN' as any
                 });
 
