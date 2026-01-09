@@ -287,11 +287,12 @@ export class ChatService {
                     message.loai === 'GHI_AM' ? '🎤 Tin nhắn thoại' : '📎 Tệp đính kèm';
 
             // Create notification record
+            const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
             await this.notificationService.create({
                 tieuDe: isGroup ? `${senderName} trong ${channelName}` : senderName,
                 noiDung: notificationContent,
                 nguoiNhanId: memberId,
-                lienKet: `/${locale}/chat?id=${message.kenhChatId}`,
+                lienKet: `${frontendUrl}/${locale}/chat?id=${message.kenhChatId}`,
                 loai: 'TIN_NHAN' as any
             });
 
