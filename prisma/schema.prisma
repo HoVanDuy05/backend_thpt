@@ -516,10 +516,13 @@ model TinNhan {
   duongDanTep  String?     @map("duong_dan_tep") @db.Text // URL for image/file
   ngayGui      DateTime    @default(now()) @map("ngay_gui")
   daSua        Boolean     @default(false) @map("da_sua")
+  tinNhanGocId Int?        @map("tin_nhan_goc_id") // For replies
   
   // Relations
   kenhChat     KenhChat    @relation(fields: [kenhChatId], references: [id], onDelete: Cascade)
   nguoiGui     NguoiDung   @relation(fields: [nguoiGuiId], references: [id], onDelete: Cascade)
+  tinNhanGoc   TinNhan?    @relation("TinNhanPhanHoi", fields: [tinNhanGocId], references: [id], onDelete: SetNull)
+  phanHoi      TinNhan[]   @relation("TinNhanPhanHoi")
 
   @@map("tin_nhan")
 }
