@@ -5,8 +5,9 @@ import { Injectable } from '@nestjs/common';
 export class MailService {
     constructor(private mailerService: MailerService) { }
 
-    async sendWelcomeEmail(user: any) {
-        const url = `http://localhost:3000/auth/login`;
+    async sendWelcomeEmail(user: any, locale: string = 'vi') {
+        const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+        const url = `${frontendUrl}/${locale}/auth/login`;
 
         await this.mailerService.sendMail({
             to: user.email || user.taiKhoan, // Using taiKhoan if email is not provided in schema, but usually it should be an email
@@ -20,8 +21,9 @@ export class MailService {
         });
     }
 
-    async sendResetPasswordEmail(user: any, token: string) {
-        const url = `http://localhost:3000/auth/reset-password?token=${token}`;
+    async sendResetPasswordEmail(user: any, token: string, locale: string = 'vi') {
+        const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+        const url = `${frontendUrl}/${locale}/auth/reset-password?token=${token}`;
 
         await this.mailerService.sendMail({
             to: user.email,

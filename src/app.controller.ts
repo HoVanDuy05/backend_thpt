@@ -81,8 +81,9 @@ export class AppController {
   @ApiTags('Auth - Xác thực')
   @Public()
   @Post('auth/forgot-password')
-  async forgotPassword(@Body() body: { email: string }) {
-    return this.authService.forgotPassword(body.email);
+  @Post('auth/forgot-password')
+  async forgotPassword(@Body() body: { email: string; locale?: string }) {
+    return this.authService.forgotPassword(body.email, body.locale || 'vi');
   }
 
   @ApiTags('Auth - Xác thực')

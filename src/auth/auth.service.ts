@@ -82,7 +82,7 @@ export class AuthService {
         });
     }
 
-    async forgotPassword(email: string) {
+    async forgotPassword(email: string, locale: string = 'vi') {
         const user = await this.usersService.findByEmail(email);
         if (!user) {
             // Don't reveal if email exists
@@ -96,7 +96,7 @@ export class AuthService {
         );
 
         // In production: send email with reset link
-        await this.mailService.sendResetPasswordEmail(user, resetToken).catch(err => console.error('Reset email failed:', err));
+        await this.mailService.sendResetPasswordEmail(user, resetToken, locale).catch(err => console.error('Reset email failed:', err));
 
         return { message: 'Nếu email tồn tại, link reset đã được gửi' };
     }
