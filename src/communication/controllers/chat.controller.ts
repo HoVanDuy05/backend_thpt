@@ -35,4 +35,11 @@ export class ChatController {
         const locale = referer.includes('/en/') ? 'en' : 'vi';
         return this.chatService.sendMessage(req.user.userId, createMessageDto, locale);
     }
+
+    @Get('link-preview')
+    @ApiOperation({ summary: 'Lấy thông tin preview link' })
+    @ApiQuery({ name: 'url', required: true })
+    getLinkPreview(@Query('url') url: string) {
+        return this.chatService.getLinkPreview(url);
+    }
 }

@@ -1,9 +1,11 @@
-import { Injectable, NotFoundException, ForbiddenException, Inject, forwardRef } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException, Inject, forwardRef, HttpException, HttpStatus } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateChannelDto, CreateMessageDto } from '../dto/chat.dto';
 import { LoaiKenhChat, TrangThaiBanBe } from '@prisma/client';
 import { WebsocketGateway } from '../websocket.gateway';
 import { NotificationService } from './notification.service';
+import * as cheerio from 'cheerio';
+import axios from 'axios';
 
 @Injectable()
 export class ChatService {
@@ -14,6 +16,41 @@ export class ChatService {
         @Inject(forwardRef(() => NotificationService))
         private notificationService: NotificationService
     ) { }
+
+    async getLinkPreview(url: string) {
+        try {
+            const { data } = await axios.get(url, {
+                headers: {
+                    'User-Agent': 'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)',
+                },
+                timeout: 5000
+            });
+            const $ = cheerio.load(data);
+
+            const getMetaTag = (name: string) =>
+                $(`meta[property="${name}"]`).attr('content') ||
+                $(`meta[name="${name}"]`).attr('content') ||
+                $(`meta[itemprop="${name}"]`).attr('content');
+
+            return {
+                url,
+                title: getMetaTag('og:title') || $('title').text() || '',
+                description: getMetaTag('og:description') || getMetaTag('description') || '',
+                image: getMetaTag('og:image') || getMetaTag('image') || '',
+                domain: new URL(url).hostname
+            };
+        } catch (error) {
+            console.error('Link preview failed:', error.message);
+            // Return basic info if fetch fails
+            return {
+                url,
+                title: url,
+                description: '',
+                image: '',
+                domain: new URL(url).hostname // Safe assuming valid URL passed
+            };
+        }
+    }
 
     async createChannel(userId: number, createChannelDto: CreateChannelDto) {
         if (createChannelDto.loaiKenh === LoaiKenhChat.CA_NHAN) {
