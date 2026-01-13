@@ -51,9 +51,19 @@ export class SocialController {
         return this.socialService.getActivity(req.user.userId, limit ? +limit : 20);
     }
 
-    @Get('users/profile/:id')
-    getUserProfile(@Param('id') id: string) {
-        return this.socialService.getUserSocialProfile(+id);
+    @Get('profile/:id')
+    getSocialProfile(@Request() req: any, @Param('id') id: string) {
+        return this.socialService.getUserSocialProfile(+id, req.user?.userId);
+    }
+
+    @Get('trending')
+    getTrending() {
+        return this.socialService.getTrending();
+    }
+
+    @Get('suggested-users')
+    getSuggestedUsers(@Request() req: any, @Query('limit') limit?: string) {
+        return this.socialService.getSuggestedUsers(req.user.userId, limit ? +limit : 5);
     }
 
     // Friend Requests endpoints

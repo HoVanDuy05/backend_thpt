@@ -289,7 +289,7 @@ export class SocialService {
         return activity;
     }
 
-    async getUserSocialProfile(userId: number) {
+    async getUserSocialProfile(userId: number, requesterId?: number) {
         const user = await this.prisma.nguoiDung.findUnique({
             where: { id: userId },
             select: {
@@ -298,6 +298,19 @@ export class SocialService {
                 hoTen: true,
                 avatar: true,
                 vaiTro: true,
+                email: true,
+                hoSoHocSinh: {
+                    select: {
+                        hoTen: true,
+                        lopHoc: { select: { id: true, tenLop: true } }
+                    }
+                },
+                hoSoGiaoVien: {
+                    select: {
+                        hoTen: true,
+                        chuyenMon: true
+                    }
+                },
                 _count: {
                     select: {
                         threads: true,
@@ -309,6 +322,79 @@ export class SocialService {
         });
 
         if (!user) throw new NotFoundException('Không tìm thấy người dùng');
-        return user;
+
+        let isFollowing = false;
+        let friendshipStatus: 'NONE' | 'FRIEND' | 'SENT' | 'RECEIVED' | 'BLOCKED' = 'NONE';
+
+        if (requesterId && requesterId !== userId) {
+            // Check follow status
+            const follow = await this.prisma.flowTheoDoi.findUnique({
+                where: {
+                    nguoiTheoDoiId_nguoiDuocTheoDoiId: {
+                        nguoiTheoDoiId: requesterId,
+                        nguoiDuocTheoDoiId: userId
+                    }
+                }
+            });
+            isFollowing = !!follow;
+
+            // Check friendship status
+            const friendship = await this.prisma.ketBan.findFirst({
+                where: {
+                    OR: [
+                        { nguoiGuiId: requesterId, nguoiNhanId: userId },
+                        { nguoiGuiId: userId, nguoiNhanId: requesterId }
+                    ]
+                }
+            });
+
+            if (friendship) {
+                if (friendship.trangThai === 'DA_KET_BAN') friendshipStatus = 'FRIEND';
+                else if (friendship.trangThai === 'BI_CHAN') friendshipStatus = 'BLOCKED';
+                else if (friendship.nguoiGuiId === requesterId) friendshipStatus = 'SENT';
+                else friendshipStatus = 'RECEIVED';
+            }
+        }
+
+        return {
+            ...user,
+            isFollowing,
+            friendshipStatus
+        };
+    }
+
+    async getTrending() {
+        // Return some mock trending topics for now but from API
+        // In a real app, this would query a Hashtag table or analyze thread content
+        return [
+            { id: 1, name: 'SchoolLife', category: 'Trending in Vietnam', count: '12.5K' },
+            { id: 2, name: 'NextJS', category: 'Technology', count: '8.2K' },
+            { id: 3, name: 'DeepMind', category: 'AI', count: '15.1K' },
+            { id: 4, name: 'Programming', category: 'Education', count: '5.4K' },
+        ];
+    }
+
+    async getSuggestedUsers(userId: number, limit = 5) {
+        // Get users that current user is NOT following
+        const following = await this.prisma.flowTheoDoi.findMany({
+            where: { nguoiTheoDoiId: userId },
+            select: { nguoiDuocTheoDoiId: true },
+        });
+
+        const followingIds = following.map(f => f.nguoiDuocTheoDoiId);
+        followingIds.push(userId); // Don't suggest self
+
+        return this.prisma.nguoiDung.findMany({
+            where: {
+                id: { notIn: followingIds }
+            },
+            select: {
+                id: true,
+                taiKhoan: true,
+                hoTen: true,
+                avatar: true,
+            },
+            take: limit,
+        });
     }
 }

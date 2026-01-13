@@ -57,6 +57,21 @@ export class FriendsService {
             requestId: request.id
         });
 
+        // Tự động follow khi gửi lời mời kết bạn (Kết bạn thì sẽ flow)
+        await this.prisma.flowTheoDoi.upsert({
+            where: {
+                nguoiTheoDoiId_nguoiDuocTheoDoiId: {
+                    nguoiTheoDoiId: senderId,
+                    nguoiDuocTheoDoiId: receiverId
+                }
+            },
+            update: {},
+            create: {
+                nguoiTheoDoiId: senderId,
+                nguoiDuocTheoDoiId: receiverId
+            }
+        });
+
         return request;
     }
 
@@ -93,6 +108,21 @@ export class FriendsService {
             type: 'accepted',
             userId: requesterId,
             friendshipId: friendship.id
+        });
+
+        // Tự động follow lại khi đồng ý kết bạn (Kết bạn thì sẽ flow - mutual follow)
+        await this.prisma.flowTheoDoi.upsert({
+            where: {
+                nguoiTheoDoiId_nguoiDuocTheoDoiId: {
+                    nguoiTheoDoiId: userId,
+                    nguoiDuocTheoDoiId: requesterId
+                }
+            },
+            update: {},
+            create: {
+                nguoiTheoDoiId: userId,
+                nguoiDuocTheoDoiId: requesterId
+            }
         });
 
         return friendship;

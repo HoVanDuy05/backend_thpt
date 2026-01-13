@@ -59,6 +59,8 @@ export class ChatService {
                 // Special case for self-chat or missing IDs
                 // For now, let's just enforce friendId
             } else {
+                // Removed friendship requirement check as per user request
+                /*
                 const friendship = await this.prisma.ketBan.findFirst({
                     where: {
                         OR: [
@@ -71,6 +73,7 @@ export class ChatService {
                 if (!friendship) {
                     throw new ForbiddenException('Chỉ có thể nhắn tin cho người đã kết bạn');
                 }
+                */
 
                 // Check existing 1-1 channel
                 const existingChannel = await this.prisma.kenhChat.findFirst({
@@ -224,41 +227,47 @@ export class ChatService {
         });
         if (!isMember) throw new ForbiddenException('You are not a member of this channel');
 
-        const { tinNhanGocId, ...messageData } = createMessageDto;
+        const { tinNhanGocId, kenhChatId, ...messageData } = createMessageDto;
 
         // Create message
         const message = await this.prisma.tinNhan.create({
             data: {
-                ...messageData,
-                nguoiGuiId: userId,
+                ...(messageData as any),
+                nguoiGui: { connect: { id: userId } },
+                kenhChat: { connect: { id: kenhChatId } },
                 ...(tinNhanGocId ? {
-                    tinNhanGoc: {
-                        connect: { id: tinNhanGocId }
-                    }
+                    tinNhanGoc: { connect: { id: tinNhanGocId } }
                 } : {})
             },
             include: {
                 nguoiGui: {
-                    select: { id: true, taiKhoan: true, hoSoHocSinh: { select: { hoTen: true } }, hoSoGiaoVien: { select: { hoTen: true } } }
+                    select: {
+                        id: true,
+                        taiKhoan: true,
+                        hoTen: true,
+                        hoSoHocSinh: { select: { hoTen: true } },
+                        hoSoGiaoVien: { select: { hoTen: true } }
+                    }
                 },
                 kenhChat: {
                     select: {
                         id: true,
                         loaiKenh: true,
+                        tenKenh: true,
                         thanhViens: {
                             select: { nguoiDungId: true }
                         }
                     }
                 }
             }
-        });
+        }) as any; // Cast to any to bypass inference issues if build still struggles
 
         // 1. Emit to channel (for active chat windows)
         this.websocketGateway.emitNewMessage(createMessageDto.kenhChatId, message);
 
         // 2. Emit to each member (for sidebar updates & multi-device sync)
         try {
-            const members = (message as any)?.kenhChat?.thanhViens || [];
+            const members = message?.kenhChat?.thanhViens || [];
             for (const m of members) {
                 const memberId = m?.nguoiDungId;
                 if (!memberId) continue;
@@ -270,16 +279,17 @@ export class ChatService {
 
         // Create notifications for other members
         const otherMembers = message.kenhChat.thanhViens
-            .filter(member => member.nguoiDungId !== userId)
-            .map(member => member.nguoiDungId);
+            .filter((member: any) => member.nguoiDungId !== userId)
+            .map((member: any) => member.nguoiDungId);
 
         for (const memberId of otherMembers) {
-            const senderName = message.nguoiGui.hoSoHocSinh?.hoTen ||
+            const senderName = message.nguoiGui.hoTen ||
+                message.nguoiGui.hoSoHocSinh?.hoTen ||
                 message.nguoiGui.hoSoGiaoVien?.hoTen ||
                 message.nguoiGui.taiKhoan;
 
             const isGroup = message.kenhChat.loaiKenh === LoaiKenhChat.NHOM;
-            const channelName = isGroup ? (message.kenhChat as any).tenKenh : '';
+            const channelName = isGroup ? message.kenhChat.tenKenh : '';
 
             const notificationContent: string = message.loai === 'VAN_BAN'
                 ? (message.noiDung || '')
@@ -296,8 +306,7 @@ export class ChatService {
                 loai: 'TIN_NHAN' as any
             });
 
-            // Send real-time notification (already handled by websocketGateway emitting to user in step 2 above)
-            // But we can add a specific notification event if needed for non-chat pages
+            // Send real-time notification
             this.websocketGateway.emitToUser(memberId, 'notification:new', {
                 type: 'message',
                 message: message,
