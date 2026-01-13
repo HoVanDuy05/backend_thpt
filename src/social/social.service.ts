@@ -1,21 +1,42 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { WebsocketGateway } from '../communication/websocket.gateway';
 
 @Injectable()
 export class SocialService {
-    constructor(private prisma: PrismaService) { }
+    constructor(
+        private prisma: PrismaService,
+        private websocketGateway: WebsocketGateway
+    ) { }
 
     // --- THREADS ---
 
     async createThread(userId: number, data: { noiDung: string; hinhAnh?: string; threadChaId?: number }) {
-        return this.prisma.thread.create({
+        const thread = await this.prisma.thread.create({
             data: {
                 tacGiaId: userId,
                 noiDung: data.noiDung,
                 hinhAnh: data.hinhAnh,
                 threadChaId: data.threadChaId,
             },
+            include: {
+                threadCha: {
+                    select: { tacGiaId: true }
+                }
+            }
         });
+
+        // Nếu là phản hồi, thông báo cho tác giả bài viết gốc
+        if (data.threadChaId && thread.threadCha?.tacGiaId && thread.threadChaId !== userId) {
+            this.websocketGateway.emitToUser(thread.threadCha.tacGiaId, 'activity:new', {
+                type: 'REPLY',
+                senderId: userId,
+                threadId: thread.id,
+                parentId: data.threadChaId
+            });
+        }
+
+        return thread;
     }
 
     async getFeed(userId: number, limit = 20, cursor?: number) {
@@ -112,9 +133,22 @@ export class SocialService {
             await this.prisma.threadLike.delete({ where: { id: existing.id } });
             return { liked: false };
         } else {
-            await this.prisma.threadLike.create({
+            const like = await this.prisma.threadLike.create({
                 data: { threadId, nguoiDungId: userId },
+                include: {
+                    thread: { select: { tacGiaId: true } }
+                }
             });
+
+            // Thông báo cho tác giả bài viết
+            if (like.thread.tacGiaId !== userId) {
+                this.websocketGateway.emitToUser(like.thread.tacGiaId, 'activity:new', {
+                    type: 'LIKE',
+                    senderId: userId,
+                    threadId
+                });
+            }
+
             return { liked: true };
         }
     }
@@ -143,6 +177,13 @@ export class SocialService {
                     nguoiDuocTheoDoiId: followingId,
                 },
             });
+
+            // Thông báo cho người được theo dõi
+            this.websocketGateway.emitToUser(followingId, 'activity:new', {
+                type: 'FOLLOW',
+                senderId: followerId
+            });
+
             return { following: true };
         }
     }

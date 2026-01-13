@@ -43,7 +43,7 @@ export class AuthService {
 
         if (!user) {
             // Failure logging would be good here too, but for now successful
-            throw new UnauthorizedException('Thông tin đăng nhập không chính xác');
+            throw new UnauthorizedException('validation.invalid_credentials');
         }
 
         // Record login history
@@ -69,7 +69,7 @@ export class AuthService {
         // Simple registration - in production, hash password with bcrypt
         const existingUser = await this.usersService.findByEmail(registerDto.email);
         if (existingUser) {
-            throw new UnauthorizedException('Email đã được sử dụng');
+            throw new UnauthorizedException('validation.email_in_use');
         }
 
         // Generate taiKhoan from email
@@ -105,12 +105,12 @@ export class AuthService {
         try {
             const decoded = this.jwtService.verify(token);
             if (decoded.purpose !== 'reset') {
-                throw new UnauthorizedException('Token không hợp lệ');
+                throw new UnauthorizedException('validation.invalid_token');
             }
 
             const user = await this.usersService.findByEmail(decoded.email);
             if (!user) {
-                throw new UnauthorizedException('User không tồn tại');
+                throw new UnauthorizedException('validation.user_not_found');
             }
 
             // Update password (in production, hash it)
@@ -121,7 +121,7 @@ export class AuthService {
 
             return { message: 'Mật khẩu đã được cập nhật' };
         } catch (error) {
-            throw new UnauthorizedException('Token không hợp lệ hoặc đã hết hạn');
+            throw new UnauthorizedException('validation.token_expired');
         }
     }
 
@@ -217,7 +217,7 @@ export class AuthService {
     async getProfile(userId: number) {
         const user = await this.usersService.findUserProfile(userId);
         if (!user) {
-            throw new UnauthorizedException('Không tìm thấy thông tin người dùng.');
+            throw new UnauthorizedException('validation.user_not_found');
         }
         // Remove password from response just in case
         const { matKhau, ...result } = user;
@@ -240,7 +240,7 @@ export class AuthService {
 
         // Update role-specific profiles if exist
         const user = await this.prisma.nguoiDung.findUnique({ where: { id: userId } });
-        if (!user) throw new UnauthorizedException('Không tìm thấy thông tin người dùng.');
+        if (!user) throw new UnauthorizedException('validation.user_not_found');
 
         const ngaySinh = dto?.ngaySinh ? new Date(dto.ngaySinh) : undefined;
 
@@ -295,7 +295,7 @@ export class AuthService {
     }
 
     async updateAvatar(userId: number, avatarUrl: string) {
-        if (!avatarUrl) throw new UnauthorizedException('Avatar không hợp lệ.');
+        if (!avatarUrl) throw new UnauthorizedException('validation.invalid_avatar');
         await this.prisma.nguoiDung.update({
             where: { id: userId },
             data: { avatar: avatarUrl },

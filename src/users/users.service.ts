@@ -145,7 +145,7 @@ export class UsersService {
 
   findOne(id: number) {
     if (!id || Number.isNaN(id)) {
-      throw new BadRequestException('Invalid user id');
+      throw new BadRequestException('validation.invalid_user_id');
     }
     return this.prisma.nguoiDung.findUnique({
       where: { id },
@@ -154,7 +154,7 @@ export class UsersService {
 
   update(id: number, updateUserDto: UpdateUserDto) {
     if (!id || Number.isNaN(id)) {
-      throw new BadRequestException('Invalid user id');
+      throw new BadRequestException('validation.invalid_user_id');
     }
     return this.prisma.nguoiDung.update({
       where: { id },
@@ -164,7 +164,7 @@ export class UsersService {
 
   remove(id: number) {
     if (!id || Number.isNaN(id)) {
-      throw new BadRequestException('Invalid user id');
+      throw new BadRequestException('validation.invalid_user_id');
     }
     return this.prisma.nguoiDung.delete({
       where: { id },

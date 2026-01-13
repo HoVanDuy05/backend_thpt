@@ -2,13 +2,15 @@ import { Injectable, BadRequestException, NotFoundException, Inject, forwardRef 
 import { PrismaService } from '../../prisma/prisma.service';
 import { TrangThaiBanBe } from '@prisma/client';
 import { ChatService } from '../../communication/services/chat.service';
+import { WebsocketGateway } from '../../communication/websocket.gateway';
 
 @Injectable()
 export class FriendsService {
     constructor(
         private prisma: PrismaService,
         @Inject(forwardRef(() => ChatService))
-        private chatService: ChatService
+        private chatService: ChatService,
+        private websocketGateway: WebsocketGateway
     ) { }
 
     async sendRequest(senderId: number, receiverId: number) {
@@ -40,13 +42,22 @@ export class FriendsService {
             }
         }
 
-        return this.prisma.ketBan.create({
+        const request = await this.prisma.ketBan.create({
             data: {
                 nguoiGuiId: senderId,
                 nguoiNhanId: receiverId,
                 trangThai: TrangThaiBanBe.CHO_XAC_NHAN
             }
         });
+
+        // Emit socket event to receiver
+        this.websocketGateway.emitToUser(receiverId, 'friend:request', {
+            type: 'new',
+            senderId,
+            requestId: request.id
+        });
+
+        return request;
     }
 
     async acceptRequest(userId: number, requesterId: number) {
@@ -72,6 +83,18 @@ export class FriendsService {
         // Create chat channel for the new friends
         await this.chatService.createDirectMessageChannel(requesterId, userId);
 
+        // Emit socket event to both users
+        this.websocketGateway.emitToUser(requesterId, 'friend:request', {
+            type: 'accepted',
+            userId,
+            friendshipId: friendship.id
+        });
+        this.websocketGateway.emitToUser(userId, 'friend:request', {
+            type: 'accepted',
+            userId: requesterId,
+            friendshipId: friendship.id
+        });
+
         return friendship;
     }
 
@@ -89,9 +112,17 @@ export class FriendsService {
             throw new NotFoundException('Không tìm thấy lời mời kết bạn');
         }
 
-        return this.prisma.ketBan.delete({
+        const deleted = await this.prisma.ketBan.delete({
             where: { id: request.id }
         });
+
+        // Emit socket event to requester
+        this.websocketGateway.emitToUser(requesterId, 'friend:request', {
+            type: 'declined',
+            userId
+        });
+
+        return deleted;
     }
 
     async cancelRequest(userId: number, receiverId: number) {
