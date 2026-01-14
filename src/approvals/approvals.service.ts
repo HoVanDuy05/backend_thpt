@@ -263,7 +263,7 @@ export class ApprovalsService {
     // SUBMIT & APPROVAL FLOW
     // ==========================================
 
-    async submitFlowInstance(userId: number, data: any) {
+    async submitFlowInstance(userId: number, data: any, locale: string = 'vi') {
         const flow = await this.prisma.quyTrinh.findUnique({
             where: { id: data.flow_id },
             include: { cacBuoc: { orderBy: { thuTuBuoc: 'asc' } }, cacTruong: true },
@@ -310,11 +310,12 @@ export class ApprovalsService {
 
         // Send notification to Creator (Confirmation)
         if (instance.nguoiTao?.email) {
-            await this.mailService.sendApprovalNotification(instance.nguoiTao.email, {
+            const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+            this.mailService.sendApprovalNotification(instance.nguoiTao.email, {
                 title: flow.ten,
                 status: 'Đã gửi yêu cầu',
-                link: `http://localhost:3000/portal/approvals/${instance.id}`
-            });
+                link: `${frontendUrl}/${locale}/portal/approvals/${instance.id}`
+            }, locale).catch(err => console.error('Failed to send submission email:', err));
         }
 
         return {
@@ -414,7 +415,7 @@ export class ApprovalsService {
         });
     }
 
-    async approveStep(userId: number, instanceId: number, data: { note?: string }) {
+    async approveStep(userId: number, instanceId: number, data: { note?: string }, locale: string = 'vi') {
         const instance = await this.prisma.phienQuyTrinh.findUnique({
             where: { id: instanceId },
             include: {
@@ -467,11 +468,12 @@ export class ApprovalsService {
 
             // Notify creator
             if (instance.nguoiTao?.email) {
-                await this.mailService.sendApprovalNotification(instance.nguoiTao.email, {
+                const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+                this.mailService.sendApprovalNotification(instance.nguoiTao.email, {
                     title: instance.quyTrinh.ten,
                     status: 'Đã được duyệt bước: ' + stepDefinition.ten,
-                    link: `http://localhost:3000/portal/approvals/${instanceId}`
-                });
+                    link: `${frontendUrl}/${locale}/portal/approvals/${instanceId}`
+                }, locale).catch(err => console.error('Failed to send step approval email:', err));
             }
 
             // Move to next step
@@ -500,11 +502,12 @@ export class ApprovalsService {
 
                 // Notify final success
                 if (instance.nguoiTao?.email) {
-                    await this.mailService.sendApprovalNotification(instance.nguoiTao.email, {
+                    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+                    this.mailService.sendApprovalNotification(instance.nguoiTao.email, {
                         title: instance.quyTrinh.ten,
                         status: 'Đã được duyệt hoàn toàn! 🎉',
-                        link: `http://localhost:3000/portal/approvals/${instanceId}`
-                    });
+                        link: `${frontendUrl}/${locale}/portal/approvals/${instanceId}`
+                    }, locale).catch(err => console.error('Failed to send final approval email:', err));
                 }
 
                 return { status: 'approved_completely' };
@@ -514,10 +517,14 @@ export class ApprovalsService {
         return { status: 'partial_approval_recorded' };
     }
 
-    async rejectStep(userId: number, instanceId: number, data: { note?: string }) {
+    async rejectStep(userId: number, instanceId: number, data: { note?: string }, locale: string = 'vi') {
         const instance = await this.prisma.phienQuyTrinh.findUnique({
             where: { id: instanceId },
-            include: { buocPhiens: { where: { trangThai: TrangThaiBuocPhien.CHO_DUYET } } },
+            include: {
+                nguoiTao: true,
+                quyTrinh: true,
+                buocPhiens: { where: { trangThai: TrangThaiBuocPhien.CHO_DUYET } }
+            },
         });
 
         if (!instance) throw new NotFoundException('Instance not found');
@@ -550,6 +557,16 @@ export class ApprovalsService {
             where: { id: instanceId },
             data: { trangThai: TrangThaiPhien.TU_CHOI }, // Entire flow is rejected
         });
+
+        // Notify creator about rejection
+        if (instance.nguoiTao?.email) {
+            const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+            this.mailService.sendApprovalNotification(instance.nguoiTao.email, {
+                title: instance.quyTrinh.ten,
+                status: locale === 'vi' ? 'Đã bị từ chối ❌' : 'Rejected ❌',
+                link: `${frontendUrl}/${locale}/portal/approvals/${instanceId}`
+            }, locale).catch(err => console.error('Failed to send rejection email:', err));
+        }
 
         return { status: 'rejected' };
     }

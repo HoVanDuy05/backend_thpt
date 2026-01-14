@@ -72,7 +72,8 @@ export class ApprovalsController {
 
     @Post('submit-flow')
     submitInstance(@Request() req: any, @Body() data: any) {
-        return this.approvalsService.submitFlowInstance(req.user.userId, data);
+        const locale = req.headers['x-custom-lang'] || 'vi';
+        return this.approvalsService.submitFlowInstance(req.user.userId, data, locale);
     }
 
     @Get('my-flow')
@@ -87,12 +88,14 @@ export class ApprovalsController {
 
     @Post('flow-instance/:id/approve')
     approve(@Request() req: any, @Param('id') id: string, @Body() data: any) {
-        return this.approvalsService.approveStep(req.user.userId, +id, data);
+        const locale = req.headers['x-custom-lang'] || 'vi';
+        return this.approvalsService.approveStep(req.user.userId, +id, data, locale);
     }
 
     @Post('flow-instance/:id/reject')
     reject(@Request() req: any, @Param('id') id: string, @Body() data: any) {
-        return this.approvalsService.rejectStep(req.user.userId, +id, data);
+        const locale = req.headers['x-custom-lang'] || 'vi';
+        return this.approvalsService.rejectStep(req.user.userId, +id, data, locale);
     }
 
     @Get('flow-instance/:id/logs')

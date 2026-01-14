@@ -69,7 +69,7 @@ export class AuthService {
         };
     }
 
-    async register(registerDto: { email: string; matKhau: string; hoTen: string; soDienThoai: string }) {
+    async register(registerDto: { email: string; matKhau: string; hoTen: string; soDienThoai: string }, locale: string = 'vi') {
         const existingUser = await this.usersService.findByEmail(registerDto.email);
         if (existingUser) {
             throw new UnauthorizedException('validation.email_in_use');
@@ -95,12 +95,12 @@ export class AuthService {
         });
 
         // Send verification email
-        await this.mailService.sendVerificationEmail(user, maXacThuc).catch(err => console.error('Verification email failed:', err));
+        this.mailService.sendVerificationEmail(user, maXacThuc, locale).catch(err => console.error('Verification email failed:', err));
 
         return user;
     }
 
-    async verifyCode(email: string, code: string) {
+    async verifyCode(email: string, code: string, locale: string = 'vi') {
         const user = await this.usersService.findByEmail(email);
         if (!user) {
             throw new UnauthorizedException('validation.user_not_found');
@@ -119,12 +119,12 @@ export class AuthService {
         });
 
         // Send welcome email after successful activation
-        await this.mailService.sendWelcomeEmail(user).catch(err => console.error('Welcome email failed:', err));
+        this.mailService.sendWelcomeEmail(user, locale).catch(err => console.error('Welcome email failed:', err));
 
         return { message: 'validation.activation_success' };
     }
 
-    async resendCode(email: string) {
+    async resendCode(email: string, locale: string = 'vi') {
         const user = await this.usersService.findByEmail(email);
         if (!user) {
             throw new UnauthorizedException('validation.user_not_found');
@@ -141,7 +141,7 @@ export class AuthService {
             data: { maXacThuc }
         });
 
-        await this.mailService.sendVerificationEmail(user, maXacThuc).catch(err => console.error('Verification email failed:', err));
+        this.mailService.sendVerificationEmail(user, maXacThuc, locale).catch(err => console.error('Verification email failed:', err));
 
         return { message: 'validation.code_resent' };
     }
@@ -160,7 +160,7 @@ export class AuthService {
         );
 
         // In production: send email with reset link
-        await this.mailService.sendResetPasswordEmail(user, resetToken, locale).catch(err => console.error('Reset email failed:', err));
+        this.mailService.sendResetPasswordEmail(user, resetToken, locale).catch(err => console.error('Reset email failed:', err));
 
         return { message: 'Nếu email tồn tại, link reset đã được gửi' };
     }

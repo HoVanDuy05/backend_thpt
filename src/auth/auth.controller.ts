@@ -14,20 +14,23 @@ export class AuthController {
 
     @Public()
     @Post('register')
-    async register(@Body() registerDto: any) {
-        return this.authService.register(registerDto);
+    async register(@Body() registerDto: any, @Req() req) {
+        const locale = req.headers['x-custom-lang'] || 'vi';
+        return this.authService.register(registerDto, locale);
     }
 
     @Public()
     @Post('verify')
-    async verify(@Body() body: { email: string; code: string }) {
-        return this.authService.verifyCode(body.email, body.code);
+    async verify(@Body() body: { email: string; code: string }, @Req() req) {
+        const locale = req.headers['x-custom-lang'] || 'vi';
+        return this.authService.verifyCode(body.email, body.code, locale);
     }
 
     @Public()
     @Post('resend-code')
-    async resendCode(@Body() body: { email: string }) {
-        return this.authService.resendCode(body.email);
+    async resendCode(@Body() body: { email: string }, @Req() req) {
+        const locale = req.headers['x-custom-lang'] || 'vi';
+        return this.authService.resendCode(body.email, locale);
     }
 
     @Public()
