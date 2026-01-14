@@ -11,6 +11,7 @@ import { join } from 'path';
             // transport: 'smtps://user@example.com:topsecret@smtp.example.com',
             // or
             transport: {
+                service: (process.env.MAIL_HOST || '').includes('gmail') ? 'gmail' : undefined,
                 host: process.env.MAIL_HOST || 'smtp.example.com',
                 port: parseInt(process.env.MAIL_PORT || '587'),
                 secure: process.env.MAIL_SECURE === 'true', // true for 465, false for 587
@@ -19,7 +20,7 @@ import { join } from 'path';
                     pass: process.env.MAIL_PASS || 'password',
                 },
                 tls: {
-                    rejectUnauthorized: false // Helps with some SMTP providers
+                    rejectUnauthorized: false
                 }
             },
             defaults: {
