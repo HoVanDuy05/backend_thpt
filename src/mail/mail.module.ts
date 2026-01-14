@@ -10,11 +10,16 @@ import { join } from 'path';
         MailerModule.forRoot({
             // transport: 'smtps://user@example.com:topsecret@smtp.example.com',
             // or
-            transport: {
-                service: (process.env.MAIL_HOST || '').includes('gmail') ? 'gmail' : undefined,
+            transport: (process.env.MAIL_HOST || '').includes('gmail') ? {
+                service: 'gmail',
+                auth: {
+                    user: process.env.MAIL_USER,
+                    pass: process.env.MAIL_PASS,
+                },
+            } : {
                 host: process.env.MAIL_HOST || 'smtp.example.com',
                 port: parseInt(process.env.MAIL_PORT || '587'),
-                secure: process.env.MAIL_SECURE === 'true', // true for 465, false for 587
+                secure: process.env.MAIL_SECURE === 'true',
                 auth: {
                     user: process.env.MAIL_USER || 'user@example.com',
                     pass: process.env.MAIL_PASS || 'password',
