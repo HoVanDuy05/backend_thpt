@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, BadRequestException } from '@nestjs/common';
 import { UsersService } from '../users/users.service';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
@@ -42,8 +42,12 @@ export class AuthService {
         const user = await this.validateUser(loginDto.email, loginDto.matKhau);
 
         if (!user) {
-            // Failure logging would be good here too, but for now successful
             throw new UnauthorizedException('validation.invalid_credentials');
+        }
+
+        // Check activation
+        if (!user.kichHoat) {
+            throw new UnauthorizedException('validation.account_not_activated');
         }
 
         // Record login history
@@ -65,21 +69,81 @@ export class AuthService {
         };
     }
 
-    async register(registerDto: { email: string; matKhau: string }) {
-        // Simple registration - in production, hash password with bcrypt
+    async register(registerDto: { email: string; matKhau: string; hoTen: string; soDienThoai: string }) {
         const existingUser = await this.usersService.findByEmail(registerDto.email);
         if (existingUser) {
             throw new UnauthorizedException('validation.email_in_use');
         }
 
         // Generate taiKhoan from email
-        const taiKhoan = registerDto.email.split('@')[0];
+        const taiKhoan = registerDto.email.split('@')[0] + '_' + Math.floor(Math.random() * 1000);
 
-        return this.usersService.create({
-            email: registerDto.email,
-            matKhau: registerDto.matKhau,
-            vaiTro: 'HOC_SINH' as any,
+        // Generate verification code
+        const maXacThuc = Math.floor(100000 + Math.random() * 900000).toString();
+
+        const user = await this.prisma.nguoiDung.create({
+            data: {
+                taiKhoan,
+                email: registerDto.email,
+                matKhau: registerDto.matKhau,
+                hoTen: registerDto.hoTen,
+                soDienThoai: registerDto.soDienThoai,
+                maXacThuc,
+                kichHoat: false,
+                vaiTro: 'HOC_SINH',
+            }
         });
+
+        // Send verification email
+        await this.mailService.sendVerificationEmail(user, maXacThuc).catch(err => console.error('Verification email failed:', err));
+
+        return user;
+    }
+
+    async verifyCode(email: string, code: string) {
+        const user = await this.usersService.findByEmail(email);
+        if (!user) {
+            throw new UnauthorizedException('validation.user_not_found');
+        }
+
+        if (user.maXacThuc !== code) {
+            throw new UnauthorizedException('validation.invalid_verification_code');
+        }
+
+        await this.prisma.nguoiDung.update({
+            where: { id: user.id },
+            data: {
+                kichHoat: true,
+                maXacThuc: null
+            }
+        });
+
+        // Send welcome email after successful activation
+        await this.mailService.sendWelcomeEmail(user).catch(err => console.error('Welcome email failed:', err));
+
+        return { message: 'validation.activation_success' };
+    }
+
+    async resendCode(email: string) {
+        const user = await this.usersService.findByEmail(email);
+        if (!user) {
+            throw new UnauthorizedException('validation.user_not_found');
+        }
+
+        if (user.kichHoat) {
+            throw new BadRequestException('validation.account_already_activated');
+        }
+
+        const maXacThuc = Math.floor(100000 + Math.random() * 900000).toString();
+
+        await this.prisma.nguoiDung.update({
+            where: { id: user.id },
+            data: { maXacThuc }
+        });
+
+        await this.mailService.sendVerificationEmail(user, maXacThuc).catch(err => console.error('Verification email failed:', err));
+
+        return { message: 'validation.code_resent' };
     }
 
     async forgotPassword(email: string, locale: string = 'vi') {
@@ -225,10 +289,9 @@ export class AuthService {
     }
 
     async updateProfile(userId: number, dto: any) {
-        // Update base user fields
+        // 1. Update basic User info (Name, Avatar) - Shared
         const dataNguoiDung: any = {};
         if (typeof dto?.hoTen === 'string') dataNguoiDung.hoTen = dto.hoTen;
-        if (typeof dto?.email === 'string') dataNguoiDung.email = dto.email;
         if (typeof dto?.avatar === 'string') dataNguoiDung.avatar = dto.avatar;
 
         if (Object.keys(dataNguoiDung).length > 0) {
@@ -238,58 +301,31 @@ export class AuthService {
             });
         }
 
-        // Update role-specific profiles if exist
-        const user = await this.prisma.nguoiDung.findUnique({ where: { id: userId } });
-        if (!user) throw new UnauthorizedException('validation.user_not_found');
+        // 2. Update Social Profile (HoSoXaHoi)
+        const socialData: any = {};
 
-        const ngaySinh = dto?.ngaySinh ? new Date(dto.ngaySinh) : undefined;
+        // Map 'tieuSu' (Bio)
+        if (typeof dto?.tieuSu === 'string') socialData.tieuSu = dto.tieuSu;
 
-        if (user.vaiTro === 'GIAO_VIEN') {
-            const data: any = {};
-            if (ngaySinh) data.ngaySinh = ngaySinh;
-            if (dto?.gioiTinh) data.gioiTinh = dto.gioiTinh;
-            if (typeof dto?.diaChi === 'string') data.diaChi = dto.diaChi;
-            if (typeof dto?.soDienThoai === 'string') data.soDienThoai = dto.soDienThoai;
-            if (typeof dto?.email === 'string') data.emailLienHe = dto.email;
-            if (typeof dto?.chuyenMon === 'string') data.chuyenMon = dto.chuyenMon;
-            if (Object.keys(data).length > 0) {
-                await this.prisma.hoSoGiaoVien.updateMany({
-                    where: { userId },
-                    data,
-                });
-            }
+        // Map 'ngaySinh' to 'ngaySinhHienThi'
+        if (dto?.ngaySinh) socialData.ngaySinhHienThi = new Date(dto.ngaySinh);
+
+        // Map 'diaChi' to 'diaChiHienThi'
+        if (typeof dto?.diaChi === 'string') socialData.diaChiHienThi = dto.diaChi;
+
+        if (typeof dto?.soThich === 'string') socialData.soThich = dto.soThich;
+
+        // Upsert HoSoXaHoi
+        if (Object.keys(socialData).length > 0) {
+            await this.prisma.hoSoXaHoi.upsert({
+                where: { userId },
+                create: { userId, ...socialData },
+                update: socialData
+            });
         }
 
-        if (user.vaiTro === 'HOC_SINH') {
-            const data: any = {};
-            if (typeof dto?.hoTen === 'string') data.hoTen = dto.hoTen;
-            if (ngaySinh) data.ngaySinh = ngaySinh;
-            if (dto?.gioiTinh) data.gioiTinh = dto.gioiTinh;
-            if (typeof dto?.soDienThoai === 'string') data.soDienThoai = dto.soDienThoai;
-            if (typeof dto?.diaChi === 'string') data.diaChiThuongTru = dto.diaChi;
-            if (dto?.lopHocId) data.lopId = Number(dto.lopHocId);
-            if (Object.keys(data).length > 0) {
-                await this.prisma.hoSoHocSinh.updateMany({
-                    where: { userId },
-                    data,
-                });
-            }
-        }
-
-        if (user.vaiTro === 'NHAN_VIEN') {
-            const data: any = {};
-            if (ngaySinh) data.ngaySinh = ngaySinh;
-            if (dto?.gioiTinh) data.gioiTinh = dto.gioiTinh;
-            if (typeof dto?.diaChi === 'string') data.diaChi = dto.diaChi;
-            if (typeof dto?.soDienThoai === 'string') data.soDienThoai = dto.soDienThoai;
-            if (typeof dto?.email === 'string') data.emailLienHe = dto.email;
-            if (Object.keys(data).length > 0) {
-                await this.prisma.hoSoNhanVien.updateMany({
-                    where: { userId },
-                    data,
-                });
-            }
-        }
+        // NOTE: We intentionally DO NOT update HoSoHocSinh/HoSoGiaoVien here anymore.
+        // Official records should be updated via a separate Administrative API.
 
         return this.getProfile(userId);
     }

@@ -17,4 +17,13 @@ export class RegisterDto {
     @IsEmail({}, { message: 'validation.email.invalid' })
     @IsNotEmpty({ message: 'validation.email.required' })
     email: string;
+
+    @IsString({ message: 'validation.phone.invalid_type' })
+    @IsNotEmpty({ message: 'validation.phone.required' })
+    @Matches(/^[0-9+]{10,15}$/, { message: 'validation.phone.invalid_pattern' })
+    soDienThoai: string;
+
+    @IsString({ message: 'validation.fullname.invalid_type' })
+    @IsNotEmpty({ message: 'validation.fullname.required' })
+    hoTen: string;
 }

@@ -13,6 +13,24 @@ export class AuthController {
     constructor(private authService: AuthService, private cloudinaryService: CloudinaryService) { }
 
     @Public()
+    @Post('register')
+    async register(@Body() registerDto: any) {
+        return this.authService.register(registerDto);
+    }
+
+    @Public()
+    @Post('verify')
+    async verify(@Body() body: { email: string; code: string }) {
+        return this.authService.verifyCode(body.email, body.code);
+    }
+
+    @Public()
+    @Post('resend-code')
+    async resendCode(@Body() body: { email: string }) {
+        return this.authService.resendCode(body.email);
+    }
+
+    @Public()
     @HttpCode(HttpStatus.OK)
     @Post('login')
     async signIn(@Body() loginDto: LoginDto, @Request() req) {

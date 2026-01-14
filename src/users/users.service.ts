@@ -191,6 +191,7 @@ export class UsersService {
           },
         },
         hoSoNhanVien: true,
+        hoSoXaHoi: true,
       },
     });
   }

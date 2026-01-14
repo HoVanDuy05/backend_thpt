@@ -63,4 +63,16 @@ export class MailService {
             },
         });
     }
+
+    async sendVerificationEmail(user: any, code: string, locale: string = 'vi') {
+        await this.mailerService.sendMail({
+            to: user.email,
+            subject: 'Xác thực tài khoản - Hệ thống Trường học 🔐',
+            template: './verification',
+            context: {
+                name: user.hoTen || user.taiKhoan,
+                code,
+            },
+        });
+    }
 }

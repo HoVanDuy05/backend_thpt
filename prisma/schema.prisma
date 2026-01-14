@@ -46,6 +46,9 @@ model NguoiDung {
   taiKhoan     String   @unique @map("tai_khoan") @db.VarChar(50)
   matKhau      String?  @map("mat_khau") @db.Text
   email        String?  @unique @db.VarChar(100)
+  soDienThoai  String?  @unique @map("so_dien_thoai") @db.VarChar(15)
+  kichHoat     Boolean  @default(false) @map("kich_hoat")
+  maXacThuc    String?  @map("ma_xac_thuc") @db.VarChar(10)
   googleId     String?  @unique @map("google_id") @db.VarChar(255)
   vaiTro       VaiTro   @map("vai_tro")
   hoTen        String?  @map("ho_ten") @db.VarChar(100)
@@ -71,6 +74,7 @@ model NguoiDung {
   threadReposts  ThreadRepost[]
   following      FlowTheoDoi[]    @relation("Following")
   followers      FlowTheoDoi[]    @relation("Followers")
+  hoSoXaHoi      HoSoXaHoi?
 
   // Friendship
   yeuCauKetBanGui  KetBan[] @relation("YeuCauKetBanGui")
@@ -688,6 +692,23 @@ model FlowTheoDoi {
 
   @@unique([nguoiTheoDoiId, nguoiDuocTheoDoiId])
   @@map("flow_theo_doi")
+}
+
+model HoSoXaHoi {
+  id             Int       @id @default(autoincrement())
+  userId         Int       @unique @map("user_id")
+  tieuSu         String?   @map("tieu_su") @db.Text
+  ngaySinhHienThi DateTime? @map("ngay_sinh_hien_thi") @db.Date
+  diaChiHienThi  String?   @map("dia_chi_hien_thi") @db.VarChar(255)
+  lienKetMangXaHoi String? @map("lien_ket_mang_xa_hoi") @db.Text
+  soThich        String?   @map("so_thich") @db.Text
+  ngayTao        DateTime  @default(now()) @map("ngay_tao")
+  ngayCapNhat    DateTime  @updatedAt @map("ngay_cap_nhat")
+
+  // Relations
+  nguoiDung      NguoiDung @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("ho_so_xa_hoi")
 }
 
 enum TrangThaiBanBe {

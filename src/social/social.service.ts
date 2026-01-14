@@ -292,25 +292,28 @@ export class SocialService {
     async getUserSocialProfile(userId: number, requesterId?: number) {
         const user = await this.prisma.nguoiDung.findUnique({
             where: { id: userId },
-            select: {
-                id: true,
-                taiKhoan: true,
-                hoTen: true,
-                avatar: true,
-                vaiTro: true,
-                email: true,
+            include: {
                 hoSoHocSinh: {
                     select: {
                         hoTen: true,
+                        soDienThoai: true,
+                        gioiTinh: true,
+                        ngaySinh: true,
+                        diaChiThuongTru: true,
                         lopHoc: { select: { id: true, tenLop: true } }
                     }
                 },
                 hoSoGiaoVien: {
                     select: {
                         hoTen: true,
-                        chuyenMon: true
+                        chuyenMon: true,
+                        soDienThoai: true,
+                        gioiTinh: true,
+                        ngaySinh: true,
+                        diaChi: true
                     }
                 },
+                hoSoXaHoi: true,
                 _count: {
                     select: {
                         threads: true,
@@ -358,6 +361,11 @@ export class SocialService {
 
         return {
             ...user,
+            // Flatten academic profile fields to top-level for EditProfileModal compatibility
+            soDienThoai: (user as any).hoSoHocSinh?.soDienThoai || (user as any).hoSoGiaoVien?.soDienThoai,
+            gioiTinh: (user as any).hoSoHocSinh?.gioiTinh || (user as any).hoSoGiaoVien?.gioiTinh,
+            ngaySinh: (user as any).hoSoHocSinh?.ngaySinh || (user as any).hoSoGiaoVien?.ngaySinh,
+            diaChi: (user as any).hoSoHocSinh?.diaChiThuongTru || (user as any).hoSoGiaoVien?.diaChi,
             isFollowing,
             friendshipStatus
         };
