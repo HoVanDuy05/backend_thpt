@@ -4,13 +4,13 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { CreateTeacherDto } from './dto/create-teacher.dto';
 import { CreateStudentDto } from './dto/create-student.dto';
 import { PrismaService } from '../prisma/prisma.service';
-import { MailService } from '../mail/mail.service';
+import { ResendMailService } from '../mail/resend-mail.service';
 
 @Injectable()
 export class UsersService {
   constructor(
-    private readonly prisma: PrismaService,
-    private readonly mailService: MailService,
+    private prisma: PrismaService,
+    private mailService: ResendMailService,
   ) { }
 
   async create(createUserDto: CreateUserDto) {

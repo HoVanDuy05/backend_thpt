@@ -1,14 +1,14 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateGradingDto } from './dto/create-grading.dto';
 import { UpdateGradingDto } from './dto/update-grading.dto';
-import { MailService } from '../mail/mail.service';
+import { ResendMailService } from '../mail/resend-mail.service';
 
 @Injectable()
 export class GradingService {
   constructor(
-    private readonly prisma: PrismaService,
-    private readonly mailService: MailService,
+    private prisma: PrismaService,
+    private mailService: ResendMailService,
   ) { }
 
   async create(dto: CreateGradingDto) {

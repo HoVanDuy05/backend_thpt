@@ -8,13 +8,13 @@ import {
     HanhDongPheDuyet,
     LoaiNguoiPheDuyet
 } from '@prisma/client';
-import { MailService } from '../mail/mail.service';
+import { ResendMailService } from '../mail/resend-mail.service';
 
 @Injectable()
 export class ApprovalsService {
     constructor(
         private prisma: PrismaService,
-        private mailService: MailService
+        private mailService: ResendMailService
     ) { }
 
     // ==========================================

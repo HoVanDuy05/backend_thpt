@@ -4,7 +4,7 @@ import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { LoginDto } from './dto/login.dto';
 import { PrismaService } from '../prisma/prisma.service';
-import { MailService } from '../mail/mail.service';
+import { ResendMailService } from '../mail/resend-mail.service';
 import { Request } from 'express';
 
 @Injectable()
@@ -13,7 +13,7 @@ export class AuthService {
         private usersService: UsersService,
         private jwtService: JwtService,
         private prisma: PrismaService,
-        private mailService: MailService,
+        private mailService: ResendMailService,
     ) { }
 
     async validateUser(email: string, matKhau: string): Promise<any> {
