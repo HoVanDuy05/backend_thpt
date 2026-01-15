@@ -52,6 +52,7 @@ model NguoiDung {
   googleId     String?  @unique @map("google_id") @db.VarChar(255)
   vaiTro       VaiTro   @map("vai_tro")
   hoTen        String?  @map("ho_ten") @db.VarChar(100)
+  maSo         String?  @unique @map("ma_so") @db.VarChar(50)
   avatar       String?  @map("avatar") @db.Text
   ngayTao      DateTime @default(now()) @map("ngay_tao")
 

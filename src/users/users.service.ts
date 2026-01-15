@@ -1,8 +1,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { CreateTeacherDto } from './dto/create-teacher.dto';
-import { CreateStudentDto } from './dto/create-student.dto';
 import { PrismaService } from '../prisma/prisma.service';
 import { ResendMailService } from '../mail/resend-mail.service';
 import * as bcrypt from 'bcrypt';
@@ -29,36 +27,50 @@ export class UsersService {
     return user;
   }
 
-  createTeacherProfile(dto: CreateTeacherDto) {
-    return this.prisma.hoSoGiaoVien.create({
-      data: dto as any,
-    });
-  }
-
-  createStudentProfile(dto: CreateStudentDto) {
-    return this.prisma.hoSoHocSinh.create({
-      data: {
-        ...dto,
-        ngaySinh: dto.ngaySinh ? new Date(dto.ngaySinh) : null,
-      } as any,
-    });
-  }
-
   private generateRandomPassword(): string {
     return Math.random().toString(36).slice(-8);
   }
 
-  private generateId(prefix: string): string {
-    const year = new Date().getFullYear().toString().slice(-2);
-    const random = Math.floor(1000 + Math.random() * 9000); // 4 random digits
-    return `${prefix}${year}${random}`;
+  private async generateId(prefix: string): Promise<string> {
+    const now = new Date();
+    const yy = now.getFullYear().toString().slice(-2);
+    const mm = (now.getMonth() + 1).toString().padStart(2, '0');
+    const dd = now.getDate().toString().padStart(2, '0');
+    const datePrefix = `${prefix}${yy}${mm}${dd}`;
+
+    let lastRecord;
+    if (prefix === 'HS') {
+      lastRecord = await this.prisma.hoSoHocSinh.findFirst({
+        where: { maSoHs: { startsWith: datePrefix } },
+        orderBy: { maSoHs: 'desc' },
+      });
+    } else if (prefix === 'GV') {
+      lastRecord = await this.prisma.hoSoGiaoVien.findFirst({
+        where: { maSoGv: { startsWith: datePrefix } },
+        orderBy: { maSoGv: 'desc' },
+      });
+    } else {
+      lastRecord = await this.prisma.hoSoNhanVien.findFirst({
+        where: { maSo: { startsWith: datePrefix } },
+        orderBy: { maSo: 'desc' },
+      });
+    }
+
+    let nextNumber = 1;
+    if (lastRecord) {
+      const lastId = prefix === 'HS' ? lastRecord.maSoHs : (prefix === 'GV' ? lastRecord.maSoGv : lastRecord.maSo);
+      const lastSeq = parseInt(lastId.slice(-3));
+      nextNumber = lastSeq + 1;
+    }
+
+    return `${datePrefix}${nextNumber.toString().padStart(3, '0')}`;
   }
 
   async createFullStudent(dto: any) {
     const { email, matKhau, isNewAccount, ...profileData } = dto;
     let user;
 
-    const maSoHs = profileData.maSoHs || this.generateId('HS');
+    const maSoHs = profileData.maSoHs || (await this.generateId('HS'));
 
     if (isNewAccount) {
       const existingUser = await this.prisma.nguoiDung.findUnique({ where: { email } });
@@ -96,7 +108,7 @@ export class UsersService {
       }).catch(e => console.error(e));
     }
 
-    return this.prisma.hoSoHocSinh.create({
+    const profile = await this.prisma.hoSoHocSinh.create({
       data: {
         userId: user.id,
         maSoHs: maSoHs,
@@ -123,13 +135,21 @@ export class UsersService {
         lopId: profileData.lopId
       }
     });
+
+    // Update the NguoiDung record with the maSo for quick access
+    await this.prisma.nguoiDung.update({
+      where: { id: user.id },
+      data: { maSo: maSoHs }
+    });
+
+    return profile;
   }
 
   async createFullTeacher(dto: any) {
     const { email, matKhau, isNewAccount, ...profileData } = dto;
     let user;
 
-    const maSoGv = profileData.maSoGv || this.generateId('GV');
+    const maSoGv = profileData.maSoGv || (await this.generateId('GV'));
 
     if (isNewAccount) {
       const existingUser = await this.prisma.nguoiDung.findUnique({ where: { email } });
@@ -165,7 +185,7 @@ export class UsersService {
       }).catch(e => console.error(e));
     }
 
-    return this.prisma.hoSoGiaoVien.create({
+    const profile = await this.prisma.hoSoGiaoVien.create({
       data: {
         userId: user.id,
         maSoGv: maSoGv,
@@ -183,12 +203,19 @@ export class UsersService {
         ngayVaoLam: profileData.ngayVaoLam ? new Date(profileData.ngayVaoLam) : null
       }
     });
+
+    await this.prisma.nguoiDung.update({
+      where: { id: user.id },
+      data: { maSo: maSoGv }
+    });
+
+    return profile;
   }
 
   async createFullStaff(dto: any) {
     const { email, matKhau, isNewAccount, ...profileData } = dto;
     let user;
-    const maSo = profileData.maSo || this.generateId('NV');
+    const maSo = profileData.maSo || (await this.generateId('NV'));
 
     if (isNewAccount) {
       const existingUser = await this.prisma.nguoiDung.findUnique({ where: { email } });
@@ -224,7 +251,7 @@ export class UsersService {
       }).catch(e => console.error(e));
     }
 
-    return this.prisma.hoSoNhanVien.create({
+    const profile = await this.prisma.hoSoNhanVien.create({
       data: {
         userId: user.id,
         maSo: maSo,
@@ -237,6 +264,13 @@ export class UsersService {
         cccd: profileData.cccd
       }
     });
+
+    await this.prisma.nguoiDung.update({
+      where: { id: user.id },
+      data: { maSo: maSo }
+    });
+
+    return profile;
   }
 
   findAll(query: any = {}) {
@@ -364,9 +398,5 @@ export class UsersService {
     });
   }
 
-  createStaffProfile(dto: any) {
-    return this.prisma.hoSoNhanVien.create({
-      data: dto as any,
-    });
-  }
+  // Legacy methods removed.
 }

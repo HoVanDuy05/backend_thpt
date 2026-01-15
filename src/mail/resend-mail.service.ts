@@ -208,7 +208,8 @@ export class ResendMailService {
             : '';
 
         try {
-            await this.resend.emails.send({
+            console.log(`[ResendMailService] Sending account details to ${user.email} (Role: ${details.role}, MaSo: ${details.maSo})`);
+            const result = await this.resend.emails.send({
                 from: `${process.env.MAIL_FROM_NAME || 'NHers Academy'} <${process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev'}>`,
                 to: [user.email],
                 subject,

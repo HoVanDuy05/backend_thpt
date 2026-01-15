@@ -97,51 +97,7 @@ export class AppController {
   // ==================================================================
   // USERS MODULE
   // ==================================================================
-  @ApiTags('Users - Quản lý chung')
-  @Public()
-  @Post('users')
-  register(@Body() createUserDto: CreateUserDto) {
-    return this.usersService.create(createUserDto);
-  }
-
-  @ApiTags('Users - Hồ sơ Giáo viên')
-  @Roles(VaiTro.ADMIN)
-  @Post('users/teachers')
-  createTeacher(@Body() dto: CreateTeacherDto) {
-    return this.usersService.createTeacherProfile(dto);
-  }
-
-  @ApiTags('Users - Hồ sơ Học sinh')
-  @Roles(VaiTro.ADMIN, VaiTro.GIAO_VIEN)
-  @Post('users/students')
-  createStudent(@Body() dto: CreateStudentDto) {
-    return this.usersService.createStudentProfile(dto);
-  }
-
-  @ApiTags('Users - Quản lý chung')
-  @Get('users')
-  findAllUsers(@Query() query: QueryDto) {
-    return this.usersService.findAll(this.parseQuery(query));
-  }
-
-  @ApiTags('Users - Quản lý chung')
-  @Get('users/:id')
-  findOneUser(@Param('id') id: string) {
-    return this.usersService.findOne(+id);
-  }
-
-  @ApiTags('Users - Quản lý chung')
-  @Patch('users/:id')
-  updateUser(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    return this.usersService.update(+id, updateUserDto);
-  }
-
-  @ApiTags('Users - Quản lý chung')
-  @Roles(VaiTro.ADMIN)
-  @Delete('users/:id')
-  removeUser(@Param('id') id: string) {
-    return this.usersService.remove(+id);
-  }
+  // Portions of USERS MODULE moved to UsersController to avoid conflicts and DTO issues.
 
   // ==================================================================
   // ACADEMIC MODULE (ADMIN ONLY)
