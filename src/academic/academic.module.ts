@@ -3,7 +3,7 @@ import { AcademicService } from './academic.service';
 import { AcademicController } from './academic.controller';
 
 @Module({
-  controllers: [],
+  controllers: [AcademicController],
   providers: [AcademicService],
   exports: [AcademicService], // Exported for AppController
 })
