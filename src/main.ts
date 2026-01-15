@@ -10,8 +10,22 @@ async function bootstrap() {
   // Thiết lập tiền tố global cho API
   app.setGlobalPrefix('api');
 
-  // Bật CORS
-  app.enableCors();
+  // Bật CORS với cấu hình chi tiết cho PWA/Mobile
+  app.enableCors({
+    origin: [
+      'http://localhost:3000',
+      'https://thpt-nguyen-hue.vercel.app',
+      /^https:\/\/.*\.vercel\.app$/, // Allow all Vercel preview deployments
+      /^capacitor:\/\/localhost$/, // Capacitor iOS
+      /^ionic:\/\/localhost$/, // Ionic
+      /^http:\/\/localhost$/, // Android WebView
+    ],
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'x-custom-lang'],
+    exposedHeaders: ['Content-Range', 'X-Content-Range'],
+    maxAge: 3600,
+  });
 
   app.useGlobalPipes(new ValidationPipe({
     whitelist: true,
