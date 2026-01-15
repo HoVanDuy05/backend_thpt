@@ -27,11 +27,11 @@ export class AuthService {
         // Let's try matching plain text first for simplicity of this demo, OR compare hash
         // const isMatch = await bcrypt.compare(matKhau, user.matKhau);
 
-        // For this specific 'System Building', let's strict check
-        // If matKhau matches directly (dev mode) OR via bcrypt
-        const isMatch = matKhau === user.matKhau;
+        const isMatch = user.matKhau && (await bcrypt.compare(matKhau, user.matKhau));
+        // Fallback for plain text if needed during development transition
+        const isPlainMatch = matKhau === user.matKhau;
 
-        if (user && isMatch) {
+        if (user && (isMatch || isPlainMatch)) {
             const { matKhau, ...result } = user;
             return result;
         }

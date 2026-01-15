@@ -1,34 +1,62 @@
 <!DOCTYPE html>
 <html>
+
 <head>
-    <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; }
-        .container { width: 80%; margin: 20px auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px; background: #fff; }
-        .header { border-bottom: 2px solid #4caf50; padding-bottom: 10px; margin-bottom: 20px; color: #4caf50; }
-        .grade-box { background: #f1f8e9; border-left: 5px solid #4caf50; padding: 15px; margin: 15px 0; }
-        .footer { text-align: center; font-size: 0.8em; color: #777; border-top: 1px solid #eee; padding-top: 10px; }
-    </style>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h2>Kết quả bài kiểm tra 📔</h2>
-        </div>
-        <div class="content">
-            <p>Xin chào <strong><%= studentName %></strong>,</p>
-            <p>Giáo viên đã hoàn tất việc chấm điểm cho bài kiểm tra của bạn:</p>
-            <div class="grade-box">
-                <p><strong>Bài kiểm tra:</strong> <%= examTitle %></p>
-                <p><strong>Điểm số:</strong> <span style="font-size: 1.2em; color: #d32f2f;"><%= grade %></span></p>
-                <% if (comment) { %>
-                    <p><strong>Nhận xét:</strong> <%= comment %></p>
-                <% } %>
-            </div>
-            <p>Bạn có thể đăng nhập vào hệ thống để xem chi tiết bài làm.</p>
-        </div>
-        <div class="footer">
-            <p>&copy; 2025 Hệ thống Trường học. Cảm ơn bạn!</p>
-        </div>
-    </div>
+
+<body style="margin: 0; padding: 0; background-color: #f4f7fa; font-family: 'Inter', 'Segoe UI', Arial, sans-serif;">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%" style="table-layout: fixed;">
+        <tr>
+            <td align="center" style="padding: 40px 10px;">
+                <table border="0" cellpadding="0" cellspacing="0" width="100%"
+                    style="max-width: 600px; background-color: #ffffff; border-radius: 24px; overflow: hidden; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05);">
+                    <tr>
+                        <td align="center" style="padding: 40px; background-color: #4f46e5;">
+                            <span style="font-size: 24px; font-weight: 800; color: #ffffff;">NHers Academy</span>
+                            <h1
+                                style="margin: 15px 0 0; font-size: 20px; color: #ffffff; opacity: 0.9; text-transform: uppercase;">
+                                Kết quả Học tập 📔</h1>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 40px; color: #374151; font-size: 16px; line-height: 1.6;">
+                            <p>Xin chào <strong>
+                                    <%= studentName %>
+                                </strong>,</p>
+                            <p>Giáo viên đã hoàn tất chấm điểm cho bài kiểm tra của bạn:</p>
+
+                            <div
+                                style="background-color: #f0fdf4; border-radius: 16px; padding: 25px; margin: 25px 0; border: 1px solid #bbf7d0; text-align: center;">
+                                <p style="margin: 0; font-size: 14px; color: #166534; text-transform: uppercase;">Điểm
+                                    số của bạn</p>
+                                <h1 style="margin: 10px 0; font-size: 48px; color: #15803d;">
+                                    <%= grade %>
+                                </h1>
+                                <p style="margin: 0; font-weight: 600; color: #166534;">
+                                    <%= examTitle %>
+                                </p>
+                            </div>
+
+                            <p><strong>Nhận xét từ giáo viên:</strong></p>
+                            <div
+                                style="background-color: #f9fafb; padding: 15px; border-radius: 8px; border: 1px solid #e5e7eb; font-style: italic;">
+                                <%= comment || 'Không có nhận xét thêm.' %>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td
+                            style="padding: 20px 40px; background-color: #f9fafb; text-align: center; border-top: 1px solid #f3f4f6;">
+                            <p style="margin: 0; font-size: 12px; color: #9ca3af;">&copy; 2026 NHers Academy. Toàn bộ
+                                quyền được bảo lưu.</p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
 </body>
+
 </html>

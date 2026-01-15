@@ -35,6 +35,7 @@ import { RolesGuard } from './common/guards/roles.guard';
     AuthModule,
     PortalModule,
     CommunicationModule,
+    MailModule,
     UploadModule,
     ExportModule,
     CalendarModule,
