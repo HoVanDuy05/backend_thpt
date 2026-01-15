@@ -45,8 +45,53 @@ export class UsersService {
 
   async createFullStudent(dto: any) { // Type as CreateStudentAccountDto
     const { email, matKhau, ...profileData } = dto;
+
+    // Check if email already exists
+    const existingUser = await this.prisma.nguoiDung.findUnique({
+      where: { email }
+    });
+
+    if (existingUser) {
+      throw new BadRequestException(`Email ${email} đã được sử dụng bởi tài khoản khác`);
+    }
+
     // Generate taiKhoan from email (username part before @)
     const taiKhoan = email.split('@')[0];
+
+    // Check if taiKhoan already exists
+    const existingTaiKhoan = await this.prisma.nguoiDung.findUnique({
+      where: { taiKhoan }
+    });
+
+    if (existingTaiKhoan) {
+      // If taiKhoan exists, append random number
+      const randomSuffix = Math.floor(Math.random() * 1000);
+      const newTaiKhoan = `${taiKhoan}${randomSuffix}`;
+
+      return this.prisma.$transaction(async (tx) => {
+        const user = await tx.nguoiDung.create({
+          data: {
+            taiKhoan: newTaiKhoan,
+            matKhau, // In a real app, hash this!
+            email,
+            vaiTro: 'HOC_SINH',
+            kichHoat: true
+          }
+        });
+
+        const student = await tx.hoSoHocSinh.create({
+          data: {
+            userId: user.id,
+            maSoHs: profileData.maSoHs,
+            hoTen: profileData.hoTen,
+            ngaySinh: profileData.ngaySinh ? new Date(profileData.ngaySinh) : null,
+            lopId: profileData.lopId
+          }
+        });
+
+        return { ...user, studentProfile: student };
+      });
+    }
 
     return this.prisma.$transaction(async (tx) => {
       const user = await tx.nguoiDung.create({
@@ -54,7 +99,8 @@ export class UsersService {
           taiKhoan,
           matKhau, // In a real app, hash this!
           email,
-          vaiTro: 'HOC_SINH'
+          vaiTro: 'HOC_SINH',
+          kichHoat: true
         }
       });
 
@@ -74,6 +120,16 @@ export class UsersService {
 
   async createFullTeacher(dto: any) {
     const { email, matKhau, ...profileData } = dto;
+
+    // Check if email already exists
+    const existingUser = await this.prisma.nguoiDung.findUnique({
+      where: { email }
+    });
+
+    if (existingUser) {
+      throw new BadRequestException(`Email ${email} đã được sử dụng bởi tài khoản khác`);
+    }
+
     const taiKhoan = email.split('@')[0];
 
     return this.prisma.$transaction(async (tx) => {
@@ -82,7 +138,8 @@ export class UsersService {
           taiKhoan,
           matKhau,
           email,
-          vaiTro: 'GIAO_VIEN'
+          vaiTro: 'GIAO_VIEN',
+          kichHoat: true
         }
       });
 
@@ -101,6 +158,16 @@ export class UsersService {
 
   async createFullStaff(dto: any) {
     const { email, matKhau, ...profileData } = dto;
+
+    // Check if email already exists
+    const existingUser = await this.prisma.nguoiDung.findUnique({
+      where: { email }
+    });
+
+    if (existingUser) {
+      throw new BadRequestException(`Email ${email} đã được sử dụng bởi tài khoản khác`);
+    }
+
     const taiKhoan = email.split('@')[0];
 
     return this.prisma.$transaction(async (tx) => {
@@ -109,7 +176,8 @@ export class UsersService {
           taiKhoan,
           matKhau,
           email,
-          vaiTro: 'NHAN_VIEN'
+          vaiTro: 'NHAN_VIEN',
+          kichHoat: true
         }
       });
 
