@@ -3,8 +3,9 @@ import { Public } from '../common/decorators/public.decorator';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { CreateTeacherDto } from './dto/create-teacher.dto';
-import { CreateStudentDto } from './dto/create-student.dto';
+import { CreateStudentAccountDto } from './dto/create-student-account.dto';
+import { CreateTeacherAccountDto } from './dto/create-teacher-account.dto';
+import { CreateStaffAccountDto } from './dto/create-staff-account.dto';
 
 @Controller('users')
 export class UsersController {
@@ -17,28 +18,18 @@ export class UsersController {
   }
 
   @Post('teachers')
-  createTeacher(@Body() dto: any) {
-    if ('taiKhoan' in dto) {
-      return this.usersService.createFullTeacher(dto);
-    }
-    return this.usersService.createTeacherProfile(dto);
+  createTeacher(@Body() dto: CreateTeacherAccountDto) {
+    return this.usersService.createFullTeacher(dto);
   }
 
   @Post('students')
-  createStudent(@Body() dto: any) {
-    if ('taiKhoan' in dto || 'email' in dto) {
-      return this.usersService.createFullStudent(dto);
-    }
-    return this.usersService.createStudentProfile(dto);
+  createStudent(@Body() dto: CreateStudentAccountDto) {
+    return this.usersService.createFullStudent(dto);
   }
 
   @Post('staff')
-  createStaff(@Body() dto: any) {
-    if ('taiKhoan' in dto || 'email' in dto) {
-      return this.usersService.createFullStaff(dto);
-    }
-    // Fixed: Using usersService instead of non-existent this.prisma
-    return this.usersService.createStaffProfile(dto);
+  createStaff(@Body() dto: CreateStaffAccountDto) {
+    return this.usersService.createFullStaff(dto);
   }
 
   @Get()

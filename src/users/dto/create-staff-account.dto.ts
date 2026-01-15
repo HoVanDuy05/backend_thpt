@@ -1,12 +1,10 @@
 import { IsNotEmpty, IsOptional, IsString, IsEmail, IsEnum, IsDateString } from 'class-validator';
-import { GioiTinh, TrinhDo } from '@prisma/client';
+import { GioiTinh } from '@prisma/client';
 
-export class CreateTeacherAccountDto {
-    // Account logic
+export class CreateStaffAccountDto {
     @IsOptional()
     isNewAccount?: boolean;
 
-    // User Account Fields
     @IsEmail({}, { message: 'validation.email.invalid' })
     @IsNotEmpty({ message: 'validation.email.required' })
     email: string;
@@ -15,10 +13,9 @@ export class CreateTeacherAccountDto {
     @IsOptional()
     matKhau?: string;
 
-    // Teacher Profile Fields
     @IsString()
     @IsOptional()
-    maSoGv?: string;
+    maSo?: string;
 
     @IsString()
     @IsNotEmpty({ message: 'Họ tên là bắt buộc' })
@@ -47,24 +44,4 @@ export class CreateTeacherAccountDto {
     @IsString()
     @IsOptional()
     cccd?: string;
-
-    @IsDateString()
-    @IsOptional()
-    ngayCapCccd?: string;
-
-    @IsString()
-    @IsOptional()
-    noiCapCccd?: string;
-
-    @IsEnum(TrinhDo)
-    @IsOptional()
-    trinhDo?: TrinhDo;
-
-    @IsString()
-    @IsOptional()
-    chuyenMon?: string;
-
-    @IsDateString()
-    @IsOptional()
-    ngayVaoLam?: string;
 }
