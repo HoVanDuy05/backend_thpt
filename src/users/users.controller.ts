@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, ParseIntPipe } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, ParseIntPipe, Query } from '@nestjs/common';
 import { Public } from '../common/decorators/public.decorator';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -6,6 +6,7 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { CreateStudentAccountDto } from './dto/create-student-account.dto';
 import { CreateTeacherAccountDto } from './dto/create-teacher-account.dto';
 import { CreateStaffAccountDto } from './dto/create-staff-account.dto';
+import { FindUsersQueryDto } from './dto/find-users-query.dto';
 
 @Controller('users')
 export class UsersController {
@@ -33,15 +34,9 @@ export class UsersController {
   }
 
   @Get()
-  findAll() {
+  findAll(@Query() query: FindUsersQueryDto) {
     // Automatically include profiles for admin view
-    return this.usersService.findAll({
-      include: {
-        hoSoHocSinh: true,
-        hoSoGiaoVien: true,
-        hoSoNhanVien: true,
-      }
-    });
+    return this.usersService.findAll(query);
   }
 
   @Get(':id')

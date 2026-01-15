@@ -239,8 +239,21 @@ export class UsersService {
     });
   }
 
-  findAll(params: any = {}) {
-    return this.prisma.nguoiDung.findMany(params);
+  findAll(query: any = {}) {
+    const { role, ...rest } = query;
+    const where: any = {};
+    if (role) {
+      where.vaiTro = role;
+    }
+    return this.prisma.nguoiDung.findMany({
+      where,
+      include: {
+        hoSoHocSinh: true,
+        hoSoGiaoVien: true,
+        hoSoNhanVien: true,
+      },
+      ...rest
+    });
   }
 
   findByTaiKhoan(taiKhoan: string) {
@@ -264,14 +277,57 @@ export class UsersService {
     });
   }
 
-  update(id: number, updateUserDto: UpdateUserDto) {
+  async update(id: number, dto: UpdateUserDto) {
     if (!id || Number.isNaN(id)) {
       throw new BadRequestException('validation.invalid_user_id');
     }
-    return this.prisma.nguoiDung.update({
+
+    const { email, matKhau, vaiTro, hoTen, ...profileData } = dto;
+    const updateData: any = {};
+    if (email) updateData.email = email;
+    if (hoTen) updateData.hoTen = hoTen;
+    if (vaiTro) updateData.vaiTro = vaiTro;
+    if (matKhau) updateData.matKhau = await bcrypt.hash(matKhau, 10);
+
+    // Get current user to know their role
+    const userSnapshot = await this.prisma.nguoiDung.findUnique({ where: { id } });
+    if (!userSnapshot) throw new BadRequestException('User not found');
+
+    const role = vaiTro || userSnapshot.vaiTro;
+
+    // Update NguoiDung
+    const updatedUser = await this.prisma.nguoiDung.update({
       where: { id },
-      data: updateUserDto,
+      data: updateData,
     });
+
+    // Update Profile
+    const profileUpdate: any = { ...profileData };
+    // Handle date strings
+    ['ngaySinh', 'ngayCapCccd', 'ngayNhapHoc', 'ngayVaoLam'].forEach(key => {
+      if (profileUpdate[key]) profileUpdate[key] = new Date(profileUpdate[key]);
+    });
+    // Handle numeric IDs
+    if (profileUpdate.lopId) profileUpdate.lopId = Number(profileUpdate.lopId);
+
+    if (role === 'HOC_SINH') {
+      await this.prisma.hoSoHocSinh.update({
+        where: { userId: id },
+        data: { ...profileUpdate, hoTen: hoTen || updatedUser.hoTen },
+      });
+    } else if (role === 'GIAO_VIEN') {
+      await this.prisma.hoSoGiaoVien.update({
+        where: { userId: id },
+        data: { ...profileUpdate, hoTen: hoTen || updatedUser.hoTen },
+      });
+    } else if (role === 'NHAN_VIEN') {
+      await this.prisma.hoSoNhanVien.update({
+        where: { userId: id },
+        data: { ...profileUpdate, hoTen: hoTen || updatedUser.hoTen },
+      });
+    }
+
+    return updatedUser;
   }
 
   remove(id: number) {
