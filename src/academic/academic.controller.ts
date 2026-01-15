@@ -11,111 +11,130 @@ import { UpdateHocKyDto } from './dto/update-hoc-ky.dto';
 import { Roles } from '../common/decorators/roles.decorator';
 import { VaiTro } from '@prisma/client';
 
-@Roles(VaiTro.ADMIN) // Only Admin can manage academic structure
-// @Controller('academic')
+@Controller('academic')
 export class AcademicController {
   constructor(private readonly academicService: AcademicService) { }
 
   // --- NamHoc ---
   @Post('years')
+  @Roles(VaiTro.ADMIN)
   createNamHoc(@Body() createNamHocDto: CreateNamHocDto) {
     return this.academicService.createNamHoc(createNamHocDto);
   }
 
   @Get('years')
+  @Roles(VaiTro.ADMIN, VaiTro.GIAO_VIEN, VaiTro.HOC_SINH)
   findAllNamHoc() {
     return this.academicService.findAllNamHoc();
   }
 
   @Get('years/:id')
+  @Roles(VaiTro.ADMIN, VaiTro.GIAO_VIEN, VaiTro.HOC_SINH)
   findOneNamHoc(@Param('id') id: string) {
     return this.academicService.findOneNamHoc(+id);
   }
 
   @Put('years/:id')
-  updateNamHoc(@Param('id') id: string, @Body() dto: UpdateNamHocDto) {
-    return this.academicService.updateNamHoc(+id, dto);
+  @Roles(VaiTro.ADMIN)
+  updateNamHoc(@Param('id') id: string, @Body() updateNamHocDto: UpdateNamHocDto) {
+    return this.academicService.updateNamHoc(+id, updateNamHocDto);
   }
 
   @Delete('years/:id')
+  @Roles(VaiTro.ADMIN)
   removeNamHoc(@Param('id') id: string) {
     return this.academicService.removeNamHoc(+id);
   }
 
   // --- HocKy ---
   @Post('semesters')
-  createHocKy(@Body() dto: CreateHocKyDto) {
-    return this.academicService.createHocKy(dto);
+  @Roles(VaiTro.ADMIN)
+  createHocKy(@Body() createHocKyDto: CreateHocKyDto) {
+    return this.academicService.createHocKy(createHocKyDto);
   }
 
   @Get('semesters')
+  @Roles(VaiTro.ADMIN, VaiTro.GIAO_VIEN, VaiTro.HOC_SINH)
   findAllHocKy() {
     return this.academicService.findAllHocKy();
   }
 
   @Get('semesters/:id')
+  @Roles(VaiTro.ADMIN, VaiTro.GIAO_VIEN, VaiTro.HOC_SINH)
   findOneHocKy(@Param('id') id: string) {
     return this.academicService.findOneHocKy(+id);
   }
 
   @Put('semesters/:id')
-  updateHocKy(@Param('id') id: string, @Body() dto: UpdateHocKyDto) {
-    return this.academicService.updateHocKy(+id, dto);
+  @Roles(VaiTro.ADMIN)
+  updateHocKy(@Param('id') id: string, @Body() updateHocKyDto: UpdateHocKyDto) {
+    return this.academicService.updateHocKy(+id, updateHocKyDto);
   }
 
   @Delete('semesters/:id')
+  @Roles(VaiTro.ADMIN)
   removeHocKy(@Param('id') id: string) {
     return this.academicService.removeHocKy(+id);
   }
 
   // --- MonHoc ---
   @Post('subjects')
+  @Roles(VaiTro.ADMIN)
   createMonHoc(@Body() createMonHocDto: CreateMonHocDto) {
     return this.academicService.createMonHoc(createMonHocDto);
   }
 
   @Get('subjects')
+  @Roles(VaiTro.ADMIN, VaiTro.GIAO_VIEN, VaiTro.HOC_SINH)
   findAllMonHoc() {
     return this.academicService.findAllMonHoc();
   }
 
   @Get('subjects/:id')
+  @Roles(VaiTro.ADMIN, VaiTro.GIAO_VIEN, VaiTro.HOC_SINH)
   findOneMonHoc(@Param('id') id: string) {
     return this.academicService.findOneMonHoc(+id);
   }
 
   @Put('subjects/:id')
-  updateMonHoc(@Param('id') id: string, @Body() dto: UpdateMonHocDto) {
-    return this.academicService.updateMonHoc(+id, dto);
+  @Roles(VaiTro.ADMIN)
+  updateMonHoc(@Param('id') id: string, @Body() updateMonHocDto: UpdateMonHocDto) {
+    return this.academicService.updateMonHoc(+id, updateMonHocDto);
   }
 
   @Delete('subjects/:id')
+  @Roles(VaiTro.ADMIN)
   removeMonHoc(@Param('id') id: string) {
     return this.academicService.removeMonHoc(+id);
   }
 
   // --- LopHoc ---
   @Post('classes')
+  @Roles(VaiTro.ADMIN)
   createLopHoc(@Body() createLopHocDto: CreateLopHocDto) {
     return this.academicService.createLopHoc(createLopHocDto);
   }
 
   @Get('classes')
+  @Roles(VaiTro.ADMIN, VaiTro.GIAO_VIEN, VaiTro.HOC_SINH)
   findAllLopHoc() {
     return this.academicService.findAllLopHoc();
   }
 
   @Get('classes/:id')
+  @Roles(VaiTro.ADMIN, VaiTro.GIAO_VIEN, VaiTro.HOC_SINH)
   findOneLopHoc(@Param('id') id: string) {
     return this.academicService.findOneLopHoc(+id);
   }
 
   @Put('classes/:id')
-  updateLopHoc(@Param('id') id: string, @Body() dto: UpdateLopHocDto) {
-    return this.academicService.updateLopHoc(+id, dto);
+  @Roles(VaiTro.ADMIN)
+  updateLopHoc(@Param('id') id: string, @Body() updateLopHocDto: UpdateLopHocDto) {
+    return this.academicService.updateLopHoc(+id, updateLopHocDto);
   }
 
   @Delete('classes/:id')
+  @Roles(VaiTro.ADMIN)
   removeLopHoc(@Param('id') id: string) {
     return this.academicService.removeLopHoc(+id);
   }
