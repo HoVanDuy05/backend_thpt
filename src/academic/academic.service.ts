@@ -13,21 +13,41 @@ export class AcademicService {
   constructor(private readonly prisma: PrismaService) { }
 
   // --- NamHoc ---
-  createNamHoc(createNamHocDto: CreateNamHocDto) {
+  async createNamHoc(dto: CreateNamHocDto) {
+    // If this one is active, deactivate others (optional rule)
+    if (dto.dangKichHoat) {
+      await this.prisma.namHoc.updateMany({
+        where: { dangKichHoat: true },
+        data: { dangKichHoat: false }
+      });
+    }
     return this.prisma.namHoc.create({
-      data: createNamHocDto,
+      data: dto,
     });
   }
 
-  findAllNamHoc(params: any = {}) {
-    return this.prisma.namHoc.findMany(params);
+  async findAllNamHoc(params: any = {}) {
+    return this.prisma.namHoc.findMany({
+      include: {
+        cacHocKy: true,
+        _count: { select: { cacLop: true } }
+      },
+      orderBy: { tenNamHoc: 'desc' },
+      ...params
+    });
   }
 
   findOneNamHoc(id: number) {
     return this.prisma.namHoc.findUnique({ where: { id } });
   }
 
-  updateNamHoc(id: number, dto: UpdateNamHocDto) {
+  async updateNamHoc(id: number, dto: UpdateNamHocDto) {
+    if (dto.dangKichHoat) {
+      await this.prisma.namHoc.updateMany({
+        where: { id: { not: id }, dangKichHoat: true },
+        data: { dangKichHoat: false }
+      });
+    }
     return this.prisma.namHoc.update({ where: { id }, data: dto });
   }
 
@@ -91,5 +111,43 @@ export class AcademicService {
 
   removeLopHoc(id: number) {
     return this.prisma.lopHoc.delete({ where: { id } });
+  }
+
+  // --- HocKy ---
+  async createHocKy(dto: any) {
+    // Ensure only one active semester if needed, logic similar to Nam Hoc
+    if (dto.dangKichHoat) {
+      await this.prisma.hocKy.updateMany({
+        where: { dangKichHoat: true },
+        data: { dangKichHoat: false }
+      });
+    }
+    return this.prisma.hocKy.create({ data: dto });
+  }
+
+  async findAllHocKy(params: any = {}) {
+    return this.prisma.hocKy.findMany({
+      include: { namHoc: true },
+      orderBy: { tenHocKy: 'asc' },
+      ...params
+    });
+  }
+
+  async findOneHocKy(id: number) {
+    return this.prisma.hocKy.findUnique({ where: { id } });
+  }
+
+  async updateHocKy(id: number, dto: any) {
+    if (dto.dangKichHoat) {
+      await this.prisma.hocKy.updateMany({
+        where: { id: { not: id }, dangKichHoat: true },
+        data: { dangKichHoat: false }
+      });
+    }
+    return this.prisma.hocKy.update({ where: { id }, data: dto });
+  }
+
+  async removeHocKy(id: number) {
+    return this.prisma.hocKy.delete({ where: { id } });
   }
 }

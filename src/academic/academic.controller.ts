@@ -6,6 +6,8 @@ import { CreateLopHocDto } from './dto/create-lop-hoc.dto';
 import { UpdateNamHocDto } from './dto/update-nam-hoc.dto';
 import { UpdateMonHocDto } from './dto/update-mon-hoc.dto';
 import { UpdateLopHocDto } from './dto/update-lop-hoc.dto';
+import { CreateHocKyDto } from './dto/create-hoc-ky.dto';
+import { UpdateHocKyDto } from './dto/update-hoc-ky.dto';
 import { Roles } from '../common/decorators/roles.decorator';
 import { VaiTro } from '@prisma/client';
 
@@ -38,6 +40,32 @@ export class AcademicController {
   @Delete('years/:id')
   removeNamHoc(@Param('id') id: string) {
     return this.academicService.removeNamHoc(+id);
+  }
+
+  // --- HocKy ---
+  @Post('semesters')
+  createHocKy(@Body() dto: CreateHocKyDto) {
+    return this.academicService.createHocKy(dto);
+  }
+
+  @Get('semesters')
+  findAllHocKy() {
+    return this.academicService.findAllHocKy();
+  }
+
+  @Get('semesters/:id')
+  findOneHocKy(@Param('id') id: string) {
+    return this.academicService.findOneHocKy(+id);
+  }
+
+  @Put('semesters/:id')
+  updateHocKy(@Param('id') id: string, @Body() dto: UpdateHocKyDto) {
+    return this.academicService.updateHocKy(+id, dto);
+  }
+
+  @Delete('semesters/:id')
+  removeHocKy(@Param('id') id: string) {
+    return this.academicService.removeHocKy(+id);
   }
 
   // --- MonHoc ---

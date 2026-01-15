@@ -1,9 +1,13 @@
-import { IsBoolean, IsDateString, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { IsBoolean, IsDateString, IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
 
-export class CreateNamHocDto {
+export class CreateHocKyDto {
     @IsString()
     @IsNotEmpty()
-    tenNamHoc: string;
+    tenHocKy: string;
+
+    @IsNumber()
+    @IsNotEmpty()
+    namHocId: number;
 
     @IsDateString()
     @IsOptional()

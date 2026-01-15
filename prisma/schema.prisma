@@ -206,11 +206,29 @@ model HoSoNhanVien {
 model NamHoc {
   id        Int      @id @default(autoincrement())
   tenNamHoc String   @map("ten_nam_hoc") @db.VarChar(20)
+  ngayBatDau DateTime? @map("ngay_bat_dau") @db.Date
+  ngayKetThuc DateTime? @map("ngay_ket_thuc") @db.Date
+  dangKichHoat Boolean @default(false) @map("dang_kich_hoat")
   
   // Relations
   cacLop    LopHoc[]
+  cacHocKy  HocKy[]
 
   @@map("nam_hoc")
+}
+
+model HocKy {
+  id        Int      @id @default(autoincrement())
+  tenHocKy  String   @map("ten_hoc_ky") @db.VarChar(50)
+  namHocId  Int      @map("nam_hoc_id")
+  ngayBatDau DateTime? @map("ngay_bat_dau") @db.Date
+  ngayKetThuc DateTime? @map("ngay_ket_thuc") @db.Date
+  dangKichHoat Boolean @default(false) @map("dang_kich_hoat")
+
+  // Relations
+  namHoc    NamHoc @relation(fields: [namHocId], references: [id], onDelete: Cascade)
+
+  @@map("hoc_ky")
 }
 
 model MonHoc {
