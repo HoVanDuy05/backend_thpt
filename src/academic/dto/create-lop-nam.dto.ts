@@ -12,4 +12,8 @@ export class CreateLopNamDto {
     @IsInt()
     @IsOptional()
     gvChuNhiemId?: number;
+
+    @IsInt()
+    @IsOptional()
+    siSo?: number;
 }
