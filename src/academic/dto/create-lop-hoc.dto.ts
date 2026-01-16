@@ -7,7 +7,7 @@ export class CreateLopHocDto {
 
     @IsInt()
     @IsNotEmpty()
-    khoiLop: number; // NEW: required (10, 11, 12)
+    khoiId: number; // NEW: required (relation to Khoi)
 
     @IsString()
     @IsOptional()
