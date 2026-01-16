@@ -379,6 +379,23 @@ export class UsersService {
       include: {
         hoSoHocSinh: {
           include: {
+            cacLopNam: {
+              where: { trangThai: 'DANG_HOC' },
+              include: {
+                lopNam: {
+                  include: {
+                    lopHoc: {
+                      include: {
+                        khoi: true,
+                      }
+                    },
+                    gvChuNhiem: true,
+                    namHoc: true,
+                  },
+                },
+              },
+            },
+            // Keep legacy for a while if needed, or remove if confident
             lopHoc: {
               include: {
                 namHoc: true,
@@ -390,6 +407,12 @@ export class UsersService {
         hoSoGiaoVien: {
           include: {
             lopChuNhiem: true,
+            lopNams: {
+              include: {
+                lopHoc: true,
+                namHoc: true,
+              }
+            }
           },
         },
         hoSoNhanVien: true,
