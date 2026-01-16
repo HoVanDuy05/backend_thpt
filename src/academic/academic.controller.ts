@@ -8,6 +8,8 @@ import { UpdateMonHocDto } from './dto/update-mon-hoc.dto';
 import { UpdateLopHocDto } from './dto/update-lop-hoc.dto';
 import { CreateHocKyDto } from './dto/create-hoc-ky.dto';
 import { UpdateHocKyDto } from './dto/update-hoc-ky.dto';
+import { CreateLopNamDto } from './dto/create-lop-nam.dto';
+import { UpdateLopNamDto } from './dto/update-lop-nam.dto';
 import { Roles } from '../common/decorators/roles.decorator';
 import { VaiTro } from '@prisma/client';
 
@@ -16,6 +18,43 @@ export class AcademicController {
   constructor(private readonly academicService: AcademicService) { }
 
   // --- NamHoc ---
+  @Post('classes/clone')
+  @Roles(VaiTro.ADMIN)
+  cloneClasses(@Body() body: { fromNamHocId: number; toNamHocId: number }) {
+    return this.academicService.cloneClasses(body.fromNamHocId, body.toNamHocId);
+  }
+
+  // --- LopNam (ClassYear) ---
+  @Post('class-years')
+  @Roles(VaiTro.ADMIN)
+  createLopNam(@Body() createLopNamDto: CreateLopNamDto) {
+    return this.academicService.createLopNam(createLopNamDto);
+  }
+
+  @Get('class-years')
+  @Roles(VaiTro.ADMIN, VaiTro.GIAO_VIEN, VaiTro.HOC_SINH)
+  findAllLopNam() {
+    return this.academicService.findAllLopNam();
+  }
+
+  @Get('class-years/:id')
+  @Roles(VaiTro.ADMIN, VaiTro.GIAO_VIEN, VaiTro.HOC_SINH)
+  findOneLopNam(@Param('id') id: string) {
+    return this.academicService.findOneLopNam(+id);
+  }
+
+  @Put('class-years/:id')
+  @Roles(VaiTro.ADMIN)
+  updateLopNam(@Param('id') id: string, @Body() updateLopNamDto: UpdateLopNamDto) {
+    return this.academicService.updateLopNam(+id, updateLopNamDto);
+  }
+
+  @Delete('class-years/:id')
+  @Roles(VaiTro.ADMIN)
+  removeLopNam(@Param('id') id: string) {
+    return this.academicService.removeLopNam(+id);
+  }
+
   @Post('years')
   @Roles(VaiTro.ADMIN)
   createNamHoc(@Body() createNamHocDto: CreateNamHocDto) {
