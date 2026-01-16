@@ -113,6 +113,53 @@ export class AcademicService {
     return this.prisma.lopHoc.delete({ where: { id } });
   }
 
+  async cloneClasses(fromNamHocId: number, toNamHocId: number) {
+    // 1. Get source classes
+    const sourceClasses = await this.prisma.lopHoc.findMany({
+      where: { namHocId: fromNamHocId },
+    });
+
+    if (sourceClasses.length === 0) {
+      throw new Error("Không tìm thấy lớp học nào trong năm học nguồn.");
+    }
+
+    // 2. Create target classes
+    // We can use createMany if database supports it (MySQL does).
+    // But we need to map data.
+    const dataToCreate = sourceClasses.map(cls => ({
+      tenLop: cls.tenLop,
+      namHocId: toNamHocId,
+      // We do NOT copy gvChuNhiemId because teachers change every year usually.
+      // But user demand "Clone Structure", so names are key.
+    }));
+
+    // Optional: Check existence to avoid dupes?
+    // For simplicity/speed requested by user, we just create. 
+    // If exact name exists in target year, what happens? 
+    // Allow duplicate names? Schema doesn't enforce unique tenLop per namHoc (checked ViewFile).
+    // So duplicates are possible but confusing.
+    // Ideally we skip existing names.
+
+    /* 
+    // Better logic: Filter out existing
+    const existing = await this.prisma.lopHoc.findMany({ where: { namHocId: toNamHocId } });
+    const existingNames = new Set(existing.map(c => c.tenLop));
+    const finalData = dataToCreate.filter(d => !existingNames.has(d.tenLop));
+    */
+
+    const existing = await this.prisma.lopHoc.findMany({ where: { namHocId: toNamHocId } });
+    const existingNames = new Set(existing.map(c => c.tenLop));
+    const finalData = dataToCreate.filter(d => !existingNames.has(d.tenLop));
+
+    if (finalData.length === 0) {
+      return { count: 0, message: "Tất cả các lớp đã tồn tại trong năm học đích." };
+    }
+
+    return this.prisma.lopHoc.createMany({
+      data: finalData,
+    });
+  }
+
   // --- HocKy ---
   async createHocKy(dto: any) {
     // Ensure only one active semester if needed, logic similar to Nam Hoc

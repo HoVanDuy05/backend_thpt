@@ -42,29 +42,29 @@ enum TrangThaiHocTap {
 }
 
 model NguoiDung {
-  id           Int      @id @default(autoincrement())
-  taiKhoan     String   @unique @map("tai_khoan") @db.VarChar(50)
-  matKhau      String?  @map("mat_khau") @db.Text
-  email        String?  @unique @db.VarChar(100)
-  soDienThoai  String?  @unique @map("so_dien_thoai") @db.VarChar(15)
-  kichHoat     Boolean  @default(false) @map("kich_hoat")
-  maXacThuc    String?  @map("ma_xac_thuc") @db.VarChar(10)
-  googleId     String?  @unique @map("google_id") @db.VarChar(255)
-  vaiTro       VaiTro   @map("vai_tro")
-  hoTen        String?  @map("ho_ten") @db.VarChar(100)
-  maSo         String?  @unique @map("ma_so") @db.VarChar(50)
-  avatar       String?  @map("avatar") @db.Text
-  ngayTao      DateTime @default(now()) @map("ngay_tao")
+  id          Int      @id @default(autoincrement())
+  taiKhoan    String   @unique @map("tai_khoan") @db.VarChar(50)
+  matKhau     String?  @map("mat_khau") @db.Text
+  email       String?  @unique @db.VarChar(100)
+  soDienThoai String?  @unique @map("so_dien_thoai") @db.VarChar(15)
+  kichHoat    Boolean  @default(false) @map("kich_hoat")
+  maXacThuc   String?  @map("ma_xac_thuc") @db.VarChar(10)
+  googleId    String?  @unique @map("google_id") @db.VarChar(255)
+  vaiTro      VaiTro   @map("vai_tro")
+  hoTen       String?  @map("ho_ten") @db.VarChar(100)
+  maSo        String?  @unique @map("ma_so") @db.VarChar(50)
+  avatar      String?  @map("avatar") @db.Text
+  ngayTao     DateTime @default(now()) @map("ngay_tao")
 
   // Relations
-  hoSoGiaoVien HoSoGiaoVien?
-  hoSoHocSinh  HoSoHocSinh?
-  hoSoNhanVien HoSoNhanVien?
-  baiViets     BaiViet[]
-  binhLuans    BinhLuan[]
-  thongBaos    ThongBao[]
-  cacKenhChat  ThanhVienKenh[]
-  tinNhans     TinNhan[]
+  hoSoGiaoVien   HoSoGiaoVien?
+  hoSoHocSinh    HoSoHocSinh?
+  hoSoNhanVien   HoSoNhanVien?
+  baiViets       BaiViet[]
+  binhLuans      BinhLuan[]
+  thongBaos      ThongBao[]
+  cacKenhChat    ThanhVienKenh[]
+  tinNhans       TinNhan[]
   lichSuDangNhap LichSuDangNhap[]
 
   // Approval & Social
@@ -82,66 +82,68 @@ model NguoiDung {
   yeuCauKetBanNhan KetBan[] @relation("YeuCauKetBanNhan")
 
   // Advanced Approval Flow
-  quyTrinhsTao          QuyTrinh[]               @relation("NguoiTaoQuyTrinh")
-  phienQuyTrinhsTao     PhienQuyTrinh[]          @relation("NguoiTaoPhien")
-  nhatKyPheDuyetQuyTrinh NhatKyPheDuyetQuyTrinh[] @relation("NguoiPheDuyetLog")
+  quyTrinhsTao            QuyTrinh[]               @relation("NguoiTaoQuyTrinh")
+  phienQuyTrinhsTao       PhienQuyTrinh[]          @relation("NguoiTaoPhien")
+  nhatKyPheDuyetQuyTrinh  NhatKyPheDuyetQuyTrinh[] @relation("NguoiPheDuyetLog")
   cacBuocPheDuyetDuocGiao NguoiPheDuyetBuoc[]
-  pushSubscriptions     PushSubscription[]
+  pushSubscriptions       PushSubscription[]
 
   @@map("nguoi_dung")
 }
 
 model PushSubscription {
-  id              Int      @id @default(autoincrement())
-  userId          Int      @map("user_id")
-  endpoint        String   @map("endpoint") @db.Text
-  p256dh          String   @map("p256dh") @db.Text
-  auth            String   @map("auth") @db.Text
-  thietBi         String?  @map("thiet_bi") @db.Text
-  ngayTao         DateTime @default(now()) @map("ngay_tao")
+  id       Int      @id @default(autoincrement())
+  userId   Int      @map("user_id")
+  endpoint String   @map("endpoint") @db.Text
+  p256dh   String   @map("p256dh") @db.Text
+  auth     String   @map("auth") @db.Text
+  thietBi  String?  @map("thiet_bi") @db.Text
+  ngayTao  DateTime @default(now()) @map("ngay_tao")
 
   // Relations
-  nguoiDung       NguoiDung @relation(fields: [userId], references: [id], onDelete: Cascade)
+  nguoiDung NguoiDung @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("push_subscriptions")
 }
 
 model HoSoGiaoVien {
-  id             Int     @id @default(autoincrement())
-  userId         Int     @unique @map("user_id")
-  maSoGv         String  @unique @map("ma_so_gv") @db.VarChar(20)
-  hoTen          String  @map("ho_ten") @db.VarChar(100)
-  ngaySinh       DateTime? @map("ngay_sinh") @db.Date
-  gioiTinh       GioiTinh  @default(NAM) @map("gioi_tinh")
-  diaChi         String?   @map("dia_chi") @db.VarChar(255)
-  soDienThoai    String?   @map("so_dien_thoai") @db.VarChar(15)
-  emailLienHe    String?   @map("email_lien_he") @db.VarChar(100)
-  
+  id          Int       @id @default(autoincrement())
+  userId      Int       @unique @map("user_id")
+  maSoGv      String    @unique @map("ma_so_gv") @db.VarChar(20)
+  hoTen       String    @map("ho_ten") @db.VarChar(100)
+  ngaySinh    DateTime? @map("ngay_sinh") @db.Date
+  gioiTinh    GioiTinh  @default(NAM) @map("gioi_tinh")
+  diaChi      String?   @map("dia_chi") @db.VarChar(255)
+  soDienThoai String?   @map("so_dien_thoai") @db.VarChar(15)
+  emailLienHe String?   @map("email_lien_he") @db.VarChar(100)
+
   // Giấy tờ tùy thân
-  cccd           String?   @unique @map("cccd") @db.VarChar(20)
-  ngayCapCccd    DateTime? @map("ngay_cap_cccd") @db.Date
-  noiCapCccd     String?   @map("noi_cap_cccd") @db.VarChar(100)
+  cccd        String?   @unique @map("cccd") @db.VarChar(20)
+  ngayCapCccd DateTime? @map("ngay_cap_cccd") @db.Date
+  noiCapCccd  String?   @map("noi_cap_cccd") @db.VarChar(100)
 
   // Chuyên môn
-  trinhDo        TrinhDo   @default(DAI_HOC) @map("trinh_do")
-  chuyenMon      String?   @map("chuyen_mon") @db.VarChar(50)
-  ngayVaoLam     DateTime? @map("ngay_vao_lam") @db.Date
+  trinhDo    TrinhDo   @default(DAI_HOC) @map("trinh_do")
+  chuyenMon  String?   @map("chuyen_mon") @db.VarChar(50)
+  ngayVaoLam DateTime? @map("ngay_vao_lam") @db.Date
 
   // Relations
-  nguoiDung      NguoiDung        @relation(fields: [userId], references: [id], onDelete: Cascade)
-  lopChuNhiem    LopHoc[]
-  cauHoiTao      NganHangCauHoi[]
-  deThiTao       DeKiemTra[]
-  baiCham        KetQuaChamDiem[]
-  lichDay        LichHoc[]
+  nguoiDung   NguoiDung        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lopChuNhiem LopHoc[]
+  cauHoiTao   NganHangCauHoi[]
+  deThiTao    DeKiemTra[]
+  baiCham     KetQuaChamDiem[]
+  lichDay     LichHoc[]
+  lopNams     LopNam[]
+  lichHocNews LichHocNew[]
 
   @@map("ho_so_giao_vien")
 }
 
 model HoSoHocSinh {
-  id            Int       @id @default(autoincrement())
-  userId        Int       @unique @map("user_id")
-  maSoHs        String    @unique @map("ma_so_hs") @db.VarChar(20)
+  id              Int       @id @default(autoincrement())
+  userId          Int       @unique @map("user_id")
+  maSoHs          String    @unique @map("ma_so_hs") @db.VarChar(20)
   hoTen           String    @map("ho_ten") @db.VarChar(100)
   ngaySinh        DateTime? @map("ngay_sinh") @db.Date
   gioiTinh        GioiTinh  @default(NAM) @map("gioi_tinh")
@@ -153,48 +155,54 @@ model HoSoHocSinh {
   soDienThoai     String?   @map("so_dien_thoai") @db.VarChar(15)
 
   // Giấy tờ tùy thân
-  cccd            String?   @unique @map("cccd") @db.VarChar(20)
-  ngayCapCccd     DateTime? @map("ngay_cap_cccd") @db.Date
-  noiCapCccd      String?   @map("noi_cap_cccd") @db.VarChar(100)
+  cccd        String?   @unique @map("cccd") @db.VarChar(20)
+  ngayCapCccd DateTime? @map("ngay_cap_cccd") @db.Date
+  noiCapCccd  String?   @map("noi_cap_cccd") @db.VarChar(100)
 
   // Thông tin Cha
-  hoTenCha        String?   @map("ho_ten_cha") @db.VarChar(100)
-  ngheNghiepCha   String?   @map("nghe_nghiep_cha") @db.VarChar(100)
-  sdtCha          String?   @map("sdt_cha") @db.VarChar(15)
+  hoTenCha      String? @map("ho_ten_cha") @db.VarChar(100)
+  ngheNghiepCha String? @map("nghe_nghiep_cha") @db.VarChar(100)
+  sdtCha        String? @map("sdt_cha") @db.VarChar(15)
 
   // Thông tin Mẹ
-  hoTenMe         String?   @map("ho_ten_me") @db.VarChar(100)
-  ngheNghiepMe    String?   @map("nghe_nghiep_me") @db.VarChar(100)
-  sdtMe           String?   @map("sdt_me") @db.VarChar(15)
+  hoTenMe      String? @map("ho_ten_me") @db.VarChar(100)
+  ngheNghiepMe String? @map("nghe_nghiep_me") @db.VarChar(100)
+  sdtMe        String? @map("sdt_me") @db.VarChar(15)
 
   // Học vụ
-  ngayNhapHoc     DateTime? @map("ngay_nhap_hoc") @db.Date
-  trangThai       TrangThaiHocTap @default(DANG_HOC) @map("trang_thai")
-  
-  lopId           Int?      @map("lop_id")
+  ngayNhapHoc DateTime?       @map("ngay_nhap_hoc") @db.Date
+  trangThai   TrangThaiHocTap @default(DANG_HOC) @map("trang_thai")
+
+  lopId Int? @map("lop_id")
 
   // Relations
-  nguoiDung     NguoiDung       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  lopHoc        LopHoc?         @relation(fields: [lopId], references: [id], onDelete: SetNull)
-  lichSuNopBai  LichSuNopBai[]
+  nguoiDung NguoiDung @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // OLD relation - keep for migration
+  lopHoc LopHoc? @relation(fields: [lopId], references: [id], onDelete: SetNull)
+
+  // NEW relation
+  cacLopNam HocSinhLopNam[]
+
+  lichSuNopBai LichSuNopBai[]
 
   @@map("ho_so_hoc_sinh")
 }
 
 model HoSoNhanVien {
-  id             Int     @id @default(autoincrement())
-  userId         Int     @unique @map("user_id")
-  maSo           String  @unique @map("ma_so") @db.VarChar(20)
-  hoTen          String  @map("ho_ten") @db.VarChar(100)
-  ngaySinh       DateTime? @map("ngay_sinh") @db.Date
-  gioiTinh       GioiTinh  @default(NAM) @map("gioi_tinh")
-  diaChi         String?   @map("dia_chi") @db.VarChar(255)
-  soDienThoai    String?   @map("so_dien_thoai") @db.VarChar(15)
-  emailLienHe    String?   @map("email_lien_he") @db.VarChar(100)
-  cccd           String?   @unique @map("cccd") @db.VarChar(20)
+  id          Int       @id @default(autoincrement())
+  userId      Int       @unique @map("user_id")
+  maSo        String    @unique @map("ma_so") @db.VarChar(20)
+  hoTen       String    @map("ho_ten") @db.VarChar(100)
+  ngaySinh    DateTime? @map("ngay_sinh") @db.Date
+  gioiTinh    GioiTinh  @default(NAM) @map("gioi_tinh")
+  diaChi      String?   @map("dia_chi") @db.VarChar(255)
+  soDienThoai String?   @map("so_dien_thoai") @db.VarChar(15)
+  emailLienHe String?   @map("email_lien_he") @db.VarChar(100)
+  cccd        String?   @unique @map("cccd") @db.VarChar(20)
 
   // Relations
-  nguoiDung      NguoiDung @relation(fields: [userId], references: [id], onDelete: Cascade)
+  nguoiDung NguoiDung @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("ho_so_nhan_vien")
 }
@@ -204,77 +212,140 @@ model HoSoNhanVien {
 // ==========================================================
 
 model NamHoc {
-  id        Int      @id @default(autoincrement())
-  tenNamHoc String   @map("ten_nam_hoc") @db.VarChar(20)
-  ngayBatDau DateTime? @map("ngay_bat_dau") @db.Date
-  ngayKetThuc DateTime? @map("ngay_ket_thuc") @db.Date
-  dangKichHoat Boolean @default(false) @map("dang_kich_hoat")
-  
+  id           Int       @id @default(autoincrement())
+  tenNamHoc    String    @map("ten_nam_hoc") @db.VarChar(20)
+  ngayBatDau   DateTime? @map("ngay_bat_dau") @db.Date
+  ngayKetThuc  DateTime? @map("ngay_ket_thuc") @db.Date
+  dangKichHoat Boolean   @default(false) @map("dang_kich_hoat")
+
   // Relations
-  cacLop    LopHoc[]
+  cacLop    LopHoc[] // OLD - keep for migration
+  cacLopNam LopNam[] // NEW
   cacHocKy  HocKy[]
 
   @@map("nam_hoc")
 }
 
 model HocKy {
-  id        Int      @id @default(autoincrement())
-  tenHocKy  String   @map("ten_hoc_ky") @db.VarChar(50)
-  namHocId  Int      @map("nam_hoc_id")
-  ngayBatDau DateTime? @map("ngay_bat_dau") @db.Date
-  ngayKetThuc DateTime? @map("ngay_ket_thuc") @db.Date
-  dangKichHoat Boolean @default(false) @map("dang_kich_hoat")
+  id           Int       @id @default(autoincrement())
+  tenHocKy     String    @map("ten_hoc_ky") @db.VarChar(50)
+  namHocId     Int       @map("nam_hoc_id")
+  ngayBatDau   DateTime? @map("ngay_bat_dau") @db.Date
+  ngayKetThuc  DateTime? @map("ngay_ket_thuc") @db.Date
+  dangKichHoat Boolean   @default(false) @map("dang_kich_hoat")
 
   // Relations
-  namHoc    NamHoc @relation(fields: [namHocId], references: [id], onDelete: Cascade)
+  namHoc NamHoc @relation(fields: [namHocId], references: [id], onDelete: Cascade)
 
   @@map("hoc_ky")
 }
 
 model MonHoc {
-  id        Int              @id @default(autoincrement())
-  tenMon    String           @map("ten_mon") @db.VarChar(100)
+  id     Int    @id @default(autoincrement())
+  tenMon String @map("ten_mon") @db.VarChar(100)
 
   // Relations
   nganHangCauHoi NganHangCauHoi[]
   deKiemTra      DeKiemTra[]
   lichHocs       LichHoc[]
+  lichHocNews    LichHocNew[]
 
   @@map("mon_hoc")
 }
 
 model LopHoc {
-  id             Int            @id @default(autoincrement())
-  namHocId       Int?           @map("nam_hoc_id")
-  tenLop         String         @map("ten_lop") @db.VarChar(20)
-  gvChuNhiemId   Int?           @map("gv_chu_nhiem_id")
+  id      Int     @id @default(autoincrement())
+  tenLop  String  @map("ten_lop") @db.VarChar(20)
+  khoiLop Int     @map("khoi_lop") // 10, 11, 12
+  moTa    String? @map("mo_ta") @db.Text
+
+  // OLD fields - keep for migration
+  namHocId     Int? @map("nam_hoc_id")
+  gvChuNhiemId Int? @map("gv_chu_nhiem_id")
 
   // Relations
-  namHoc         NamHoc?        @relation(fields: [namHocId], references: [id], onDelete: SetNull)
-  gvChuNhiem     HoSoGiaoVien?  @relation(fields: [gvChuNhiemId], references: [id], onDelete: SetNull)
-  hocSinhs       HoSoHocSinh[]
-  lichHocs       LichHoc[]
+  cacLopNam LopNam[]
+
+  // OLD relations - keep for migration
+  namHoc     NamHoc?       @relation(fields: [namHocId], references: [id], onDelete: SetNull)
+  gvChuNhiem HoSoGiaoVien? @relation(fields: [gvChuNhiemId], references: [id], onDelete: SetNull)
+  hocSinhs   HoSoHocSinh[]
+  lichHocs   LichHoc[]
 
   @@map("lop_hoc")
 }
 
+model LopNam {
+  id           Int  @id @default(autoincrement())
+  lopId        Int  @map("lop_id")
+  namHocId     Int  @map("nam_hoc_id")
+  gvChuNhiemId Int? @map("gv_chu_nhiem_id")
+  siSo         Int  @default(0) @map("si_so")
+
+  lopHoc     LopHoc        @relation(fields: [lopId], references: [id], onDelete: Cascade)
+  namHoc     NamHoc        @relation(fields: [namHocId], references: [id], onDelete: Cascade)
+  gvChuNhiem HoSoGiaoVien? @relation(fields: [gvChuNhiemId], references: [id], onDelete: SetNull)
+
+  hocSinhs HocSinhLopNam[]
+  lichHocs LichHocNew[]
+
+  @@unique([lopId, namHocId])
+  @@map("lop_nam")
+}
+
+model HocSinhLopNam {
+  id        Int             @id @default(autoincrement())
+  hocSinhId Int             @map("hoc_sinh_id")
+  lopNamId  Int             @map("lop_nam_id")
+  ngayVao   DateTime        @default(now()) @map("ngay_vao")
+  ngayRa    DateTime?       @map("ngay_ra")
+  trangThai TrangThaiHocTap @default(DANG_HOC) @map("trang_thai")
+
+  hocSinh HoSoHocSinh @relation(fields: [hocSinhId], references: [id], onDelete: Cascade)
+  lopNam  LopNam      @relation(fields: [lopNamId], references: [id], onDelete: Cascade)
+
+  @@unique([hocSinhId, lopNamId])
+  @@map("hoc_sinh_lop_nam")
+}
+
+// OLD LichHoc - keep for migration
 model LichHoc {
-  id          Int      @id @default(autoincrement())
-  lopId       Int      @map("lop_id")
-  monHocId    Int      @map("mon_hoc_id")
-  gvDayId     Int?     @map("gv_day_id")
-  thu         Int      // Thứ trong tuần (2-7, 8 là Chủ nhật)
-  tietBatDau  Int      @map("tiet_bat_dau")
-  soTiet      Int      @map("so_tiet")
-  phongHoc    String?  @map("phong_hoc") @db.VarChar(50)
-  ngayTao     DateTime @default(now()) @map("ngay_tao")
+  id         Int      @id @default(autoincrement())
+  lopId      Int      @map("lop_id")
+  monHocId   Int      @map("mon_hoc_id")
+  gvDayId    Int?     @map("gv_day_id")
+  thu        Int // Thứ trong tuần (2-7, 8 là Chủ nhật)
+  tietBatDau Int      @map("tiet_bat_dau")
+  soTiet     Int      @map("so_tiet")
+  phongHoc   String?  @map("phong_hoc") @db.VarChar(50)
+  ngayTao    DateTime @default(now()) @map("ngay_tao")
 
   // Relations
-  lopHoc      LopHoc   @relation(fields: [lopId], references: [id], onDelete: Cascade)
-  monHoc      MonHoc   @relation(fields: [monHocId], references: [id], onDelete: Cascade)
-  gvDay       HoSoGiaoVien? @relation(fields: [gvDayId], references: [id], onDelete: SetNull)
+  lopHoc LopHoc        @relation(fields: [lopId], references: [id], onDelete: Cascade)
+  monHoc MonHoc        @relation(fields: [monHocId], references: [id], onDelete: Cascade)
+  gvDay  HoSoGiaoVien? @relation(fields: [gvDayId], references: [id], onDelete: SetNull)
 
   @@map("lich_hoc")
+}
+
+// NEW LichHoc - uses LopNam
+model LichHocNew {
+  id         Int      @id @default(autoincrement())
+  lopNamId   Int      @map("lop_nam_id")
+  monHocId   Int      @map("mon_hoc_id")
+  gvDayId    Int?     @map("gv_day_id")
+  thu        Int // Thứ trong tuần (2-7, 8 là Chủ nhật)
+  tietBatDau Int      @map("tiet_bat_dau")
+  soTiet     Int      @map("so_tiet")
+  phongHoc   String?  @map("phong_hoc") @db.VarChar(50)
+  ngayTao    DateTime @default(now()) @map("ngay_tao")
+
+  // Relations
+  lopNam LopNam        @relation(fields: [lopNamId], references: [id], onDelete: Cascade)
+  monHoc MonHoc        @relation(fields: [monHocId], references: [id], onDelete: Cascade)
+  gvDay  HoSoGiaoVien? @relation(fields: [gvDayId], references: [id], onDelete: SetNull)
+
+  @@map("lich_hoc_new")
 }
 
 // ==========================================================
@@ -287,49 +358,49 @@ enum LoaiCauHoi {
 }
 
 model NganHangCauHoi {
-  id              Int            @id @default(autoincrement())
-  monHocId        Int            @map("mon_hoc_id")
-  gvTaoId         Int?           @map("gv_tao_id")
-  noiDungCauHoi   String         @map("noi_dung_cau_hoi") @db.Text
-  loaiCauHoi      LoaiCauHoi     @map("loai_cau_hoi")
-  dapAnDung       String?        @map("dap_an_dung") @db.Text
-  loiGiaiChiTiet  String?        @map("loi_giai_chi_tiet") @db.Text
+  id             Int        @id @default(autoincrement())
+  monHocId       Int        @map("mon_hoc_id")
+  gvTaoId        Int?       @map("gv_tao_id")
+  noiDungCauHoi  String     @map("noi_dung_cau_hoi") @db.Text
+  loaiCauHoi     LoaiCauHoi @map("loai_cau_hoi")
+  dapAnDung      String?    @map("dap_an_dung") @db.Text
+  loiGiaiChiTiet String?    @map("loi_giai_chi_tiet") @db.Text
 
   // Relations
-  monHoc          MonHoc         @relation(fields: [monHocId], references: [id], onDelete: Cascade)
-  gvTao           HoSoGiaoVien?  @relation(fields: [gvTaoId], references: [id], onDelete: SetNull)
-  chiTietDeThis   ChiTietDeThi[]
-  chiTietTraLois  ChiTietTraLoiTracNghiem[]
+  monHoc         MonHoc                    @relation(fields: [monHocId], references: [id], onDelete: Cascade)
+  gvTao          HoSoGiaoVien?             @relation(fields: [gvTaoId], references: [id], onDelete: SetNull)
+  chiTietDeThis  ChiTietDeThi[]
+  chiTietTraLois ChiTietTraLoiTracNghiem[]
 
   @@map("ngan_hang_cau_hoi")
 }
 
 model DeKiemTra {
-  id              Int            @id @default(autoincrement())
-  monHocId        Int            @map("mon_hoc_id")
-  gvTaoId         Int?           @map("gv_tao_id")
-  tieuDe          String         @map("tieu_de") @db.VarChar(255)
-  loaiBaiThi      String?        @map("loai_bai_thi") @db.VarChar(50)
-  thoiGianLamBai  Int?           @map("thoi_gian_lam_bai") // Số phút
-  hanNopBai       DateTime?      @map("han_nop_bai")
+  id             Int       @id @default(autoincrement())
+  monHocId       Int       @map("mon_hoc_id")
+  gvTaoId        Int?      @map("gv_tao_id")
+  tieuDe         String    @map("tieu_de") @db.VarChar(255)
+  loaiBaiThi     String?   @map("loai_bai_thi") @db.VarChar(50)
+  thoiGianLamBai Int?      @map("thoi_gian_lam_bai") // Số phút
+  hanNopBai      DateTime? @map("han_nop_bai")
 
   // Relations
-  monHoc          MonHoc         @relation(fields: [monHocId], references: [id], onDelete: Cascade)
-  gvTao           HoSoGiaoVien?  @relation(fields: [gvTaoId], references: [id], onDelete: SetNull)
-  chiTietDeThis   ChiTietDeThi[]
-  lichSuNopBais   LichSuNopBai[]
+  monHoc        MonHoc         @relation(fields: [monHocId], references: [id], onDelete: Cascade)
+  gvTao         HoSoGiaoVien?  @relation(fields: [gvTaoId], references: [id], onDelete: SetNull)
+  chiTietDeThis ChiTietDeThi[]
+  lichSuNopBais LichSuNopBai[]
 
   @@map("de_kiem_tra")
 }
 
 model ChiTietDeThi {
-  deThiId    Int @map("de_thi_id")
-  cauHoiId   Int @map("cau_hoi_id")
-  thuTuCau   Int? @map("thu_tu_cau")
+  deThiId  Int  @map("de_thi_id")
+  cauHoiId Int  @map("cau_hoi_id")
+  thuTuCau Int? @map("thu_tu_cau")
 
   // Relations
-  deKiemTra       DeKiemTra      @relation(fields: [deThiId], references: [id], onDelete: Cascade)
-  nganHangCauHoi  NganHangCauHoi @relation(fields: [cauHoiId], references: [id], onDelete: Cascade)
+  deKiemTra      DeKiemTra      @relation(fields: [deThiId], references: [id], onDelete: Cascade)
+  nganHangCauHoi NganHangCauHoi @relation(fields: [cauHoiId], references: [id], onDelete: Cascade)
 
   @@id([deThiId, cauHoiId])
   @@map("chi_tiet_de_thi")
@@ -350,24 +421,24 @@ model LichSuNopBai {
   trangThai      String?  @default("CHO_CHAM") @map("trang_thai") @db.VarChar(20)
 
   // Relations
-  deKiemTra      DeKiemTra      @relation(fields: [deThiId], references: [id], onDelete: Cascade)
-  hocSinh        HoSoHocSinh    @relation(fields: [hocSinhId], references: [id], onDelete: Cascade)
-  chiTietTraLois ChiTietTraLoiTracNghiem[]
+  deKiemTra       DeKiemTra                 @relation(fields: [deThiId], references: [id], onDelete: Cascade)
+  hocSinh         HoSoHocSinh               @relation(fields: [hocSinhId], references: [id], onDelete: Cascade)
+  chiTietTraLois  ChiTietTraLoiTracNghiem[]
   ketQuaChamDiems KetQuaChamDiem[]
 
   @@map("lich_su_nop_bai")
 }
 
 model ChiTietTraLoiTracNghiem {
-  id              Int            @id @default(autoincrement())
-  nopBaiId        Int            @map("nop_bai_id")
-  cauHoiId        Int            @map("cau_hoi_id")
-  cauTraLoiCuaHs  String?        @map("cau_tra_loi_cua_hs") @db.Text
-  laDung          Boolean?       @map("la_dung")
+  id             Int      @id @default(autoincrement())
+  nopBaiId       Int      @map("nop_bai_id")
+  cauHoiId       Int      @map("cau_hoi_id")
+  cauTraLoiCuaHs String?  @map("cau_tra_loi_cua_hs") @db.Text
+  laDung         Boolean? @map("la_dung")
 
   // Relations
-  lichSuNopBai    LichSuNopBai   @relation(fields: [nopBaiId], references: [id], onDelete: Cascade)
-  nganHangCauHoi  NganHangCauHoi @relation(fields: [cauHoiId], references: [id], onDelete: Cascade)
+  lichSuNopBai   LichSuNopBai   @relation(fields: [nopBaiId], references: [id], onDelete: Cascade)
+  nganHangCauHoi NganHangCauHoi @relation(fields: [cauHoiId], references: [id], onDelete: Cascade)
 
   @@map("chi_tiet_tra_loi_trac_nghiem")
 }
@@ -377,16 +448,16 @@ model ChiTietTraLoiTracNghiem {
 // ==========================================================
 
 model KetQuaChamDiem {
-  id            Int      @id @default(autoincrement())
-  nopBaiId      Int      @map("nop_bai_id")
-  gvChamId      Int?     @map("gv_cham_id")
-  diemSo        Decimal? @map("diem_so") @db.Decimal(4, 2)
-  nhanXetCuaGv  String?  @map("nhan_xet_cua_gv") @db.Text
-  ngayCham      DateTime @default(now()) @map("ngay_cham")
+  id           Int      @id @default(autoincrement())
+  nopBaiId     Int      @map("nop_bai_id")
+  gvChamId     Int?     @map("gv_cham_id")
+  diemSo       Decimal? @map("diem_so") @db.Decimal(4, 2)
+  nhanXetCuaGv String?  @map("nhan_xet_cua_gv") @db.Text
+  ngayCham     DateTime @default(now()) @map("ngay_cham")
 
   // Relations
-  lichSuNopBai  LichSuNopBai   @relation(fields: [nopBaiId], references: [id], onDelete: Cascade)
-  gvCham        HoSoGiaoVien?  @relation(fields: [gvChamId], references: [id], onDelete: SetNull)
+  lichSuNopBai LichSuNopBai  @relation(fields: [nopBaiId], references: [id], onDelete: Cascade)
+  gvCham       HoSoGiaoVien? @relation(fields: [gvChamId], references: [id], onDelete: SetNull)
 
   @@map("ket_qua_cham_diem")
 }
@@ -417,40 +488,40 @@ enum LoaiBaiViet {
 }
 
 model BaiViet {
-  id           Int           @id @default(autoincrement())
-  tieuDe       String        @map("tieu_de") @db.VarChar(255)
-  duongDan     String        @unique @map("duong_dan") @db.VarChar(255) // Slug
-  tomTat       String?       @map("tom_tat") @db.Text
-  noiDung      String        @map("noi_dung") @db.LongText
-  anhBia       String?       @map("anh_bia") @db.VarChar(255)
-  loai         LoaiBaiViet   @default(TIN_TUC) @map("loai")
-  daXuatBan    Boolean       @default(false) @map("da_xuat_ban")
-  luotXem      Int           @default(0) @map("luot_xem")
-  nguoiTaoId   Int?          @map("nguoi_tao_id")
-  ngayTao      DateTime      @default(now()) @map("ngay_tao")
-  ngayCapNhat  DateTime      @updatedAt @map("ngay_cap_nhat")
+  id          Int         @id @default(autoincrement())
+  tieuDe      String      @map("tieu_de") @db.VarChar(255)
+  duongDan    String      @unique @map("duong_dan") @db.VarChar(255) // Slug
+  tomTat      String?     @map("tom_tat") @db.Text
+  noiDung     String      @map("noi_dung") @db.LongText
+  anhBia      String?     @map("anh_bia") @db.VarChar(255)
+  loai        LoaiBaiViet @default(TIN_TUC) @map("loai")
+  daXuatBan   Boolean     @default(false) @map("da_xuat_ban")
+  luotXem     Int         @default(0) @map("luot_xem")
+  nguoiTaoId  Int?        @map("nguoi_tao_id")
+  ngayTao     DateTime    @default(now()) @map("ngay_tao")
+  ngayCapNhat DateTime    @updatedAt @map("ngay_cap_nhat")
 
   // Relations
-  nguoiTao     NguoiDung?    @relation(fields: [nguoiTaoId], references: [id], onDelete: SetNull)
-  binhLuans    BinhLuan[]
+  nguoiTao  NguoiDung? @relation(fields: [nguoiTaoId], references: [id], onDelete: SetNull)
+  binhLuans BinhLuan[]
 
   @@map("bai_viet")
 }
 
 model BinhLuan {
-  id           Int        @id @default(autoincrement())
-  baiVietId    Int        @map("bai_viet_id")
-  nguoiDungId  Int        @map("nguoi_dung_id")
-  noiDung      String     @map("noi_dung") @db.Text
-  binhLuanChaId Int?      @map("binh_luan_cha_id") // Parent comment for replies
-  ngayTao      DateTime   @default(now()) @map("ngay_tao")
-  ngayCapNhat  DateTime   @updatedAt @map("ngay_cap_nhat")
+  id            Int      @id @default(autoincrement())
+  baiVietId     Int      @map("bai_viet_id")
+  nguoiDungId   Int      @map("nguoi_dung_id")
+  noiDung       String   @map("noi_dung") @db.Text
+  binhLuanChaId Int?     @map("binh_luan_cha_id") // Parent comment for replies
+  ngayTao       DateTime @default(now()) @map("ngay_tao")
+  ngayCapNhat   DateTime @updatedAt @map("ngay_cap_nhat")
 
   // Relations
-  baiViet      BaiViet    @relation(fields: [baiVietId], references: [id], onDelete: Cascade)
-  nguoiDung    NguoiDung  @relation(fields: [nguoiDungId], references: [id], onDelete: Cascade)
-  binhLuanCha  BinhLuan?  @relation("PhanHoi", fields: [binhLuanChaId], references: [id], onDelete: Cascade)
-  phanHoi      BinhLuan[] @relation("PhanHoi")
+  baiViet     BaiViet    @relation(fields: [baiVietId], references: [id], onDelete: Cascade)
+  nguoiDung   NguoiDung  @relation(fields: [nguoiDungId], references: [id], onDelete: Cascade)
+  binhLuanCha BinhLuan?  @relation("PhanHoi", fields: [binhLuanChaId], references: [id], onDelete: Cascade)
+  phanHoi     BinhLuan[] @relation("PhanHoi")
 
   @@map("binh_luan")
 }
@@ -467,38 +538,38 @@ enum LoaiThongBao {
 }
 
 model ThongBao {
-  id           Int           @id @default(autoincrement())
-  nguoiNhanId  Int           @map("nguoi_nhan_id")
-  tieuDe       String        @map("tieu_de") @db.VarChar(150)
-  noiDung      String        @map("noi_dung") @db.Text
-  loai         LoaiThongBao  @default(HE_THONG) @map("loai")
-  lienKet      String?       @map("lien_ket") @db.VarChar(255)
-  daDoc        Boolean       @default(false) @map("da_doc")
-  ngayTao      DateTime      @default(now()) @map("ngay_tao")
+  id          Int          @id @default(autoincrement())
+  nguoiNhanId Int          @map("nguoi_nhan_id")
+  tieuDe      String       @map("tieu_de") @db.VarChar(150)
+  noiDung     String       @map("noi_dung") @db.Text
+  loai        LoaiThongBao @default(HE_THONG) @map("loai")
+  lienKet     String?      @map("lien_ket") @db.VarChar(255)
+  daDoc       Boolean      @default(false) @map("da_doc")
+  ngayTao     DateTime     @default(now()) @map("ngay_tao")
 
   // Relations
-  nguoiNhan    NguoiDung     @relation(fields: [nguoiNhanId], references: [id], onDelete: Cascade)
+  nguoiNhan NguoiDung @relation(fields: [nguoiNhanId], references: [id], onDelete: Cascade)
 
   @@map("thong_bao")
 }
 
 enum LoaiKenhChat {
   CA_NHAN // 1-1
-  NHOM    // Group
+  NHOM // Group
   LOP_HOC // Auto-generated for classes
 }
 
 model KenhChat {
-  id           Int           @id @default(autoincrement())
-  tenKenh      String?       @map("ten_kenh") @db.VarChar(100) // Null for direct messages
-  loaiKenh     LoaiKenhChat  @default(CA_NHAN) @map("loai_kenh")
-  anhDaiDien   String?       @map("anh_dai_dien") @db.VarChar(255)
-  ngayTao      DateTime      @default(now()) @map("ngay_tao")
-  ngayCapNhat  DateTime      @updatedAt @map("ngay_cap_nhat")
+  id          Int          @id @default(autoincrement())
+  tenKenh     String?      @map("ten_kenh") @db.VarChar(100) // Null for direct messages
+  loaiKenh    LoaiKenhChat @default(CA_NHAN) @map("loai_kenh")
+  anhDaiDien  String?      @map("anh_dai_dien") @db.VarChar(255)
+  ngayTao     DateTime     @default(now()) @map("ngay_tao")
+  ngayCapNhat DateTime     @updatedAt @map("ngay_cap_nhat")
 
   // Relations
-  thanhViens   ThanhVienKenh[]
-  tinNhans     TinNhan[]
+  thanhViens ThanhVienKenh[]
+  tinNhans   TinNhan[]
 
   @@map("kenh_chat")
 }
@@ -509,15 +580,15 @@ enum VaiTroKenh {
 }
 
 model ThanhVienKenh {
-  id           Int         @id @default(autoincrement())
-  kenhChatId   Int         @map("kenh_chat_id")
-  nguoiDungId  Int         @map("nguoi_dung_id")
-  vaiTro       VaiTroKenh  @default(THANH_VIEN) @map("vai_tro")
-  ngayThamGia  DateTime    @default(now()) @map("ngay_tham_gia")
+  id          Int        @id @default(autoincrement())
+  kenhChatId  Int        @map("kenh_chat_id")
+  nguoiDungId Int        @map("nguoi_dung_id")
+  vaiTro      VaiTroKenh @default(THANH_VIEN) @map("vai_tro")
+  ngayThamGia DateTime   @default(now()) @map("ngay_tham_gia")
 
   // Relations
-  kenhChat     KenhChat    @relation(fields: [kenhChatId], references: [id], onDelete: Cascade)
-  nguoiDung    NguoiDung   @relation(fields: [nguoiDungId], references: [id], onDelete: Cascade)
+  kenhChat  KenhChat  @relation(fields: [kenhChatId], references: [id], onDelete: Cascade)
+  nguoiDung NguoiDung @relation(fields: [nguoiDungId], references: [id], onDelete: Cascade)
 
   @@unique([kenhChatId, nguoiDungId])
   @@map("thanh_vien_kenh")
@@ -540,12 +611,12 @@ model TinNhan {
   ngayGui      DateTime    @default(now()) @map("ngay_gui")
   daSua        Boolean     @default(false) @map("da_sua")
   tinNhanGocId Int?        @map("tin_nhan_goc_id") // For replies
-  
+
   // Relations
-  kenhChat     KenhChat    @relation(fields: [kenhChatId], references: [id], onDelete: Cascade)
-  nguoiGui     NguoiDung   @relation(fields: [nguoiGuiId], references: [id], onDelete: Cascade)
-  tinNhanGoc   TinNhan?    @relation("TinNhanPhanHoi", fields: [tinNhanGocId], references: [id], onDelete: SetNull)
-  phanHoi      TinNhan[]   @relation("TinNhanPhanHoi")
+  kenhChat   KenhChat  @relation(fields: [kenhChatId], references: [id], onDelete: Cascade)
+  nguoiGui   NguoiDung @relation(fields: [nguoiGuiId], references: [id], onDelete: Cascade)
+  tinNhanGoc TinNhan?  @relation("TinNhanPhanHoi", fields: [tinNhanGocId], references: [id], onDelete: SetNull)
+  phanHoi    TinNhan[] @relation("TinNhanPhanHoi")
 
   @@map("tin_nhan")
 }
@@ -555,15 +626,15 @@ model TinNhan {
 // ==========================================================
 
 model LichSuDangNhap {
-  id          Int      @id @default(autoincrement())
-  userId      Int      @map("user_id")
-  thoiGian    DateTime @default(now()) @map("thoi_gian")
-  ipAddress   String?  @map("ip_address") @db.VarChar(50)
-  thietBi     String?  @map("thiet_bi") @db.Text
-  trangThai   Boolean  @default(true) @map("trang_thai") // Thành công/Thất bại
+  id        Int      @id @default(autoincrement())
+  userId    Int      @map("user_id")
+  thoiGian  DateTime @default(now()) @map("thoi_gian")
+  ipAddress String?  @map("ip_address") @db.VarChar(50)
+  thietBi   String?  @map("thiet_bi") @db.Text
+  trangThai Boolean  @default(true) @map("trang_thai") // Thành công/Thất bại
 
   // Relations
-  nguoiDung   NguoiDung @relation(fields: [userId], references: [id], onDelete: Cascade)
+  nguoiDung NguoiDung @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("lich_su_dang_nhap")
 }
@@ -581,13 +652,13 @@ enum TrangThaiPheDuyet {
 }
 
 model LoaiPheDuyet {
-  id           Int      @id @default(autoincrement())
-  tenLoai      String   @map("ten_loai") @db.VarChar(100)
-  maLoai       String   @unique @map("ma_loai") @db.VarChar(50) // E.g., 'XUAT_BAN_BAI_VIET', 'XIN_NGHI_PHEP'
-  moTa         String?  @map("mo_ta") @db.Text
-  cauHinhForm  String?  @map("cau_hinh_form") @db.LongText // JSON string defining the dynamic fields/inputs
-  ngayTao      DateTime @default(now()) @map("ngay_tao")
-  ngayCapNhat  DateTime @updatedAt @map("ngay_cap_nhat")
+  id          Int      @id @default(autoincrement())
+  tenLoai     String   @map("ten_loai") @db.VarChar(100)
+  maLoai      String   @unique @map("ma_loai") @db.VarChar(50) // E.g., 'XUAT_BAN_BAI_VIET', 'XIN_NGHI_PHEP'
+  moTa        String?  @map("mo_ta") @db.Text
+  cauHinhForm String?  @map("cau_hinh_form") @db.LongText // JSON string defining the dynamic fields/inputs
+  ngayTao     DateTime @default(now()) @map("ngay_tao")
+  ngayCapNhat DateTime @updatedAt @map("ngay_cap_nhat")
 
   // Relations
   cacDonPheDuyet DonPheDuyet[]
@@ -597,15 +668,15 @@ model LoaiPheDuyet {
 }
 
 model BuocPheDuyet {
-  id             Int      @id @default(autoincrement())
-  loaiPheDuyetId Int      @map("loai_phe_duyet_id")
-  tenBuoc        String   @map("ten_buoc") @db.VarChar(100)
-  thuTu          Int      @map("thu_tu") // Step 1, 2, 3...
-  vaiTroPheDuyet VaiTro   @map("vai_tro_phe_duyet") // Who can approve this step
-  
+  id             Int    @id @default(autoincrement())
+  loaiPheDuyetId Int    @map("loai_phe_duyet_id")
+  tenBuoc        String @map("ten_buoc") @db.VarChar(100)
+  thuTu          Int    @map("thu_tu") // Step 1, 2, 3...
+  vaiTroPheDuyet VaiTro @map("vai_tro_phe_duyet") // Who can approve this step
+
   // Relations
-  loaiPheDuyet   LoaiPheDuyet @relation(fields: [loaiPheDuyetId], references: [id], onDelete: Cascade)
-  lichSuDuyet    LichSuPheDuyet[]
+  loaiPheDuyet LoaiPheDuyet     @relation(fields: [loaiPheDuyetId], references: [id], onDelete: Cascade)
+  lichSuDuyet  LichSuPheDuyet[]
 
   @@map("buoc_phe_duyet")
 }
@@ -623,26 +694,26 @@ model DonPheDuyet {
   ngayCapNhat    DateTime          @updatedAt @map("ngay_cap_nhat")
 
   // Relations
-  loaiPheDuyet   LoaiPheDuyet     @relation(fields: [loaiPheDuyetId], references: [id], onDelete: Cascade)
-  nguoiYeuCau    NguoiDung        @relation(fields: [nguoiYeuCauId], references: [id], onDelete: Cascade)
-  lichSuDuyet    LichSuPheDuyet[]
+  loaiPheDuyet LoaiPheDuyet     @relation(fields: [loaiPheDuyetId], references: [id], onDelete: Cascade)
+  nguoiYeuCau  NguoiDung        @relation(fields: [nguoiYeuCauId], references: [id], onDelete: Cascade)
+  lichSuDuyet  LichSuPheDuyet[]
 
   @@map("don_phe_duyet")
 }
 
 model LichSuPheDuyet {
-  id            Int               @id @default(autoincrement())
-  donId         Int               @map("don_id")
-  buocId        Int               @map("buoc_id")
-  nguoiDuyetId  Int?              @map("nguoi_duyet_id")
-  hanhDong      TrangThaiPheDuyet @map("hanh_dong")
-  ghiChu        String?           @map("ghi_chu") @db.Text
-  ngayTao       DateTime          @default(now()) @map("ngay_tao")
+  id           Int               @id @default(autoincrement())
+  donId        Int               @map("don_id")
+  buocId       Int               @map("buoc_id")
+  nguoiDuyetId Int?              @map("nguoi_duyet_id")
+  hanhDong     TrangThaiPheDuyet @map("hanh_dong")
+  ghiChu       String?           @map("ghi_chu") @db.Text
+  ngayTao      DateTime          @default(now()) @map("ngay_tao")
 
   // Relations
-  donPheDuyet   DonPheDuyet       @relation(fields: [donId], references: [id], onDelete: Cascade)
-  buocPheDuyet  BuocPheDuyet      @relation(fields: [buocId], references: [id], onDelete: Cascade)
-  nguoiDuyet    NguoiDung?        @relation(fields: [nguoiDuyetId], references: [id], onDelete: SetNull)
+  donPheDuyet  DonPheDuyet  @relation(fields: [donId], references: [id], onDelete: Cascade)
+  buocPheDuyet BuocPheDuyet @relation(fields: [buocId], references: [id], onDelete: Cascade)
+  nguoiDuyet   NguoiDung?   @relation(fields: [nguoiDuyetId], references: [id], onDelete: SetNull)
 
   @@map("lich_su_phe_duyet")
 }
@@ -652,58 +723,58 @@ model LichSuPheDuyet {
 // ==========================================================
 
 model Thread {
-  id             Int      @id @default(autoincrement())
-  tacGiaId       Int      @map("tac_gia_id")
-  noiDung        String   @map("noi_dung") @db.LongText
-  hinhAnh        String?  @map("hinh_anh") @db.Text // JSON or comma separated URLs
-  threadChaId    Int?     @map("thread_cha_id") // For replies
-  luotXem        Int      @default(0) @map("luot_xem")
-  ngayTao        DateTime @default(now()) @map("ngay_tao")
-  ngayCapNhat    DateTime @updatedAt @map("ngay_cap_nhat")
+  id          Int      @id @default(autoincrement())
+  tacGiaId    Int      @map("tac_gia_id")
+  noiDung     String   @map("noi_dung") @db.LongText
+  hinhAnh     String?  @map("hinh_anh") @db.Text // JSON or comma separated URLs
+  threadChaId Int?     @map("thread_cha_id") // For replies
+  luotXem     Int      @default(0) @map("luot_xem")
+  ngayTao     DateTime @default(now()) @map("ngay_tao")
+  ngayCapNhat DateTime @updatedAt @map("ngay_cap_nhat")
 
   // Relations
-  tacGia         NguoiDung  @relation(fields: [tacGiaId], references: [id], onDelete: Cascade)
-  threadCha      Thread?    @relation("ThreadReplies", fields: [threadChaId], references: [id], onDelete: Cascade)
-  replies        Thread[]   @relation("ThreadReplies")
-  likes          ThreadLike[]
-  reposts        ThreadRepost[]
+  tacGia    NguoiDung      @relation(fields: [tacGiaId], references: [id], onDelete: Cascade)
+  threadCha Thread?        @relation("ThreadReplies", fields: [threadChaId], references: [id], onDelete: Cascade)
+  replies   Thread[]       @relation("ThreadReplies")
+  likes     ThreadLike[]
+  reposts   ThreadRepost[]
 
   @@map("thread")
 }
 
 model ThreadLike {
-  id           Int      @id @default(autoincrement())
-  threadId     Int      @map("thread_id")
-  nguoiDungId  Int      @map("nguoi_dung_id")
-  ngayTao      DateTime @default(now()) @map("ngay_tao")
+  id          Int      @id @default(autoincrement())
+  threadId    Int      @map("thread_id")
+  nguoiDungId Int      @map("nguoi_dung_id")
+  ngayTao     DateTime @default(now()) @map("ngay_tao")
 
   // Relations
-  thread       Thread    @relation(fields: [threadId], references: [id], onDelete: Cascade)
-  nguoiDung    NguoiDung @relation(fields: [nguoiDungId], references: [id], onDelete: Cascade)
+  thread    Thread    @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  nguoiDung NguoiDung @relation(fields: [nguoiDungId], references: [id], onDelete: Cascade)
 
   @@unique([threadId, nguoiDungId])
   @@map("thread_like")
 }
 
 model ThreadRepost {
-  id           Int      @id @default(autoincrement())
-  threadId     Int      @map("thread_id")
-  nguoiDungId  Int      @map("nguoi_dung_id")
-  ngayTao      DateTime @default(now()) @map("ngay_tao")
+  id          Int      @id @default(autoincrement())
+  threadId    Int      @map("thread_id")
+  nguoiDungId Int      @map("nguoi_dung_id")
+  ngayTao     DateTime @default(now()) @map("ngay_tao")
 
   // Relations
-  thread       Thread    @relation(fields: [threadId], references: [id], onDelete: Cascade)
-  nguoiDung    NguoiDung @relation(fields: [nguoiDungId], references: [id], onDelete: Cascade)
+  thread    Thread    @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  nguoiDung NguoiDung @relation(fields: [nguoiDungId], references: [id], onDelete: Cascade)
 
   @@unique([threadId, nguoiDungId])
   @@map("thread_repost")
 }
 
 model FlowTheoDoi {
-  id             Int      @id @default(autoincrement())
-  nguoiTheoDoiId Int      @map("nguoi_theo_doi_id")
-  nguoiDuocTheoDoiId Int  @map("nguoi_duoc_theo_doi_id")
-  ngayTao        DateTime @default(now()) @map("ngay_tao")
+  id                 Int      @id @default(autoincrement())
+  nguoiTheoDoiId     Int      @map("nguoi_theo_doi_id")
+  nguoiDuocTheoDoiId Int      @map("nguoi_duoc_theo_doi_id")
+  ngayTao            DateTime @default(now()) @map("ngay_tao")
 
   // Relations
   nguoiTheoDoi     NguoiDung @relation("Following", fields: [nguoiTheoDoiId], references: [id], onDelete: Cascade)
@@ -714,18 +785,18 @@ model FlowTheoDoi {
 }
 
 model HoSoXaHoi {
-  id             Int       @id @default(autoincrement())
-  userId         Int       @unique @map("user_id")
-  tieuSu         String?   @map("tieu_su") @db.Text
-  ngaySinhHienThi DateTime? @map("ngay_sinh_hien_thi") @db.Date
-  diaChiHienThi  String?   @map("dia_chi_hien_thi") @db.VarChar(255)
-  lienKetMangXaHoi String? @map("lien_ket_mang_xa_hoi") @db.Text
-  soThich        String?   @map("so_thich") @db.Text
-  ngayTao        DateTime  @default(now()) @map("ngay_tao")
-  ngayCapNhat    DateTime  @updatedAt @map("ngay_cap_nhat")
+  id               Int       @id @default(autoincrement())
+  userId           Int       @unique @map("user_id")
+  tieuSu           String?   @map("tieu_su") @db.Text
+  ngaySinhHienThi  DateTime? @map("ngay_sinh_hien_thi") @db.Date
+  diaChiHienThi    String?   @map("dia_chi_hien_thi") @db.VarChar(255)
+  lienKetMangXaHoi String?   @map("lien_ket_mang_xa_hoi") @db.Text
+  soThich          String?   @map("so_thich") @db.Text
+  ngayTao          DateTime  @default(now()) @map("ngay_tao")
+  ngayCapNhat      DateTime  @updatedAt @map("ngay_cap_nhat")
 
   // Relations
-  nguoiDung      NguoiDung @relation(fields: [userId], references: [id], onDelete: Cascade)
+  nguoiDung NguoiDung @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("ho_so_xa_hoi")
 }
@@ -737,16 +808,16 @@ enum TrangThaiBanBe {
 }
 
 model KetBan {
-  id            Int            @id @default(autoincrement())
-  nguoiGuiId    Int            @map("nguoi_gui_id")
-  nguoiNhanId   Int            @map("nguoi_nhan_id")
-  trangThai     TrangThaiBanBe @default(CHO_XAC_NHAN) @map("trang_thai")
-  ngayTao       DateTime       @default(now()) @map("ngay_tao")
-  ngayCapNhat   DateTime       @updatedAt @map("ngay_cap_nhat")
+  id          Int            @id @default(autoincrement())
+  nguoiGuiId  Int            @map("nguoi_gui_id")
+  nguoiNhanId Int            @map("nguoi_nhan_id")
+  trangThai   TrangThaiBanBe @default(CHO_XAC_NHAN) @map("trang_thai")
+  ngayTao     DateTime       @default(now()) @map("ngay_tao")
+  ngayCapNhat DateTime       @updatedAt @map("ngay_cap_nhat")
 
   // Relations
-  nguoiGui      NguoiDung      @relation("YeuCauKetBanGui", fields: [nguoiGuiId], references: [id], onDelete: Cascade)
-  nguoiNhan     NguoiDung      @relation("YeuCauKetBanNhan", fields: [nguoiNhanId], references: [id], onDelete: Cascade)
+  nguoiGui  NguoiDung @relation("YeuCauKetBanGui", fields: [nguoiGuiId], references: [id], onDelete: Cascade)
+  nguoiNhan NguoiDung @relation("YeuCauKetBanNhan", fields: [nguoiNhanId], references: [id], onDelete: Cascade)
 
   @@unique([nguoiGuiId, nguoiNhanId])
   @@map("ket_ban")
@@ -818,37 +889,37 @@ model QuyTrinh {
   ngayCapNhat DateTime          @updatedAt @map("ngay_cap_nhat")
 
   // Relations
-  danhMuc     DanhMucQuyTrinh?  @relation(fields: [danhMucId], references: [id], onDelete: SetNull)
-  nguoiTao    NguoiDung         @relation("NguoiTaoQuyTrinh", fields: [nguoiTaoId], references: [id])
-  cacBuoc     BuocQuyTrinh[]
-  cacTruong   TruongFormQuyTrinh[]
-  cacPhien    PhienQuyTrinh[]
+  danhMuc   DanhMucQuyTrinh?     @relation(fields: [danhMucId], references: [id], onDelete: SetNull)
+  nguoiTao  NguoiDung            @relation("NguoiTaoQuyTrinh", fields: [nguoiTaoId], references: [id])
+  cacBuoc   BuocQuyTrinh[]
+  cacTruong TruongFormQuyTrinh[]
+  cacPhien  PhienQuyTrinh[]
 
   @@map("quy_trinh")
 }
 
 model DanhMucQuyTrinh {
-  id          Int       @id @default(autoincrement())
-  ten         String    @map("ten") @db.VarChar(100)
-  moTa        String?   @map("mo_ta") @db.Text
-  ngayTao     DateTime  @default(now()) @map("ngay_tao")
+  id      Int      @id @default(autoincrement())
+  ten     String   @map("ten") @db.VarChar(100)
+  moTa    String?  @map("mo_ta") @db.Text
+  ngayTao DateTime @default(now()) @map("ngay_tao")
 
   // Relations
-  quyTrinhs   QuyTrinh[]
+  quyTrinhs QuyTrinh[]
 
   @@map("danh_muc_quy_trinh")
 }
 
 model BuocQuyTrinh {
-  id          Int               @id @default(autoincrement())
-  quyTrinhId  Int               @map("quy_trinh_id")
-  thuTuBuoc   Int               @map("thu_tu_buoc")
-  ten         String            @map("ten") @db.VarChar(100)
-  loaiQuyTac  LoaiQuyTacBuoc    @default(BAT_KY) @map("loai_quy_tac")
-  ngayTao     DateTime          @default(now()) @map("ngay_tao")
+  id         Int            @id @default(autoincrement())
+  quyTrinhId Int            @map("quy_trinh_id")
+  thuTuBuoc  Int            @map("thu_tu_buoc")
+  ten        String         @map("ten") @db.VarChar(100)
+  loaiQuyTac LoaiQuyTacBuoc @default(BAT_KY) @map("loai_quy_tac")
+  ngayTao    DateTime       @default(now()) @map("ngay_tao")
 
   // Relations
-  quyTrinh    QuyTrinh          @relation(fields: [quyTrinhId], references: [id], onDelete: Cascade)
+  quyTrinh    QuyTrinh            @relation(fields: [quyTrinhId], references: [id], onDelete: Cascade)
   nguoiDuyets NguoiPheDuyetBuoc[]
   buocPhiens  BuocPhienQuyTrinh[]
 
@@ -864,43 +935,43 @@ model NguoiPheDuyetBuoc {
   ngayTao           DateTime          @default(now()) @map("ngay_tao")
 
   // Relations
-  buoc              BuocQuyTrinh      @relation(fields: [buocId], references: [id], onDelete: Cascade)
-  user              NguoiDung?        @relation(fields: [approverId], references: [id], onDelete: SetNull)
+  buoc BuocQuyTrinh @relation(fields: [buocId], references: [id], onDelete: Cascade)
+  user NguoiDung?   @relation(fields: [approverId], references: [id], onDelete: SetNull)
 
   @@map("nguoi_phe_duyet_buoc")
 }
 
 model TruongFormQuyTrinh {
-  id          Int               @id @default(autoincrement())
-  quyTrinhId  Int               @map("quy_trinh_id")
-  tenTruong   String            @map("ten_truong") @db.VarChar(100) // field_key
-  nhan        String            @map("nhan") @db.VarChar(255) // label
-  loai        LoaiTruongForm    @map("loai")
-  batBuoc     Boolean           @default(false) @map("bat_buoc")
-  tuyChon     Json?             @map("tuy_chon") // options for select
-  thuTu       Int               @map("thu_tu")
+  id         Int            @id @default(autoincrement())
+  quyTrinhId Int            @map("quy_trinh_id")
+  tenTruong  String         @map("ten_truong") @db.VarChar(100) // field_key
+  nhan       String         @map("nhan") @db.VarChar(255) // label
+  loai       LoaiTruongForm @map("loai")
+  batBuoc    Boolean        @default(false) @map("bat_buoc")
+  tuyChon    Json?          @map("tuy_chon") // options for select
+  thuTu      Int            @map("thu_tu")
 
   // Relations
-  quyTrinh    QuyTrinh          @relation(fields: [quyTrinhId], references: [id], onDelete: Cascade)
+  quyTrinh QuyTrinh @relation(fields: [quyTrinhId], references: [id], onDelete: Cascade)
 
   @@map("truong_form_quy_trinh")
 }
 
 model PhienQuyTrinh {
-  id               Int               @id @default(autoincrement())
-  quyTrinhId       Int               @map("quy_trinh_id")
-  doiTuongLienQuan Json?             @map("doi_tuong_lien_quan")
-  trangThai        TrangThaiPhien    @default(CHO_DUYET) @map("trang_thai")
-  buocHienTai      Int               @default(1) @map("buoc_hien_tai")
-  duLieuForm       String?           @map("du_lieu_form") @db.LongText
-  nguoiTaoId       Int               @map("nguoi_tao_id")
-  ngayTao          DateTime          @default(now()) @map("ngay_tao")
+  id               Int            @id @default(autoincrement())
+  quyTrinhId       Int            @map("quy_trinh_id")
+  doiTuongLienQuan Json?          @map("doi_tuong_lien_quan")
+  trangThai        TrangThaiPhien @default(CHO_DUYET) @map("trang_thai")
+  buocHienTai      Int            @default(1) @map("buoc_hien_tai")
+  duLieuForm       String?        @map("du_lieu_form") @db.LongText
+  nguoiTaoId       Int            @map("nguoi_tao_id")
+  ngayTao          DateTime       @default(now()) @map("ngay_tao")
 
   // Relations
-  quyTrinh         QuyTrinh          @relation(fields: [quyTrinhId], references: [id], onDelete: Cascade)
-  nguoiTao         NguoiDung         @relation("NguoiTaoPhien", fields: [nguoiTaoId], references: [id])
-  buocPhiens       BuocPhienQuyTrinh[]
-  nhatKy           NhatKyPheDuyetQuyTrinh[]
+  quyTrinh   QuyTrinh                 @relation(fields: [quyTrinhId], references: [id], onDelete: Cascade)
+  nguoiTao   NguoiDung                @relation("NguoiTaoPhien", fields: [nguoiTaoId], references: [id])
+  buocPhiens BuocPhienQuyTrinh[]
+  nhatKy     NhatKyPheDuyetQuyTrinh[]
 
   @@index([quyTrinhId])
   @@index([nguoiTaoId])
@@ -908,18 +979,18 @@ model PhienQuyTrinh {
 }
 
 model BuocPhienQuyTrinh {
-  id              Int               @id @default(autoincrement())
-  phienId         Int               @map("phien_id")
-  buocId          Int               @map("buoc_id")
+  id              Int                @id @default(autoincrement())
+  phienId         Int                @map("phien_id")
+  buocId          Int                @map("buoc_id")
   trangThai       TrangThaiBuocPhien @default(CHO_DUYET) @map("trang_thai")
-  nguoiPheDuyetId Int?              @map("nguoi_phe_duyet_id")
-  ngayPheDuyet    DateTime?         @map("ngay_phe_duyet")
-  ghiChu          String?           @map("ghi_chu") @db.Text
-  ngayTao         DateTime          @default(now()) @map("ngay_tao")
+  nguoiPheDuyetId Int?               @map("nguoi_phe_duyet_id")
+  ngayPheDuyet    DateTime?          @map("ngay_phe_duyet")
+  ghiChu          String?            @map("ghi_chu") @db.Text
+  ngayTao         DateTime           @default(now()) @map("ngay_tao")
 
   // Relations
-  phien           PhienQuyTrinh     @relation(fields: [phienId], references: [id], onDelete: Cascade)
-  buoc            BuocQuyTrinh      @relation(fields: [buocId], references: [id], onDelete: Cascade)
+  phien PhienQuyTrinh @relation(fields: [phienId], references: [id], onDelete: Cascade)
+  buoc  BuocQuyTrinh  @relation(fields: [buocId], references: [id], onDelete: Cascade)
 
   @@index([phienId])
   @@index([buocId])
@@ -927,17 +998,17 @@ model BuocPhienQuyTrinh {
 }
 
 model NhatKyPheDuyetQuyTrinh {
-  id            Int               @id @default(autoincrement())
-  phienId       Int               @map("phien_id")
-  buocId        Int?              @map("buoc_id")
-  nguoiDungId   Int               @map("nguoi_dung_id")
-  hanhDong      HanhDongPheDuyet  @map("hanh_dong")
-  noiDung       String?           @map("noi_dung") @db.Text
-  ngayTao       DateTime          @default(now()) @map("ngay_tao")
+  id          Int              @id @default(autoincrement())
+  phienId     Int              @map("phien_id")
+  buocId      Int?             @map("buoc_id")
+  nguoiDungId Int              @map("nguoi_dung_id")
+  hanhDong    HanhDongPheDuyet @map("hanh_dong")
+  noiDung     String?          @map("noi_dung") @db.Text
+  ngayTao     DateTime         @default(now()) @map("ngay_tao")
 
   // Relations
-  phien         PhienQuyTrinh      @relation(fields: [phienId], references: [id], onDelete: Cascade)
-  nguoiDung     NguoiDung          @relation("NguoiPheDuyetLog", fields: [nguoiDungId], references: [id])
+  phien     PhienQuyTrinh @relation(fields: [phienId], references: [id], onDelete: Cascade)
+  nguoiDung NguoiDung     @relation("NguoiPheDuyetLog", fields: [nguoiDungId], references: [id])
 
   @@index([phienId])
   @@index([nguoiDungId])
