@@ -185,4 +185,57 @@ export class AcademicService {
   async removeHocKy(id: number) {
     return this.prisma.hocKy.delete({ where: { id } });
   }
+
+  // --- LopNam (ClassYear) ---
+  createLopNam(dto: any) {
+    return this.prisma.lopNam.create({
+      data: dto,
+      include: {
+        lopHoc: true,
+        namHoc: true,
+        gvChuNhiem: true,
+      }
+    });
+  }
+
+  findAllLopNam(params: any = {}) {
+    return this.prisma.lopNam.findMany({
+      include: {
+        lopHoc: true,
+        namHoc: true,
+        gvChuNhiem: true,
+        _count: { select: { hocSinhs: true } }
+      },
+      orderBy: { id: 'desc' },
+      ...params,
+    });
+  }
+
+  findOneLopNam(id: number) {
+    return this.prisma.lopNam.findUnique({
+      where: { id },
+      include: {
+        lopHoc: true,
+        namHoc: true,
+        gvChuNhiem: true,
+        _count: { select: { hocSinhs: true } }
+      },
+    });
+  }
+
+  updateLopNam(id: number, dto: any) {
+    return this.prisma.lopNam.update({
+      where: { id },
+      data: dto,
+      include: {
+        lopHoc: true,
+        namHoc: true,
+        gvChuNhiem: true,
+      }
+    });
+  }
+
+  removeLopNam(id: number) {
+    return this.prisma.lopNam.delete({ where: { id } });
+  }
 }
