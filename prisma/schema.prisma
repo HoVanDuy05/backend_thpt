@@ -240,6 +240,16 @@ model HocKy {
   @@map("hoc_ky")
 }
 
+model Khoi {
+  id      Int      @id @default(autoincrement())
+  tenKhoi String   @map("ten_khoi") @db.VarChar(50)
+  maKhoi  Int      @unique @map("ma_khoi") // 10, 11, 12...
+  moTa    String?  @map("mo_ta") @db.Text
+  lopHocs LopHoc[]
+
+  @@map("khoi")
+}
+
 model MonHoc {
   id     Int    @id @default(autoincrement())
   tenMon String @map("ten_mon") @db.VarChar(100)
@@ -256,15 +266,17 @@ model MonHoc {
 model LopHoc {
   id      Int     @id @default(autoincrement())
   tenLop  String  @map("ten_lop") @db.VarChar(20)
-  khoiLop Int     @map("khoi_lop") // 10, 11, 12
+  khoiId  Int?    @map("khoi_id")
   moTa    String? @map("mo_ta") @db.Text
+
+  // Relations
+  khoi      Khoi?    @relation(fields: [khoiId], references: [id])
+  cacLopNam LopNam[]
 
   // OLD fields - keep for migration
   namHocId     Int? @map("nam_hoc_id")
   gvChuNhiemId Int? @map("gv_chu_nhiem_id")
 
-  // Relations
-  cacLopNam LopNam[]
 
   // OLD relations - keep for migration
   namHoc     NamHoc?       @relation(fields: [namHocId], references: [id], onDelete: SetNull)

@@ -54,6 +54,15 @@ async function main() {
     });
     console.log('Created Subjects');
 
+    const khois = await prisma.khoi.createMany({
+        data: [
+            { tenKhoi: 'Khối 10', maKhoi: 10 },
+            { tenKhoi: 'Khối 11', maKhoi: 11 },
+            { tenKhoi: 'Khối 12', maKhoi: 12 },
+        ],
+    });
+    console.log('Created Grades');
+
     console.log('Seed completed successfully! 🚀');
 }
 

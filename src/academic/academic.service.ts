@@ -3,6 +3,8 @@ import { Injectable } from '@nestjs/common';
 import { CreateNamHocDto } from './dto/create-nam-hoc.dto';
 import { CreateMonHocDto } from './dto/create-mon-hoc.dto';
 import { CreateLopHocDto } from './dto/create-lop-hoc.dto';
+import { CreateKhoiDto } from './dto/create-khoi.dto';
+import { UpdateKhoiDto } from './dto/update-khoi.dto';
 import { UpdateNamHocDto } from './dto/update-nam-hoc.dto';
 import { UpdateMonHocDto } from './dto/update-mon-hoc.dto';
 import { UpdateLopHocDto } from './dto/update-lop-hoc.dto';
@@ -11,6 +13,36 @@ import { PrismaService } from '../prisma/prisma.service';
 @Injectable()
 export class AcademicService {
   constructor(private readonly prisma: PrismaService) { }
+
+  // --- Khoi ---
+  createKhoi(dto: CreateKhoiDto) {
+    return this.prisma.khoi.create({ data: dto });
+  }
+
+  findAllKhoi() {
+    return this.prisma.khoi.findMany({
+      include: {
+        _count: { select: { lopHocs: true } }
+      }
+    });
+  }
+
+  findOneKhoi(id: number) {
+    return this.prisma.khoi.findUnique({
+      where: { id },
+      include: {
+        lopHocs: true
+      }
+    });
+  }
+
+  updateKhoi(id: number, dto: UpdateKhoiDto) {
+    return this.prisma.khoi.update({ where: { id }, data: dto });
+  }
+
+  removeKhoi(id: number) {
+    return this.prisma.khoi.delete({ where: { id } });
+  }
 
   // --- NamHoc ---
   async createNamHoc(dto: CreateNamHocDto) {
@@ -88,8 +120,13 @@ export class AcademicService {
   findAllLopHoc(params: any = {}) {
     return this.prisma.lopHoc.findMany({
       include: {
-        namHoc: true,
-        gvChuNhiem: true,
+        khoi: true,
+        cacLopNam: {
+          include: {
+            namHoc: true,
+            gvChuNhiem: true
+          }
+        }
       },
       ...params,
     });
@@ -99,8 +136,13 @@ export class AcademicService {
     return this.prisma.lopHoc.findUnique({
       where: { id },
       include: {
-        namHoc: true,
-        gvChuNhiem: true,
+        khoi: true,
+        cacLopNam: {
+          include: {
+            namHoc: true,
+            gvChuNhiem: true
+          }
+        }
       },
     });
   }

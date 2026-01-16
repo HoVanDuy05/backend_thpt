@@ -10,12 +10,45 @@ import { CreateHocKyDto } from './dto/create-hoc-ky.dto';
 import { UpdateHocKyDto } from './dto/update-hoc-ky.dto';
 import { CreateLopNamDto } from './dto/create-lop-nam.dto';
 import { UpdateLopNamDto } from './dto/update-lop-nam.dto';
+import { CreateKhoiDto } from './dto/create-khoi.dto';
+import { UpdateKhoiDto } from './dto/update-khoi.dto';
 import { Roles } from '../common/decorators/roles.decorator';
 import { VaiTro } from '@prisma/client';
 
 @Controller('academic')
 export class AcademicController {
   constructor(private readonly academicService: AcademicService) { }
+
+  // --- Khoi (Grades) ---
+  @Post('grades')
+  @Roles(VaiTro.ADMIN)
+  createKhoi(@Body() createKhoiDto: CreateKhoiDto) {
+    return this.academicService.createKhoi(createKhoiDto);
+  }
+
+  @Get('grades')
+  @Roles(VaiTro.ADMIN, VaiTro.GIAO_VIEN, VaiTro.HOC_SINH)
+  findAllKhoi() {
+    return this.academicService.findAllKhoi();
+  }
+
+  @Get('grades/:id')
+  @Roles(VaiTro.ADMIN, VaiTro.GIAO_VIEN, VaiTro.HOC_SINH)
+  findOneKhoi(@Param('id') id: string) {
+    return this.academicService.findOneKhoi(+id);
+  }
+
+  @Put('grades/:id')
+  @Roles(VaiTro.ADMIN)
+  updateKhoi(@Param('id') id: string, @Body() updateKhoiDto: UpdateKhoiDto) {
+    return this.academicService.updateKhoi(+id, updateKhoiDto);
+  }
+
+  @Delete('grades/:id')
+  @Roles(VaiTro.ADMIN)
+  removeKhoi(@Param('id') id: string) {
+    return this.academicService.removeKhoi(+id);
+  }
 
   // --- NamHoc ---
   @Post('classes/clone')
