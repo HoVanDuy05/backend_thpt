@@ -114,48 +114,36 @@ export class AcademicService {
   }
 
   async cloneClasses(fromNamHocId: number, toNamHocId: number) {
-    // 1. Get source classes
-    const sourceClasses = await this.prisma.lopHoc.findMany({
+    // NEW LOGIC: Clone LopNam structure, not LopHoc
+    // 1. Get all LopNam from source year
+    const sourceLopNams = await this.prisma.lopNam.findMany({
       where: { namHocId: fromNamHocId },
+      include: { lopHoc: true }
     });
 
-    if (sourceClasses.length === 0) {
+    if (sourceLopNams.length === 0) {
       throw new Error("Không tìm thấy lớp học nào trong năm học nguồn.");
     }
 
-    // 2. Create target classes
-    // We can use createMany if database supports it (MySQL does).
-    // But we need to map data.
-    const dataToCreate = sourceClasses.map(cls => ({
-      tenLop: cls.tenLop,
+    // 2. Create LopNam for target year (reuse same LopHoc)
+    const dataToCreate = sourceLopNams.map(ln => ({
+      lopId: ln.lopId,  // Reuse same class structure
       namHocId: toNamHocId,
-      // We do NOT copy gvChuNhiemId because teachers change every year usually.
-      // But user demand "Clone Structure", so names are key.
+      // Don't copy gvChuNhiemId - teachers reassigned each year
     }));
 
-    // Optional: Check existence to avoid dupes?
-    // For simplicity/speed requested by user, we just create. 
-    // If exact name exists in target year, what happens? 
-    // Allow duplicate names? Schema doesn't enforce unique tenLop per namHoc (checked ViewFile).
-    // So duplicates are possible but confusing.
-    // Ideally we skip existing names.
-
-    /* 
-    // Better logic: Filter out existing
-    const existing = await this.prisma.lopHoc.findMany({ where: { namHocId: toNamHocId } });
-    const existingNames = new Set(existing.map(c => c.tenLop));
-    const finalData = dataToCreate.filter(d => !existingNames.has(d.tenLop));
-    */
-
-    const existing = await this.prisma.lopHoc.findMany({ where: { namHocId: toNamHocId } });
-    const existingNames = new Set(existing.map(c => c.tenLop));
-    const finalData = dataToCreate.filter(d => !existingNames.has(d.tenLop));
+    // 3. Filter out existing to avoid duplicates
+    const existing = await this.prisma.lopNam.findMany({
+      where: { namHocId: toNamHocId }
+    });
+    const existingLopIds = new Set(existing.map(ln => ln.lopId));
+    const finalData = dataToCreate.filter(d => !existingLopIds.has(d.lopId));
 
     if (finalData.length === 0) {
       return { count: 0, message: "Tất cả các lớp đã tồn tại trong năm học đích." };
     }
 
-    return this.prisma.lopHoc.createMany({
+    return this.prisma.lopNam.createMany({
       data: finalData,
     });
   }
