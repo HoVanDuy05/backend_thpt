@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, Put, Delete, Param } from '@nestjs/common';
+import { Body, Controller, Get, Post, Put, Delete, Param, Query } from '@nestjs/common';
 import { AcademicService } from './academic.service';
 import { CreateNamHocDto } from './dto/create-nam-hoc.dto';
 import { CreateMonHocDto } from './dto/create-mon-hoc.dto';
@@ -66,8 +66,8 @@ export class AcademicController {
 
   @Get('class-years')
   @Roles(VaiTro.ADMIN, VaiTro.GIAO_VIEN, VaiTro.HOC_SINH)
-  findAllLopNam() {
-    return this.academicService.findAllLopNam();
+  findAllLopNam(@Query() query: any) {
+    return this.academicService.findAllLopNam(query);
   }
 
   @Get('class-years/:id')
@@ -209,5 +209,18 @@ export class AcademicController {
   @Roles(VaiTro.ADMIN)
   removeLopHoc(@Param('id') id: string) {
     return this.academicService.removeLopHoc(+id);
+  }
+
+  // --- Student Management ---
+  @Get('years/:yearId/available-students')
+  @Roles(VaiTro.ADMIN, VaiTro.GIAO_VIEN)
+  getAvailableStudentsForYear(@Param('yearId') yearId: string) {
+    return this.academicService.getAvailableStudentsForYear(+yearId);
+  }
+
+  @Post('classes/:classId/students')
+  @Roles(VaiTro.ADMIN)
+  addStudentsToClass(@Param('classId') classId: string, @Body() body: { studentIds: number[] }) {
+    return this.academicService.addStudentsToClass(+classId, body.studentIds);
   }
 }

@@ -147,6 +147,101 @@ export class AcademicService {
     });
   }
 
+  // --- Student Management ---
+
+  async getAvailableStudentsForYear(yearId: number) {
+    // 1. Get all students
+    // 2. Filter out students who are already in a class for this year
+    // Note: This can be optimized with a raw query or clever where clause, 
+    // but for now we'll do: Find all students who do NOT have a HocSinhLopNam entry 
+    // linked to a LopNam that is linked to this NamHoc.
+
+    return this.prisma.nguoiDung.findMany({
+      where: {
+        vaiTro: 'HOC_SINH',
+        hoSoHocSinh: {
+          cacLopNam: {
+            none: {
+              lopNam: {
+                namHocId: yearId
+              }
+            }
+          }
+        }
+      },
+      include: {
+        hoSoHocSinh: true
+      },
+      orderBy: {
+        hoTen: 'asc'
+      }
+    });
+  }
+
+  async addStudentsToClass(classId: number, studentIds: number[]) {
+    // classId here is effectively the `LopNam` ID because we are adding to a specific class-year instance.
+    // However, the frontend might be passing the generic `LopHoc` ID or the `LopNam` ID.
+    // Based on the context (Classes within a Year), we should be operating on `LopNam`.
+    // Let's assume classId passed here IS the `LopNam` ID (id of table lop_nam).
+
+    // Verify LopNam exists
+    const lopNam = await this.prisma.lopNam.findUnique({
+      where: { id: classId },
+      include: { namHoc: true }
+    });
+
+    if (!lopNam) {
+      // It might be a LopHoc ID passed, let's try to find the LopNam for this LopHoc + NamHoc? 
+      // But for "Add Student", we really need the specific LopNam instance.
+      // Let's assume the controller will pass the valid LopNam ID.
+      throw new Error(`Class (LopNam) with ID ${classId} not found.`);
+    }
+
+    // Logic: Ensure student isn't already in another class for this year?
+    // The query 'getAvailable' excludes them, but we should double check or just try/catch unique constraint.
+    // The Schema has @@unique([hocSinhId, lopNamId]), preventing dups in SAME class.
+    // To prevent dups in SAME YEAR (different class), we rely on the `getAvailable` filter 
+    // OR we could enforce it here for safety.
+
+    // Let's enforce safety:
+    const yearId = lopNam.namHocId;
+
+    const studentsInYear = await this.prisma.hocSinhLopNam.findMany({
+      where: {
+        hocSinh: { userId: { in: studentIds } },
+        lopNam: { namHocId: yearId }
+      },
+      select: { hocSinh: { select: { userId: true } } }
+    });
+
+    const invalidUserIds = studentsInYear.map(s => s.hocSinh.userId);
+    const validUserIds = studentIds.filter(id => !invalidUserIds.includes(id));
+
+    // We need 'hocSinhId' (from HoSoHocSinh table), not 'userId'.
+    // The input `studentIds` are likely `userId` or `hoSoHocSinh.id`?
+    // Frontend creates student with `userId`. Let's assume input is `userId`.
+    // We need to map `userId` -> `hoSoHocSinh.id`.
+
+    const profiles = await this.prisma.hoSoHocSinh.findMany({
+      where: { userId: { in: validUserIds } },
+      select: { id: true }
+    });
+
+    const createData = profiles.map(p => ({
+      hocSinhId: p.id,
+      lopNamId: classId,
+      trangThai: 'DANG_HOC' as const // Enforce literal type
+    }));
+
+    if (createData.length === 0) {
+      return { count: 0, message: 'No valid students to add (all already in a class for this year).' };
+    }
+
+    return this.prisma.hocSinhLopNam.createMany({
+      data: createData
+    });
+  }
+
   updateLopHoc(id: number, dto: UpdateLopHocDto) {
     return this.prisma.lopHoc.update({ where: { id }, data: dto });
   }
@@ -241,7 +336,14 @@ export class AcademicService {
   }
 
   findAllLopNam(params: any = {}) {
+    const { namHocId, ...otherParams } = params;
+    const where: any = {};
+    if (namHocId) {
+      where.namHocId = parseInt(namHocId as string);
+    }
+
     return this.prisma.lopNam.findMany({
+      where,
       include: {
         lopHoc: true,
         namHoc: true,
@@ -249,7 +351,7 @@ export class AcademicService {
         _count: { select: { hocSinhs: true } }
       },
       orderBy: { id: 'desc' },
-      ...params,
+      ...otherParams,
     });
   }
 
