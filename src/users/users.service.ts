@@ -2,14 +2,14 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { PrismaService } from '../prisma/prisma.service';
-import { ResendMailService } from '../mail/resend-mail.service';
+import { MailService } from '../mail/mail.service';
 import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UsersService {
   constructor(
     private prisma: PrismaService,
-    private mailService: ResendMailService,
+    private mailService: MailService,
   ) { }
 
   async create(createUserDto: CreateUserDto) {

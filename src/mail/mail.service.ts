@@ -116,4 +116,45 @@ export class MailService {
             throw error;
         }
     }
+
+    async sendAccountDetailsEmail(user: any, details: {
+        password?: string,
+        role: string,
+        maSo: string,
+        schoolName?: string,
+        className?: string,
+        teacherName?: string
+    }, locale: string = 'vi') {
+        const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+        const loginUrl = `${frontendUrl}/${locale}/auth/login`;
+        const subject = locale === 'vi' ? 'Thông tin tài khoản NHers Academy 🎓' : 'NHers Academy Account Details 🎓';
+
+        const roleName = details.role === 'HOC_SINH' ? 'Học sinh' : details.role === 'GIAO_VIEN' ? 'Giáo viên' : 'Nhân viên';
+
+        console.log(`[MailService] Sending Account Details to: ${user.email}`);
+
+        try {
+            await this.mailerService.sendMail({
+                to: user.email,
+                subject,
+                template: './account-details',
+                context: {
+                    name: user.hoTen,
+                    roleName,
+                    schoolName: details.schoolName || 'NHers Academy',
+                    email: user.email,
+                    password: details.password,
+                    maSo: details.maSo,
+                    className: details.className,
+                    teacherName: details.teacherName,
+                    url: loginUrl,
+                    locale
+                },
+            });
+            console.log(`[MailService] Successfully sent account details email to ${user.email}`);
+        } catch (error) {
+            console.error(`[MailService] FAILED to send account details email to ${user.email}:`, error);
+            // Don't throw to prevent blocking user creation? Better to log.
+        }
+    }
 }

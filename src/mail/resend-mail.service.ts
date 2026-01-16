@@ -28,7 +28,7 @@ export class ResendMailService {
     async sendWelcomeEmail(user: any, locale: string = 'vi') {
         const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
         const url = `${frontendUrl}/${locale}/auth/login`;
-        const subject = locale === 'vi' ? 'Chào mừng bạn đến với NHers Academy! 🎓' : 'Welcome to NHers Academy! 🎓';
+        let subject = locale === 'vi' ? 'Chào mừng bạn đến với NHers Academy! 🎓' : 'Welcome to NHers Academy! 🎓';
         const title = locale === 'vi' ? 'Chào mừng thành viên mới' : 'Welcome new member';
 
         const content = `
@@ -48,10 +48,18 @@ export class ResendMailService {
         `;
 
         const fromEmail = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
-        console.log(`[ResendMailService] Attempting to send Welcome Email to: ${user.email} from: ${fromEmail}`);
+        // FIXME: Update this to the actual registered email from Resend error message
+        const OWNER_EMAIL = 'vanduyho717@gmail.com';
+        let toEmail = user.email || user.taiKhoan;
 
-        if (fromEmail === 'onboarding@resend.dev' && user.email !== 'vanduyho919@gmail.com') {
-            console.warn(`[ResendMailService] WARNING: Using 'onboarding@resend.dev'. Emails can ONLY be sent to the owner's email address (vanduyho919@gmail.com) in this mode.`);
+        console.log(`[ResendMailService] Attempting to send Welcome Email to: ${toEmail} from: ${fromEmail}`);
+
+        if (fromEmail === 'onboarding@resend.dev') {
+            if (toEmail !== OWNER_EMAIL) {
+                console.warn(`[ResendMailService] SANDBOX MODE DETECTED. Redirecting email from ${toEmail} to ${OWNER_EMAIL}`);
+                subject = `[SANDBOX REDIRECT from ${toEmail}] ${subject}`;
+                toEmail = OWNER_EMAIL;
+            }
         }
 
         try {
@@ -63,15 +71,15 @@ export class ResendMailService {
 
             const { data: resData, error } = await this.resend.emails.send({
                 from: `${process.env.MAIL_FROM_NAME || 'NHers Academy'} <${fromEmail}>`,
-                to: [user.email || user.taiKhoan],
+                to: [toEmail],
                 subject,
                 html,
             });
 
             if (error) {
-                console.error(`[ResendMailService] FAILED to send welcome email to ${user.email}:`, JSON.stringify(error, null, 2));
+                console.error(`[ResendMailService] FAILED to send welcome email to ${toEmail}:`, JSON.stringify(error, null, 2));
             } else {
-                console.log(`[ResendMailService] Successfully sent welcome email to ${user.email}`, resData);
+                console.log(`[ResendMailService] Successfully sent welcome email to ${toEmail}`, resData);
             }
         } catch (error) {
             console.error(`[ResendMailService] FAILED to send welcome email (CRITICAL):`, error);
@@ -79,27 +87,22 @@ export class ResendMailService {
     }
 
     async sendVerificationEmail(user: any, code: string, locale: string = 'vi') {
-        const subject = locale === 'vi' ? 'Mã xác thực tài khoản NHers Academy 🔐' : 'Verification Code - NHers Academy 🔐';
+        let subject = locale === 'vi' ? 'Mã xác thực tài khoản NHers Academy 🔐' : 'Verification Code - NHers Academy 🔐';
         const title = locale === 'vi' ? 'Xác thực bảo mật' : 'Security Verification';
 
-        const content = `
-            <p style="margin-bottom: 20px;">
-                ${locale === 'vi'
-                ? `Xin chào <strong>${user.hoTen || user.taiKhoan}</strong>, vui lòng sử dụng mã dưới đây để hoàn tất quá trình xác thực tài khoản của bạn:`
-                : `Hello <strong>${user.hoTen || user.taiKhoan}</strong>, please use the code below to complete your account verification:`}
-            </p>
-            <div style="background-color: #f8fafc; border: 2px dashed #e2e8f0; padding: 30px; border-radius: 20px; text-align: center; margin: 30px 0;">
-                <span style="color: #4f46e5; font-size: 38px; font-weight: 800; letter-spacing: 12px; margin: 0; font-family: monospace;">${code}</span>
-            </div>
-            <p style="text-align: center; color: #ef4444; font-size: 14px; font-weight: 600;">
-                ${locale === 'vi' ? 'Mã này sẽ hết hạn sau 10 phút.' : 'This code will expire in 10 minutes.'}
-            </p>
-            <p style="margin-top: 25px; font-size: 14px; color: #6b7280; font-style: italic;">
-                ${locale === 'vi'
-                ? 'Nếu bạn không thực hiện yêu cầu này, vui lòng bỏ qua email hoặc liên hệ BP Hỗ trợ.'
-                : 'If you did not request this, please ignore this email or contact Support.'}
-            </p>
-        `;
+        // ... content variable removed as it's not used (template is used)
+
+        const fromEmail = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
+        const OWNER_EMAIL = 'vanduyho717@gmail.com';
+        let toEmail = user.email;
+
+        if (fromEmail === 'onboarding@resend.dev') {
+            if (toEmail !== OWNER_EMAIL) {
+                console.warn(`[ResendMailService] SANDBOX MODE DETECTED. Redirecting verification from ${toEmail} to ${OWNER_EMAIL}`);
+                subject = `[SANDBOX REDIRECT from ${toEmail}] ${subject}`;
+                toEmail = OWNER_EMAIL;
+            }
+        }
 
         try {
             const html = await this.renderTemplate('verification', {
@@ -110,15 +113,15 @@ export class ResendMailService {
 
             const { data: resData, error } = await this.resend.emails.send({
                 from: `${process.env.MAIL_FROM_NAME || 'NHers Academy'} <${process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev'}>`,
-                to: [user.email],
+                to: [toEmail],
                 subject,
                 html,
             });
 
             if (error) {
-                console.error(`[ResendMailService] FAILED to send verification email to ${user.email}:`, error);
+                console.error(`[ResendMailService] FAILED to send verification email to ${toEmail}:`, error);
             } else {
-                console.log(`[ResendMailService] Successfully sent verification email to ${user.email}`, resData);
+                console.log(`[ResendMailService] Successfully sent verification email to ${toEmail}`, resData);
             }
         } catch (error) {
             console.error(`[ResendMailService] FAILED to send verification email (CRITICAL):`, error);
@@ -263,64 +266,24 @@ export class ResendMailService {
     }, locale: string = 'vi') {
         const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
         const loginUrl = `${frontendUrl}/${locale}/auth/login`;
-        const subject = locale === 'vi' ? 'Thông tin tài khoản NHers Academy 🎓' : 'NHers Academy Account Details 🎓';
+        let subject = locale === 'vi' ? 'Thông tin tài khoản NHers Academy 🎓' : 'NHers Academy Account Details 🎓';
         const title = locale === 'vi' ? 'Thông báo Hồ sơ' : 'Profile Notification';
 
         const roleName = details.role === 'HOC_SINH' ? 'Học sinh' : details.role === 'GIAO_VIEN' ? 'Giáo viên' : 'Nhân viên';
 
-        const content = `
-            <p style="font-size: 18px; font-weight: 600; color: #111827; margin-bottom: 16px;">
-                ${locale === 'vi' ? `Chào ${user.hoTen}!` : `Hello ${user.hoTen}!`}
-            </p>
-            <p>
-                ${locale === 'vi'
-                ? `Thông tin hồ sơ <strong>${roleName}</strong> của bạn đã được cập nhật tại <strong>${details.schoolName || 'NHers Academy'}</strong>.`
-                : `Your <strong>${roleName}</strong> profile has been updated at <strong>${details.schoolName || 'NHers Academy'}</strong>.`}
-            </p>
-            
-            <div style="background-color: #f8fafc; border-radius: 16px; padding: 25px; margin: 25px 0; border: 1px solid #e2e8f0;">
-                <h3 style="margin-top: 0; font-size: 14px; color: #4f46e5; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 20px; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px;">
-                    Chi tiết tài khoản
-                </h3>
-                <table width="100%" cellpadding="0" cellspacing="0" border="0">
-                    <tr>
-                        <td style="padding: 8px 0; color: #64748b; font-size: 14px; width: 40%;">Tài khoản (Email)</td>
-                        <td style="padding: 8px 0; color: #1e293b; font-weight: 600;">${user.email}</td>
-                    </tr>
-                    ${details.password ? `
-                    <tr>
-                        <td style="padding: 8px 0; color: #64748b; font-size: 14px;">Mật khẩu tạm thời</td>
-                        <td style="padding: 8px 0;"><code style="background: #e0e7ff; color: #4338ca; padding: 4px 8px; border-radius: 6px; font-weight: 700;">${details.password}</code></td>
-                    </tr>
-                    ` : ''}
-                    <tr>
-                        <td style="padding: 8px 0; color: #64748b; font-size: 14px;">Mã định danh</td>
-                        <td style="padding: 8px 0; color: #1e293b; font-weight: 600;">${details.maSo}</td>
-                    </tr>
-                    ${details.className ? `
-                    <tr>
-                        <td style="padding: 8px 0; color: #64748b; font-size: 14px;">Lớp học</td>
-                        <td style="padding: 8px 0; color: #1e293b; font-weight: 600;">${details.className}</td>
-                    </tr>
-                    ` : ''}
-                    ${details.teacherName ? `
-                    <tr>
-                        <td style="padding: 8px 0; color: #64748b; font-size: 14px;">Giáo viên chủ nhiệm</td>
-                        <td style="padding: 8px 0; color: #1e293b; font-weight: 600;">${details.teacherName}</td>
-                    </tr>
-                    ` : ''}
-                </table>
-            </div>
-
-            <p style="font-size: 14px; color: #6b7280; font-style: italic;">
-                ${locale === 'vi'
-                ? 'Vui lòng đăng nhập và đổi mật khẩu ngay trong lần sử dụng đầu tiên để bảo mật thông tin.'
-                : 'Please login and change your password during your first use for security purposes.'}
-            </p>
-        `;
+        // ... content variable removed
 
         const fromEmail = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
-        console.log(`[ResendMailService] Attempting to send Account Details to: ${user.email} from: ${fromEmail}`);
+        const OWNER_EMAIL = 'vanduyho717@gmail.com';
+        let toEmail = user.email;
+
+        if (fromEmail === 'onboarding@resend.dev') {
+            if (toEmail !== OWNER_EMAIL) {
+                console.warn(`[ResendMailService] SANDBOX MODE DETECTED. Redirecting Account Credentials from ${toEmail} to ${OWNER_EMAIL}`);
+                subject = `[SANDBOX REDIRECT from ${toEmail}] ${subject}`;
+                toEmail = OWNER_EMAIL;
+            }
+        }
 
         try {
             const html = await this.renderTemplate('account-details', {
@@ -338,15 +301,15 @@ export class ResendMailService {
 
             const { data: resData, error } = await this.resend.emails.send({
                 from: `${process.env.MAIL_FROM_NAME || 'NHers Academy'} <${fromEmail}>`,
-                to: [user.email],
+                to: [toEmail],
                 subject,
                 html,
             });
 
             if (error) {
-                console.error(`[ResendMailService] FAILED to send account details email to ${user.email}:`, JSON.stringify(error, null, 2));
+                console.error(`[ResendMailService] FAILED to send account details email to ${toEmail}:`, JSON.stringify(error, null, 2));
             } else {
-                console.log(`[ResendMailService] Successfully sent account details email to ${user.email}`, resData);
+                console.log(`[ResendMailService] Successfully sent account details email to ${toEmail}`, resData);
             }
         } catch (error) {
             console.error(`[ResendMailService] FAILED to send account details email (CRITICAL):`, error);
