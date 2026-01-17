@@ -298,10 +298,17 @@ export class AcademicService {
   }
 
   async findAllHocKy(params: any = {}) {
+    const { namHocId, ...otherParams } = params;
+    const where: any = {};
+    if (namHocId) {
+      where.namHocId = parseInt(namHocId as string);
+    }
+
     return this.prisma.hocKy.findMany({
+      where,
       include: { namHoc: true },
-      orderBy: { tenHocKy: 'asc' },
-      ...params
+      orderBy: { ngayBatDau: 'asc' },
+      ...otherParams
     });
   }
 
@@ -347,7 +354,20 @@ export class AcademicService {
       include: {
         lopHoc: true,
         namHoc: true,
-        gvChuNhiem: true,
+        gvChuNhiem: {
+          include: {
+            nguoiDung: true
+          }
+        },
+        hocSinhs: {
+          include: {
+            hocSinh: {
+              include: {
+                nguoiDung: true
+              }
+            }
+          }
+        },
         _count: { select: { hocSinhs: true } }
       },
       orderBy: { id: 'desc' },
@@ -361,7 +381,25 @@ export class AcademicService {
       include: {
         lopHoc: true,
         namHoc: true,
-        gvChuNhiem: true,
+        gvChuNhiem: {
+          include: {
+            nguoiDung: true
+          }
+        },
+        hocSinhs: {
+          include: {
+            hocSinh: {
+              include: {
+                nguoiDung: true
+              }
+            }
+          },
+          orderBy: {
+            hocSinh: {
+              hoTen: 'asc'
+            }
+          }
+        },
         _count: { select: { hocSinhs: true } }
       },
     });

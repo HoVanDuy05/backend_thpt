@@ -127,8 +127,8 @@ export class AcademicController {
 
   @Get('semesters')
   @Roles(VaiTro.ADMIN, VaiTro.GIAO_VIEN, VaiTro.HOC_SINH)
-  findAllHocKy() {
-    return this.academicService.findAllHocKy();
+  findAllHocKy(@Query() query: any) {
+    return this.academicService.findAllHocKy(query);
   }
 
   @Get('semesters/:id')
