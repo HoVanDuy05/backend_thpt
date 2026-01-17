@@ -17,21 +17,82 @@ export class AuthService {
     ) { }
 
     async validateUser(email: string, matKhau: string): Promise<any> {
-        const user = await this.usersService.findByEmail(email);
-        if (!user) return null;
+        const user = await this.prisma.nguoiDung.findUnique({
+            where: { email },
+            select: {
+                id: true,
+                taiKhoan: true,
+                email: true,
+                matKhau: true, // Include matKhau ONLY for validation
+                kichHoat: true,
+                vaiTro: true,
+                hoTen: true,
+                maSo: true,
+                avatar: true,
+                ngayTao: true,
+                hoSoHocSinh: {
+                    include: {
+                        cacLopNam: {
+                            include: {
+                                lopNam: {
+                                    include: {
+                                        lopHoc: {
+                                            include: {
+                                                khoi: true
+                                            }
+                                        },
+                                        namHoc: true,
+                                        gvChuNhiem: {
+                                            include: {
+                                                nguoiDung: {
+                                                    select: {
+                                                        id: true,
+                                                        taiKhoan: true,
+                                                        email: true,
+                                                        vaiTro: true,
+                                                        hoTen: true,
+                                                        maSo: true
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            orderBy: {
+                                lopNam: {
+                                    namHoc: {
+                                        ngayBatDau: 'desc'
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                hoSoGiaoVien: {
+                    include: {
+                        lopChuNhiem: true,
+                        lopNams: {
+                            include: {
+                                lopHoc: true,
+                                namHoc: true
+                            }
+                        }
+                    }
+                },
+                hoSoNhanVien: true
+            }
+        });
 
-        // In a real app, use bcrypt.compare(matKhau, user.matKhau)
-        // Assuming simple comparison for now if passwords aren't hashed yet, 
-        // OR assuming they ARE hashed. Let's assume hashed for best practice.
-        // However, if user seeded plain text, this might fail. 
-        // Let's try matching plain text first for simplicity of this demo, OR compare hash
-        // const isMatch = await bcrypt.compare(matKhau, user.matKhau);
+        if (!user || !user.matKhau) {
+            return null;
+        }
 
         const isMatch = user.matKhau && (await bcrypt.compare(matKhau, user.matKhau));
         // Fallback for plain text if needed during development transition
         const isPlainMatch = matKhau === user.matKhau;
 
-        if (user && (isMatch || isPlainMatch)) {
+        if (isMatch || isPlainMatch) {
             const { matKhau, ...result } = user;
             return result;
         }
@@ -283,9 +344,8 @@ export class AuthService {
         if (!user) {
             throw new UnauthorizedException('validation.user_not_found');
         }
-        // Remove password from response just in case
-        const { matKhau, ...result } = user;
-        return result;
+        // Password is already excluded from findUserProfile, return user directly
+        return user;
     }
 
     async updateProfile(userId: number, dto: any) {
