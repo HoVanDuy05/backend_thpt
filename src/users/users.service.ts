@@ -281,7 +281,17 @@ export class UsersService {
     }
     return this.prisma.nguoiDung.findMany({
       where,
-      include: {
+      select: {
+        id: true,
+        taiKhoan: true,
+        email: true,
+        soDienThoai: true,
+        kichHoat: true,
+        vaiTro: true,
+        hoTen: true,
+        maSo: true,
+        avatar: true,
+        ngayTao: true,
         hoSoHocSinh: true,
         hoSoGiaoVien: true,
         hoSoNhanVien: true,
@@ -308,6 +318,70 @@ export class UsersService {
     }
     return this.prisma.nguoiDung.findUnique({
       where: { id },
+      select: {
+        id: true,
+        taiKhoan: true,
+        email: true,
+        soDienThoai: true,
+        kichHoat: true,
+        maXacThuc: true,
+        googleId: true,
+        vaiTro: true,
+        hoTen: true,
+        maSo: true,
+        avatar: true,
+        ngayTao: true,
+        hoSoHocSinh: {
+          include: {
+            cacLopNam: {
+              include: {
+                lopNam: {
+                  include: {
+                    lopHoc: {
+                      include: {
+                        khoi: true
+                      }
+                    },
+                    namHoc: true,
+                    gvChuNhiem: {
+                      include: {
+                        nguoiDung: {
+                          select: {
+                            id: true,
+                            taiKhoan: true,
+                            email: true,
+                            vaiTro: true,
+                            hoTen: true,
+                            maSo: true
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              orderBy: {
+                lopNam: {
+                  namHoc: {
+                    ngayBatDau: 'desc' // Most recent first
+                  }
+                }
+              }
+            }
+          }
+        },
+        hoSoGiaoVien: {
+          include: {
+            lopNams: {
+              include: {
+                lopHoc: true,
+                namHoc: true
+              }
+            }
+          }
+        },
+        hoSoNhanVien: true
+      }
     });
   }
 
@@ -376,7 +450,17 @@ export class UsersService {
   async findUserProfile(id: number) {
     return this.prisma.nguoiDung.findUnique({
       where: { id },
-      include: {
+      select: {
+        id: true,
+        taiKhoan: true,
+        email: true,
+        soDienThoai: true,
+        kichHoat: true,
+        vaiTro: true,
+        hoTen: true,
+        maSo: true,
+        avatar: true,
+        ngayTao: true,
         hoSoHocSinh: {
           include: {
             cacLopNam: {
@@ -389,17 +473,28 @@ export class UsersService {
                         khoi: true,
                       }
                     },
-                    gvChuNhiem: true,
+                    gvChuNhiem: {
+                      select: {
+                        id: true,
+                        hoTen: true,
+                        maSoGv: true
+                      }
+                    },
                     namHoc: true,
                   },
                 },
               },
             },
-            // Keep legacy for a while if needed, or remove if confident
             lopHoc: {
               include: {
                 namHoc: true,
-                gvChuNhiem: true,
+                gvChuNhiem: {
+                  select: {
+                    id: true,
+                    hoTen: true,
+                    maSoGv: true
+                  }
+                },
               },
             },
           },

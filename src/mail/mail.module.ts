@@ -2,7 +2,7 @@ import { Global, Module } from '@nestjs/common';
 import { MailService } from './mail.service';
 import { ResendMailService } from './resend-mail.service';
 import { MailerModule } from '@nestjs-modules/mailer';
-import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
+import { EjsAdapter } from '@nestjs-modules/mailer/dist/adapters/ejs.adapter';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import * as path from 'path';
 
@@ -26,7 +26,7 @@ import * as path from 'path';
                 },
                 template: {
                     dir: path.join(__dirname, 'templates'),
-                    adapter: new HandlebarsAdapter(),
+                    adapter: new EjsAdapter(),
                     options: {
                         strict: true,
                     },
