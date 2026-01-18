@@ -12,6 +12,10 @@ import { CreateLopNamDto } from './dto/create-lop-nam.dto';
 import { UpdateLopNamDto } from './dto/update-lop-nam.dto';
 import { CreateKhoiDto } from './dto/create-khoi.dto';
 import { UpdateKhoiDto } from './dto/update-khoi.dto';
+import { CreatePhanCongGvDto } from './dto/create-phan-cong-gv.dto';
+import { UpdatePhanCongGvDto } from './dto/update-phan-cong-gv.dto';
+import { CreateDiemDto } from './dto/create-diem.dto';
+import { UpdateDiemDto } from './dto/update-diem.dto';
 import { Roles } from '../common/decorators/roles.decorator';
 import { VaiTro } from '@prisma/client';
 
@@ -209,6 +213,68 @@ export class AcademicController {
   @Roles(VaiTro.ADMIN)
   removeLopHoc(@Param('id') id: string) {
     return this.academicService.removeLopHoc(+id);
+  }
+
+  // --- PhanCongGv (Teacher Assignments) ---
+  @Post('assignments')
+  @Roles(VaiTro.ADMIN)
+  createPhanCongGv(@Body() dto: CreatePhanCongGvDto) {
+    return this.academicService.createPhanCongGv(dto);
+  }
+
+  @Get('assignments')
+  @Roles(VaiTro.ADMIN, VaiTro.GIAO_VIEN)
+  findAllPhanCongGv(@Query() query: any) {
+    return this.academicService.findAllPhanCongGv(query);
+  }
+
+  @Get('assignments/:id')
+  @Roles(VaiTro.ADMIN, VaiTro.GIAO_VIEN)
+  findOnePhanCongGv(@Param('id') id: string) {
+    return this.academicService.findOnePhanCongGv(+id);
+  }
+
+  @Put('assignments/:id')
+  @Roles(VaiTro.ADMIN)
+  updatePhanCongGv(@Param('id') id: string, @Body() dto: UpdatePhanCongGvDto) {
+    return this.academicService.updatePhanCongGv(+id, dto);
+  }
+
+  @Delete('assignments/:id')
+  @Roles(VaiTro.ADMIN)
+  removePhanCongGv(@Param('id') id: string) {
+    return this.academicService.removePhanCongGv(+id);
+  }
+
+  // --- Diem (Grades) ---
+  @Post('grades-records')
+  @Roles(VaiTro.ADMIN, VaiTro.GIAO_VIEN)
+  createDiem(@Body() dto: CreateDiemDto) {
+    return this.academicService.createDiem(dto);
+  }
+
+  @Get('grades-records')
+  @Roles(VaiTro.ADMIN, VaiTro.GIAO_VIEN, VaiTro.HOC_SINH)
+  findAllDiem(@Query() query: any) {
+    return this.academicService.findAllDiem(query);
+  }
+
+  @Get('grades-records/:id')
+  @Roles(VaiTro.ADMIN, VaiTro.GIAO_VIEN, VaiTro.HOC_SINH)
+  findOneDiem(@Param('id') id: string) {
+    return this.academicService.findOneDiem(+id);
+  }
+
+  @Put('grades-records/:id')
+  @Roles(VaiTro.ADMIN, VaiTro.GIAO_VIEN)
+  updateDiem(@Param('id') id: string, @Body() dto: UpdateDiemDto) {
+    return this.academicService.updateDiem(+id, dto);
+  }
+
+  @Delete('grades-records/:id')
+  @Roles(VaiTro.ADMIN)
+  removeDiem(@Param('id') id: string) {
+    return this.academicService.removeDiem(+id);
   }
 
   // --- Student Management ---

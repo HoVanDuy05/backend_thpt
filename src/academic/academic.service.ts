@@ -9,6 +9,10 @@ import { UpdateNamHocDto } from './dto/update-nam-hoc.dto';
 import { UpdateMonHocDto } from './dto/update-mon-hoc.dto';
 import { UpdateLopHocDto } from './dto/update-lop-hoc.dto';
 import { PrismaService } from '../prisma/prisma.service';
+import { CreatePhanCongGvDto } from './dto/create-phan-cong-gv.dto';
+import { UpdatePhanCongGvDto } from './dto/update-phan-cong-gv.dto';
+import { CreateDiemDto } from './dto/create-diem.dto';
+import { UpdateDiemDto } from './dto/update-diem.dto';
 
 @Injectable()
 export class AcademicService {
@@ -95,7 +99,46 @@ export class AcademicService {
   }
 
   findAllMonHoc(params: any = {}) {
-    return this.prisma.monHoc.findMany(params);
+    return this.findAllMonHocWithCounts(params);
+  }
+
+  private async findAllMonHocWithCounts(params: any = {}) {
+    const monHocs = await this.prisma.monHoc.findMany({
+      ...params,
+    });
+
+    const monHocIds = monHocs.map((m) => m.id);
+    if (monHocIds.length === 0) return monHocs as any;
+
+    const teachersBySubject = await this.prisma.phanCongGv.groupBy({
+      by: ['monHocId', 'giaoVienId'],
+      where: { monHocId: { in: monHocIds } },
+      _count: { _all: true }
+    });
+
+    const classesBySubject = await this.prisma.phanCongGv.groupBy({
+      by: ['monHocId', 'lopNamId'],
+      where: { monHocId: { in: monHocIds } },
+      _count: { _all: true }
+    });
+
+    const teacherCountMap = new Map<number, number>();
+    for (const row of teachersBySubject) {
+      teacherCountMap.set(row.monHocId, (teacherCountMap.get(row.monHocId) || 0) + 1);
+    }
+
+    const classCountMap = new Map<number, number>();
+    for (const row of classesBySubject) {
+      classCountMap.set(row.monHocId, (classCountMap.get(row.monHocId) || 0) + 1);
+    }
+
+    return monHocs.map((m) => ({
+      ...m,
+      _count: {
+        lopHoc: classCountMap.get(m.id) || 0,
+        giaoVien: teacherCountMap.get(m.id) || 0,
+      }
+    }));
   }
 
   findOneMonHoc(id: number) {
@@ -108,6 +151,137 @@ export class AcademicService {
 
   removeMonHoc(id: number) {
     return this.prisma.monHoc.delete({ where: { id } });
+  }
+
+  // --- PhanCongGv (Teacher Assignments) ---
+  createPhanCongGv(dto: CreatePhanCongGvDto) {
+    return this.prisma.phanCongGv.create({
+      data: dto,
+      include: {
+        giaoVien: true,
+        monHoc: true,
+        lopNam: { include: { lopHoc: true, namHoc: true } },
+        namHoc: true,
+      }
+    });
+  }
+
+  findAllPhanCongGv(query: any = {}) {
+    const where: any = {};
+    if (query.giaoVienId) where.giaoVienId = +query.giaoVienId;
+    if (query.monHocId) where.monHocId = +query.monHocId;
+    if (query.lopNamId) where.lopNamId = +query.lopNamId;
+    if (query.namHocId) where.namHocId = +query.namHocId;
+
+    return this.prisma.phanCongGv.findMany({
+      where,
+      include: {
+        giaoVien: true,
+        monHoc: true,
+        lopNam: { include: { lopHoc: true, namHoc: true } },
+        namHoc: true,
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+  }
+
+  findOnePhanCongGv(id: number) {
+    return this.prisma.phanCongGv.findUnique({
+      where: { id },
+      include: {
+        giaoVien: true,
+        monHoc: true,
+        lopNam: { include: { lopHoc: true, namHoc: true } },
+        namHoc: true,
+      }
+    });
+  }
+
+  updatePhanCongGv(id: number, dto: UpdatePhanCongGvDto) {
+    return this.prisma.phanCongGv.update({
+      where: { id },
+      data: dto,
+      include: {
+        giaoVien: true,
+        monHoc: true,
+        lopNam: { include: { lopHoc: true, namHoc: true } },
+        namHoc: true,
+      }
+    });
+  }
+
+  removePhanCongGv(id: number) {
+    return this.prisma.phanCongGv.delete({ where: { id } });
+  }
+
+  // --- Diem (Grades) ---
+  private computeTrungBinh(giuaKy?: number, cuoiKy?: number) {
+    if (typeof giuaKy !== 'number' || typeof cuoiKy !== 'number') return undefined;
+    // 40% midterm + 60% final, rounded to 2 decimals
+    return Math.round((giuaKy * 0.4 + cuoiKy * 0.6) * 100) / 100;
+  }
+
+  createDiem(dto: CreateDiemDto) {
+    const trungBinh = dto.trungBinh ?? this.computeTrungBinh(dto.giuaKy, dto.cuoiKy);
+    return this.prisma.diem.create({
+      data: {
+        ...dto,
+        trungBinh,
+      } as any,
+      include: {
+        hocSinh: true,
+        monHoc: true,
+        hocKy: { include: { namHoc: true } },
+      }
+    });
+  }
+
+  findAllDiem(query: any = {}) {
+    const where: any = {};
+    if (query.hocSinhId) where.hocSinhId = +query.hocSinhId;
+    if (query.monHocId) where.monHocId = +query.monHocId;
+    if (query.hocKyId) where.hocKyId = +query.hocKyId;
+
+    return this.prisma.diem.findMany({
+      where,
+      include: {
+        hocSinh: true,
+        monHoc: true,
+        hocKy: { include: { namHoc: true } },
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+  }
+
+  findOneDiem(id: number) {
+    return this.prisma.diem.findUnique({
+      where: { id },
+      include: {
+        hocSinh: true,
+        monHoc: true,
+        hocKy: { include: { namHoc: true } },
+      }
+    });
+  }
+
+  updateDiem(id: number, dto: UpdateDiemDto) {
+    const trungBinh = (dto as any).trungBinh ?? this.computeTrungBinh((dto as any).giuaKy, (dto as any).cuoiKy);
+    return this.prisma.diem.update({
+      where: { id },
+      data: {
+        ...(dto as any),
+        trungBinh,
+      },
+      include: {
+        hocSinh: true,
+        monHoc: true,
+        hocKy: { include: { namHoc: true } },
+      }
+    });
+  }
+
+  removeDiem(id: number) {
+    return this.prisma.diem.delete({ where: { id } });
   }
 
   // --- LopHoc ---
