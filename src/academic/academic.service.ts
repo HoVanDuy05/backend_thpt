@@ -92,9 +92,38 @@ export class AcademicService {
   }
 
   // --- MonHoc ---
-  createMonHoc(createMonHocDto: CreateMonHocDto) {
+  async createMonHoc(createMonHocDto: CreateMonHocDto) {
+    let { maMon, tenMon, khoiId } = createMonHocDto;
+
+    // Auto-generate maMon if not provided
+    if (!maMon) {
+      if (khoiId) {
+        const khoi = await this.prisma.khoi.findUnique({ where: { id: khoiId } });
+        const prefix = khoi ? `K${khoi.maKhoi}` : 'SUB';
+        // Simple abbreviation of tenMon: "Ngữ Văn" -> "NV"
+        const abbr = tenMon
+          .split(' ')
+          .map(w => w.charAt(0).toUpperCase())
+          .join('')
+          .replace(/[^A-Z]/g, '');
+        const random = Math.floor(1000 + Math.random() * 9000); // 4 digit random
+        maMon = `${prefix}_${abbr}_${random}`;
+      } else {
+        const abbr = tenMon
+          .split(' ')
+          .map(w => w.charAt(0).toUpperCase())
+          .join('')
+          .replace(/[^A-Z]/g, '');
+        const random = Math.floor(1000 + Math.random() * 9000);
+        maMon = `SUB_${abbr}_${random}`;
+      }
+    }
+
     return this.prisma.monHoc.create({
-      data: createMonHocDto,
+      data: {
+        ...createMonHocDto,
+        maMon
+      } as any,
     });
   }
 
@@ -103,31 +132,45 @@ export class AcademicService {
   }
 
   private async findAllMonHocWithCounts(params: any = {}) {
+    const { khoiId, ...otherParams } = params;
+    const where: any = {};
+    if (khoiId) {
+      where.khoiId = parseInt(khoiId as string);
+    }
+
+    // Merge otherParams logic if it contains other filters
+    Object.assign(where, otherParams); // Careful not to override
+
     const monHocs = await this.prisma.monHoc.findMany({
-      ...params,
+      where,
+      include: { khoi: true }, // Include Khoi details
+      orderBy: { createdAt: 'desc' }
     });
 
     const monHocIds = monHocs.map((m) => m.id);
     if (monHocIds.length === 0) return monHocs as any;
 
-    const teachersBySubject = await this.prisma.phanCongGv.groupBy({
-      by: ['monHocId', 'giaoVienId'],
-      where: { monHocId: { in: monHocIds } },
-      _count: { _all: true }
-    });
-
-    const classesBySubject = await this.prisma.phanCongGv.groupBy({
-      by: ['monHocId', 'lopNamId'],
-      where: { monHocId: { in: monHocIds } },
-      _count: { _all: true }
-    });
-
     const teacherCountMap = new Map<number, number>();
+    const classCountMap = new Map<number, number>();
+
+    // Optimization: Run in parallel
+    const [teachersBySubject, classesBySubject] = await Promise.all([
+      this.prisma.phanCongGv.groupBy({
+        by: ['monHocId', 'giaoVienId'],
+        where: { monHocId: { in: monHocIds } },
+        _count: { _all: true }
+      }),
+      this.prisma.phanCongGv.groupBy({
+        by: ['monHocId', 'lopNamId'],
+        where: { monHocId: { in: monHocIds } },
+        _count: { _all: true }
+      })
+    ]);
+
     for (const row of teachersBySubject) {
       teacherCountMap.set(row.monHocId, (teacherCountMap.get(row.monHocId) || 0) + 1);
     }
 
-    const classCountMap = new Map<number, number>();
     for (const row of classesBySubject) {
       classCountMap.set(row.monHocId, (classCountMap.get(row.monHocId) || 0) + 1);
     }

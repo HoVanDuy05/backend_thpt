@@ -1,4 +1,4 @@
-import { IsBoolean, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { IsBoolean, IsInt, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class CreateMonHocDto {
     @IsString()
@@ -12,6 +12,10 @@ export class CreateMonHocDto {
     @IsString()
     @IsOptional()
     moTa?: string;
+
+    @IsInt()
+    @IsOptional()
+    khoiId?: number;
 
     @IsBoolean()
     @IsOptional()

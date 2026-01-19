@@ -251,6 +251,7 @@ model Khoi {
   maKhoi  Int      @unique @map("ma_khoi") // 10, 11, 12...
   moTa    String?  @map("mo_ta") @db.Text
   lopHocs LopHoc[]
+  monHocs MonHoc[] // New relation
 
   @@map("khoi")
 }
@@ -260,11 +261,13 @@ model MonHoc {
   tenMon    String   @map("ten_mon") @db.VarChar(100)
   maMon     String?  @unique @map("ma_mon") @db.VarChar(50)
   moTa      String?  @map("mo_ta") @db.Text
+  khoiId    Int?      @map("khoi_id") // Optional for migration, enforce strict later if needed
   isActive  Boolean  @default(true) @map("is_active")
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
 
   // Relations
+  khoi           Khoi?                     @relation(fields: [khoiId], references: [id], onDelete: SetNull)
   nganHangCauHoi NganHangCauHoi[]
   deKiemTra      DeKiemTra[]
   lichHocs       LichHoc[]

@@ -409,29 +409,75 @@ export class UsersService {
       data: updateData,
     });
 
-    // Update Profile
-    const profileUpdate: any = { ...profileData };
-    // Handle date strings
-    ['ngaySinh', 'ngayCapCccd', 'ngayNhapHoc', 'ngayVaoLam'].forEach(key => {
-      if (profileUpdate[key]) profileUpdate[key] = new Date(profileUpdate[key]);
+    // List of fields that belong to the base NguoiDung model, not the profile
+    const baseUserFields = ['email', 'matKhau', 'vaiTro', 'hoTen', 'isNewAccount', 'urlParams'];
+
+    // Sanitize profileUpdate: remove base user fields and any helper fields like isNewAccount
+    const profileUpdate: any = {};
+    Object.keys(dto).forEach(key => {
+      if (!baseUserFields.includes(key)) {
+        profileUpdate[key] = dto[key];
+      }
     });
-    // Handle numeric IDs
-    if (profileUpdate.lopId) profileUpdate.lopId = Number(profileUpdate.lopId);
+
+    // Handle date strings and ensure they are valid Date objects or null
+    ['ngaySinh', 'ngayCapCccd', 'ngayNhapHoc', 'ngayVaoLam'].forEach(key => {
+      if (profileUpdate[key]) {
+        const date = new Date(profileUpdate[key]);
+        profileUpdate[key] = isNaN(date.getTime()) ? null : date;
+      } else if (profileUpdate[key] === '') {
+        profileUpdate[key] = null;
+      }
+    });
+
+    // Handle numeric IDs - ensure empty strings become null
+    if (profileUpdate.lopId !== undefined) {
+      profileUpdate.lopId = profileUpdate.lopId === '' || profileUpdate.lopId === null ? null : Number(profileUpdate.lopId);
+    }
 
     if (role === 'HOC_SINH') {
+      // Whitelist fields for HoSoHocSinh
+      const hocSinhFields = [
+        'maSoHs', 'ngaySinh', 'gioiTinh', 'noiSinh', 'danToc', 'tonGiao',
+        'diaChiThuongTru', 'diaChiTamTru', 'soDienThoai', 'cccd', 'ngayCapCccd',
+        'noiCapCccd', 'hoTenCha', 'ngheNghiepCha', 'sdtCha', 'hoTenMe',
+        'ngheNghiepMe', 'sdtMe', 'ngayNhapHoc', 'trangThai', 'diaChi'
+      ];
+      const sanitizedHsData: any = {};
+      hocSinhFields.forEach(f => {
+        if (profileUpdate[f] !== undefined) sanitizedHsData[f] = profileUpdate[f];
+      });
+
       await this.prisma.hoSoHocSinh.update({
         where: { userId: id },
-        data: { ...profileUpdate, hoTen: hoTen || updatedUser.hoTen },
+        data: { ...sanitizedHsData, hoTen: hoTen || updatedUser.hoTen },
       });
     } else if (role === 'GIAO_VIEN') {
+      const giaoVienFields = [
+        'maSoGv', 'ngaySinh', 'gioiTinh', 'diaChi', 'soDienThoai', 'emailLienHe',
+        'cccd', 'ngayCapCccd', 'noiCapCccd', 'trinhDo', 'chuyenMon', 'ngayVaoLam'
+      ];
+      const sanitizedGvData: any = {};
+      giaoVienFields.forEach(f => {
+        if (profileUpdate[f] !== undefined) sanitizedGvData[f] = profileUpdate[f];
+      });
+
       await this.prisma.hoSoGiaoVien.update({
         where: { userId: id },
-        data: { ...profileUpdate, hoTen: hoTen || updatedUser.hoTen },
+        data: { ...sanitizedGvData, hoTen: hoTen || updatedUser.hoTen },
       });
     } else if (role === 'NHAN_VIEN') {
+      const nhanVienFields = [
+        'maSo', 'ngaySinh', 'gioiTinh', 'diaChi', 'soDienThoai', 'emailLienHe', 'cccd'
+      ];
+      const sanitizedNvData: any = {};
+      nhanVienFields.forEach(f => {
+        if (profileUpdate[f] !== undefined) sanitizedNvData[f] = profileUpdate[f];
+      });
+
       await this.prisma.hoSoNhanVien.update({
         where: { userId: id },
-        data: { ...profileUpdate, hoTen: hoTen || updatedUser.hoTen },
+        data: { ...sanitizedNvData, hoTen: hoTen || updatedUser.hoTen },
       });
     }
 
