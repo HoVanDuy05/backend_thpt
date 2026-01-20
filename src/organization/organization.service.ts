@@ -114,7 +114,10 @@ export class OrganizationService {
     }
 
     async remove(id: number) {
-        await this.findOne(id);
+        const org = await this.findOne(id);
+        if (org.thanhViens && org.thanhViens.length > 0) {
+            throw new ConflictException('Không thể xóa tổ chức đang có thành viên');
+        }
         return this.prisma.toChuc.delete({ where: { id } });
     }
 
