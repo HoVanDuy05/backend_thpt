@@ -3,13 +3,47 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CreateOrganizationDto } from './dto/create-organization.dto';
 import { UpdateOrganizationDto } from './dto/update-organization.dto';
 import { AddMemberDto } from './dto/add-member.dto';
-import { VaiTroToChuc } from '@prisma/client';
+import { VaiTroToChuc, LoaiToChuc } from '@prisma/client';
 
 @Injectable()
 export class OrganizationService {
     constructor(private prisma: PrismaService) { }
 
     async create(createOrganizationDto: CreateOrganizationDto) {
+        if (!createOrganizationDto.ma) {
+            const prefix = 'NH';
+            let typeCode = 'KH';
+            switch (createOrganizationDto.loaiToChuc) {
+                case LoaiToChuc.CHUYEN_MON:
+                    typeCode = 'CM';
+                    break;
+                case LoaiToChuc.HANH_CHINH:
+                    typeCode = 'HC';
+                    break;
+                case LoaiToChuc.DOAN_THE:
+                    typeCode = 'DT';
+                    break;
+            }
+
+            const baseMa = `${prefix}_${typeCode}`;
+
+            const lastOne = await this.prisma.toChuc.findFirst({
+                where: { ma: { startsWith: baseMa } },
+                orderBy: { ma: 'desc' },
+            });
+
+            let nextIndex = 1;
+            if (lastOne) {
+                const parts = lastOne.ma.split('_');
+                const lastIdx = parseInt(parts[parts.length - 1]);
+                if (!isNaN(lastIdx)) {
+                    nextIndex = lastIdx + 1;
+                }
+            }
+
+            createOrganizationDto.ma = `${baseMa}_${nextIndex.toString().padStart(5, '0')}`;
+        }
+
         const existing = await this.prisma.toChuc.findUnique({
             where: { ma: createOrganizationDto.ma },
         });
@@ -19,7 +53,7 @@ export class OrganizationService {
         }
 
         return this.prisma.toChuc.create({
-            data: createOrganizationDto,
+            data: createOrganizationDto as any,
         });
     }
 

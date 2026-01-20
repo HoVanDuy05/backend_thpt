@@ -8,9 +8,9 @@ export class CreateOrganizationDto {
     ten: string;
 
     @IsString()
-    @IsNotEmpty()
+    @IsOptional()
     @MaxLength(50)
-    ma: string;
+    ma?: string;
 
     @IsString()
     @IsOptional()
