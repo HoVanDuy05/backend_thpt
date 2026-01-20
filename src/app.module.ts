@@ -13,6 +13,7 @@ import { PortalModule } from './portal/portal.module';
 import { CommunicationModule } from './communication/communication.module';
 import { ApprovalsModule } from './approvals/approvals.module';
 import { SocialModule } from './social/social.module';
+import { OrganizationModule } from './organization/organization.module';
 
 import { AuthModule } from './auth/auth.module';
 import { UploadModule } from './common/upload/upload.module';
@@ -42,6 +43,7 @@ import { RolesGuard } from './common/guards/roles.guard';
     ApprovalsModule,
     SocialModule,
     PushModule,
+    OrganizationModule,
   ],
   controllers: [AppController],
   providers: [

@@ -53,6 +53,13 @@ export class AppController {
     return this.appService.getHello();
   }
 
+  @ApiTags('Public - Thống kê')
+  @Public()
+  @Get('stats')
+  getStats() {
+    return this.appService.getStats();
+  }
+
   // ==================================================================
   // AUTH MODULE
   // ==================================================================

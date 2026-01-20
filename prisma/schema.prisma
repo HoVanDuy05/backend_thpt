@@ -87,6 +87,7 @@ model NguoiDung {
   nhatKyPheDuyetQuyTrinh  NhatKyPheDuyetQuyTrinh[] @relation("NguoiPheDuyetLog")
   cacBuocPheDuyetDuocGiao NguoiPheDuyetBuoc[]
   pushSubscriptions       PushSubscription[]
+  thanhVienToChucs        ThanhVienToChuc[]
 
   @@map("nguoi_dung")
 }
@@ -1081,4 +1082,53 @@ model NhatKyPheDuyetQuyTrinh {
   @@index([phienId])
   @@index([nguoiDungId])
   @@map("nhat_ky_phe_duyet_quy_trinh")
+}
+// ==========================================================
+// NHÓM 12: QUẢN LÝ TỔ CHỨC & ĐOÀN THỂ (ORGANIZATIONS)
+// ==========================================================
+
+enum LoaiToChuc {
+  CHUYEN_MON   // Tổ Toán, Tổ Văn...
+  HANH_CHINH   // Phòng Đào tạo, Phòng Kế toán...
+  DOAN_THE     // Đoàn thanh niên, Hội phụ huynh...
+  KHAC
+}
+
+enum VaiTroToChuc {
+  TRUONG       // Tổ trưởng, Trưởng phòng, Bí thư...
+  PHO          // Tổ phó, Phó phòng, Phó bí thư...
+  THANH_VIEN
+  THU_KY
+}
+
+model ToChuc {
+  id          Int         @id @default(autoincrement())
+  ten         String      @map("ten") @db.VarChar(150)
+  ma          String      @unique @map("ma") @db.VarChar(50)
+  moTa        String?     @map("mo_ta") @db.Text
+  hinhAnh     String?     @map("hinh_anh") @db.VarChar(255)
+  loaiToChuc  LoaiToChuc  @default(CHUYEN_MON) @map("loai_to_chuc")
+  
+  ngayTao     DateTime    @default(now()) @map("ngay_tao")
+  ngayCapNhat DateTime    @updatedAt @map("ngay_cap_nhat")
+
+  // Relations
+  thanhViens  ThanhVienToChuc[]
+
+  @@map("to_chuc")
+}
+
+model ThanhVienToChuc {
+  id               Int          @id @default(autoincrement())
+  toChucId         Int          @map("to_chuc_id")
+  nguoiDungId      Int          @map("nguoi_dung_id")
+  vaiTroTrongToChuc VaiTroToChuc @default(THANH_VIEN) @map("vai_tro_trong_to_chuc")
+  ngayThamGia       DateTime     @default(now()) @map("ngay_tham_gia")
+
+  // Relations
+  toChuc    ToChuc    @relation(fields: [toChucId], references: [id], onDelete: Cascade)
+  nguoiDung NguoiDung @relation(fields: [nguoiDungId], references: [id], onDelete: Cascade)
+
+  @@unique([toChucId, nguoiDungId])
+  @@map("thanh_vien_to_chuc")
 }
