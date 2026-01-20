@@ -295,6 +295,7 @@ export class UsersService {
         hoSoHocSinh: true,
         hoSoGiaoVien: true,
         hoSoNhanVien: true,
+        thanhVienToChucs: true,
       },
       ...rest
     });
