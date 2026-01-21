@@ -11,11 +11,22 @@ export class AppService {
   }
 
   async getStats() {
-    const [totalStudents, totalTeachers, totalClasses, totalYears] = await Promise.all([
+    const [
+      totalStudents,
+      totalTeachers,
+      totalClasses,
+      totalYears,
+      totalOrgs,
+      totalPosts,
+      pendingApprovals,
+    ] = await Promise.all([
       this.prisma.nguoiDung.count({ where: { vaiTro: VaiTro.HOC_SINH } }),
       this.prisma.nguoiDung.count({ where: { vaiTro: VaiTro.GIAO_VIEN } }),
       this.prisma.lopHoc.count(),
       this.prisma.namHoc.count(),
+      this.prisma.toChuc.count(),
+      this.prisma.baiViet.count(),
+      this.prisma.phienQuyTrinh.count({ where: { trangThai: 'CHO_DUYET' } }),
     ]);
 
     return {
@@ -23,6 +34,9 @@ export class AppService {
       totalTeachers,
       totalClasses,
       totalYears,
+      totalOrgs,
+      totalPosts,
+      pendingApprovals,
     };
   }
 }
