@@ -52,8 +52,13 @@ export class OrganizationService {
             throw new ConflictException('Mã tổ chức đã tồn tại');
         }
 
+        const { parentId, ...rest } = createOrganizationDto;
+
         return this.prisma.toChuc.create({
-            data: createOrganizationDto as any,
+            data: {
+                ...rest,
+                parentId: parentId ? Number(parentId) : null,
+            } as any,
         });
     }
 
@@ -63,6 +68,9 @@ export class OrganizationService {
                 _count: {
                     select: { thanhViens: true },
                 },
+                children: {
+                    select: { id: true, ten: true, ma: true }
+                }
             },
             orderBy: { ngayTao: 'desc' },
         });
@@ -72,6 +80,16 @@ export class OrganizationService {
         const org = await this.prisma.toChuc.findUnique({
             where: { id },
             include: {
+                parent: {
+                    select: { id: true, ten: true, ma: true }
+                },
+                children: {
+                    include: {
+                        _count: {
+                            select: { thanhViens: true }
+                        }
+                    }
+                },
                 thanhViens: {
                     include: {
                         nguoiDung: {
@@ -107,9 +125,19 @@ export class OrganizationService {
             }
         }
 
+        const { parentId, ...rest } = updateOrganizationDto;
+
+        // Prevent self-parenting
+        if (parentId && Number(parentId) === id) {
+            throw new ConflictException('Một tổ chức không thể là cha của chính nó');
+        }
+
         return this.prisma.toChuc.update({
             where: { id },
-            data: updateOrganizationDto,
+            data: {
+                ...rest,
+                parentId: parentId ? Number(parentId) : null,
+            } as any,
         });
     }
 

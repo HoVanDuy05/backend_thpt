@@ -24,4 +24,7 @@ export class CreateOrganizationDto {
     @IsEnum(LoaiToChuc)
     @IsOptional()
     loaiToChuc?: LoaiToChuc;
+
+    @IsOptional()
+    parentId?: number;
 }

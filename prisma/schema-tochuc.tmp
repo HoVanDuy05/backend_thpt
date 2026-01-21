@@ -1,0 +1,19 @@
+model ToChuc {
+  id          Int         @id @default(autoincrement())
+  ten         String      @map("ten") @db.VarChar(150)
+  ma          String      @unique @map("ma") @db.VarChar(50)
+  moTa        String?     @map("mo_ta") @db.Text
+  hinhAnh     String?     @map("hinh_anh") @db.VarChar(255)
+  loaiToChuc  LoaiToChuc  @default(CHUYEN_MON) @map("loai_to_chuc")
+  parentId    Int?        @map("parent_id")
+  
+  ngayTao     DateTime    @default(now()) @map("ngay_tao")
+  ngayCapNhat DateTime    @updatedAt @map("ngay_cap_nhat")
+
+  // Relations
+  parent      ToChuc?     @relation("OrgHierarchy", fields: [parentId], references: [id], onDelete: SetNull)
+  children    ToChuc[]    @relation("OrgHierarchy")
+  thanhViens  ThanhVienToChuc[]
+
+  @@map("to_chuc")
+}
