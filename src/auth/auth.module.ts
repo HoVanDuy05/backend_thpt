@@ -13,24 +13,24 @@ import { CloudinaryModule } from '../common/cloudinary/cloudinary.module';
 
 @Global()
 @Module({
-    imports: [
-        UsersModule,
-        PrismaModule,
-        MailModule,
-        CloudinaryModule,
-        ConfigModule,
-        PassportModule,
-        JwtModule.registerAsync({
-            imports: [ConfigModule],
-            useFactory: (configService: ConfigService) => ({
-                secret: configService.get('JWT_SECRET') || 'secretKey',
-                signOptions: { expiresIn: '60m' },
-            }),
-            inject: [ConfigService],
-        }),
-    ],
-    providers: [AuthService, JwtStrategy, GoogleStrategy],
-    controllers: [AuthController],
-    exports: [AuthService], // Export if needed elsewhere
+  imports: [
+    UsersModule,
+    PrismaModule,
+    MailModule,
+    CloudinaryModule,
+    ConfigModule,
+    PassportModule,
+    JwtModule.registerAsync({
+      imports: [ConfigModule],
+      useFactory: (configService: ConfigService) => ({
+        secret: configService.get('JWT_SECRET') || 'secretKey',
+        signOptions: { expiresIn: '60m' },
+      }),
+      inject: [ConfigService],
+    }),
+  ],
+  providers: [AuthService, JwtStrategy, GoogleStrategy],
+  controllers: [AuthController],
+  exports: [AuthService], // Export if needed elsewhere
 })
-export class AuthModule { }
+export class AuthModule {}

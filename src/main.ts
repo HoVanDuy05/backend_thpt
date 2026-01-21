@@ -27,16 +27,20 @@ async function bootstrap() {
     maxAge: 3600,
   });
 
-  app.useGlobalPipes(new ValidationPipe({
-    whitelist: true,
-    forbidNonWhitelisted: false,
-    transform: true,
-  }));
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: false,
+      transform: true,
+    }),
+  );
 
   // Cấu hình Swagger
   const config = new DocumentBuilder()
     .setTitle('Hệ thống Quản lý Trường học (THPT)')
-    .setDescription('Tài liệu API cho hệ thống quản lý học tập, đề thi và chấm điểm')
+    .setDescription(
+      'Tài liệu API cho hệ thống quản lý học tập, đề thi và chấm điểm',
+    )
     .setVersion('1.0')
     .addBearerAuth()
     .build();

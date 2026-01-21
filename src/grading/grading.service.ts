@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateGradingDto } from './dto/create-grading.dto';
 import { UpdateGradingDto } from './dto/update-grading.dto';
@@ -9,7 +13,7 @@ export class GradingService {
   constructor(
     private prisma: PrismaService,
     private mailService: ResendMailService,
-  ) { }
+  ) {}
 
   async create(dto: CreateGradingDto) {
     const grade = await this.prisma.ketQuaChamDiem.create({
@@ -22,21 +26,22 @@ export class GradingService {
           include: {
             hocSinh: true,
             deKiemTra: true,
-          }
-        }
-      }
+          },
+        },
+      },
     });
 
     // Update submission status to DA_CHAM
     await this.prisma.lichSuNopBai.update({
       where: { id: dto.nopBaiId },
-      data: { trangThai: 'DA_CHAM' }
+      data: { trangThai: 'DA_CHAM' },
     });
-
 
     // Send notification email (non-blocking)
     if (grade.lichSuNopBai) {
-      this.mailService.sendGradeNotification(grade.lichSuNopBai, grade).catch(err => console.error('Email failed:', err));
+      this.mailService
+        .sendGradeNotification(grade.lichSuNopBai, grade)
+        .catch((err) => console.error('Email failed:', err));
     }
 
     return grade;
@@ -65,7 +70,7 @@ export class GradingService {
   update(id: number, dto: UpdateGradingDto) {
     return this.prisma.ketQuaChamDiem.update({
       where: { id },
-      data: dto
+      data: dto,
     });
   }
 

@@ -1,15 +1,21 @@
 import { VaiTro } from '@prisma/client';
-import { IsEmail, IsEnum, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import {
+  IsEmail,
+  IsEnum,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+} from 'class-validator';
 
 export class CreateUserDto {
-    @IsEmail()
-    @IsNotEmpty()
-    email: string;
+  @IsEmail()
+  @IsNotEmpty()
+  email: string;
 
-    @IsString()
-    @IsNotEmpty()
-    matKhau: string;
+  @IsString()
+  @IsNotEmpty()
+  matKhau: string;
 
-    @IsEnum(VaiTro)
-    vaiTro: VaiTro;
+  @IsEnum(VaiTro)
+  vaiTro: VaiTro;
 }

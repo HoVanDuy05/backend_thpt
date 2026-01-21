@@ -7,4 +7,4 @@ import { AcademicController } from './academic.controller';
   providers: [AcademicService],
   exports: [AcademicService], // Exported for AppController
 })
-export class AcademicModule { }
+export class AcademicModule {}

@@ -1,4 +1,17 @@
-import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Patch, Post, Put, UseGuards, Query } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  Patch,
+  Post,
+  Put,
+  UseGuards,
+  Query,
+} from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { AppService } from './app.service';
 import { VaiTro } from '@prisma/client';
@@ -46,7 +59,7 @@ export class AppController {
     private readonly assessmentsService: AssessmentsService,
     private readonly submissionsService: SubmissionsService,
     private readonly gradingService: GradingService,
-  ) { }
+  ) {}
 
   @Get()
   getHello(): string {
@@ -99,7 +112,6 @@ export class AppController {
   async resetPassword(@Body() body: { token: string; matKhau: string }) {
     return this.authService.resetPassword(body.token, body.matKhau);
   }
-
 
   // ==================================================================
   // USERS MODULE
@@ -290,14 +302,20 @@ export class AppController {
   @ApiTags('Assessments - Đề thi')
   @Roles(VaiTro.GIAO_VIEN, VaiTro.ADMIN)
   @Post('assessments/exams/:id/questions')
-  addQuestionToExam(@Param('id') id: string, @Body() dto: AddQuestionToExamDto) {
+  addQuestionToExam(
+    @Param('id') id: string,
+    @Body() dto: AddQuestionToExamDto,
+  ) {
     return this.assessmentsService.addQuestionToExam(+id, dto);
   }
 
   @ApiTags('Assessments - Đề thi')
   @Roles(VaiTro.GIAO_VIEN, VaiTro.ADMIN)
   @Delete('assessments/exams/:id/questions/:questionId')
-  removeQuestionFromExam(@Param('id') id: string, @Param('questionId') questionId: string) {
+  removeQuestionFromExam(
+    @Param('id') id: string,
+    @Param('questionId') questionId: string,
+  ) {
     return this.assessmentsService.removeQuestionFromExam(+id, +questionId);
   }
 

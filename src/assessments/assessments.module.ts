@@ -7,4 +7,4 @@ import { AssessmentsController } from './assessments.controller';
   providers: [AssessmentsService],
   exports: [AssessmentsService], // Exported for AppController
 })
-export class AssessmentsModule { }
+export class AssessmentsModule {}

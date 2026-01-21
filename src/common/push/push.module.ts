@@ -4,8 +4,8 @@ import { PushController } from './push.controller';
 
 @Global()
 @Module({
-    providers: [PushService],
-    controllers: [PushController],
-    exports: [PushService],
+  providers: [PushService],
+  controllers: [PushController],
+  exports: [PushService],
 })
-export class PushModule { }
+export class PushModule {}

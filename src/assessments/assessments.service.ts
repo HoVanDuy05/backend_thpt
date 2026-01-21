@@ -8,7 +8,7 @@ import { UpdateExamDto } from './dto/update-exam.dto';
 
 @Injectable()
 export class AssessmentsService {
-  constructor(private readonly prisma: PrismaService) { }
+  constructor(private readonly prisma: PrismaService) {}
 
   // --- Questions ---
   createQuestion(dto: CreateQuestionDto) {
@@ -59,8 +59,8 @@ export class AssessmentsService {
       include: {
         monHoc: true,
         chiTietDeThis: {
-          include: { nganHangCauHoi: true }
-        }
+          include: { nganHangCauHoi: true },
+        },
       },
       orderBy: { id: 'desc' },
       ...params,
@@ -74,9 +74,9 @@ export class AssessmentsService {
         monHoc: true,
         chiTietDeThis: {
           include: { nganHangCauHoi: true },
-          orderBy: { thuTuCau: 'asc' }
-        }
-      }
+          orderBy: { thuTuCau: 'asc' },
+        },
+      },
     });
   }
 

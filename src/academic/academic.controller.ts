@@ -1,4 +1,13 @@
-import { Body, Controller, Get, Post, Put, Delete, Param, Query } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Post,
+  Put,
+  Delete,
+  Param,
+  Query,
+} from '@nestjs/common';
 import { AcademicService } from './academic.service';
 import { CreateNamHocDto } from './dto/create-nam-hoc.dto';
 import { CreateMonHocDto } from './dto/create-mon-hoc.dto';
@@ -21,7 +30,7 @@ import { VaiTro } from '@prisma/client';
 
 @Controller('academic')
 export class AcademicController {
-  constructor(private readonly academicService: AcademicService) { }
+  constructor(private readonly academicService: AcademicService) {}
 
   // --- Khoi (Grades) ---
   @Post('grades')
@@ -58,7 +67,10 @@ export class AcademicController {
   @Post('classes/clone')
   @Roles(VaiTro.ADMIN)
   cloneClasses(@Body() body: { fromNamHocId: number; toNamHocId: number }) {
-    return this.academicService.cloneClasses(body.fromNamHocId, body.toNamHocId);
+    return this.academicService.cloneClasses(
+      body.fromNamHocId,
+      body.toNamHocId,
+    );
   }
 
   // --- LopNam (ClassYear) ---
@@ -82,7 +94,10 @@ export class AcademicController {
 
   @Put('class-years/:id')
   @Roles(VaiTro.ADMIN)
-  updateLopNam(@Param('id') id: string, @Body() updateLopNamDto: UpdateLopNamDto) {
+  updateLopNam(
+    @Param('id') id: string,
+    @Body() updateLopNamDto: UpdateLopNamDto,
+  ) {
     return this.academicService.updateLopNam(+id, updateLopNamDto);
   }
 
@@ -112,7 +127,10 @@ export class AcademicController {
 
   @Put('years/:id')
   @Roles(VaiTro.ADMIN)
-  updateNamHoc(@Param('id') id: string, @Body() updateNamHocDto: UpdateNamHocDto) {
+  updateNamHoc(
+    @Param('id') id: string,
+    @Body() updateNamHocDto: UpdateNamHocDto,
+  ) {
     return this.academicService.updateNamHoc(+id, updateNamHocDto);
   }
 
@@ -174,7 +192,10 @@ export class AcademicController {
 
   @Put('subjects/:id')
   @Roles(VaiTro.ADMIN)
-  updateMonHoc(@Param('id') id: string, @Body() updateMonHocDto: UpdateMonHocDto) {
+  updateMonHoc(
+    @Param('id') id: string,
+    @Body() updateMonHocDto: UpdateMonHocDto,
+  ) {
     return this.academicService.updateMonHoc(+id, updateMonHocDto);
   }
 
@@ -205,7 +226,10 @@ export class AcademicController {
 
   @Put('classes/:id')
   @Roles(VaiTro.ADMIN)
-  updateLopHoc(@Param('id') id: string, @Body() updateLopHocDto: UpdateLopHocDto) {
+  updateLopHoc(
+    @Param('id') id: string,
+    @Body() updateLopHocDto: UpdateLopHocDto,
+  ) {
     return this.academicService.updateLopHoc(+id, updateLopHocDto);
   }
 
@@ -286,7 +310,10 @@ export class AcademicController {
 
   @Post('classes/:classId/students')
   @Roles(VaiTro.ADMIN)
-  addStudentsToClass(@Param('classId') classId: string, @Body() body: { studentIds: number[] }) {
+  addStudentsToClass(
+    @Param('classId') classId: string,
+    @Body() body: { studentIds: number[] },
+  ) {
     return this.academicService.addStudentsToClass(+classId, body.studentIds);
   }
 }

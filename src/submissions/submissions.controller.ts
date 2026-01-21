@@ -5,7 +5,7 @@ import { SubmitAnswerDto } from './dto/submit-answer.dto';
 
 // @Controller('submissions')
 export class SubmissionsController {
-  constructor(private readonly submissionsService: SubmissionsService) { }
+  constructor(private readonly submissionsService: SubmissionsService) {}
 
   @Post()
   create(@Body() dto: CreateSubmissionDto) {

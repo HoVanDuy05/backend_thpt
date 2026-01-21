@@ -1,16 +1,22 @@
-import { IsBoolean, IsInt, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import {
+  IsBoolean,
+  IsInt,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+} from 'class-validator';
 
 export class SubmitAnswerDto {
-    @IsInt()
-    @IsNotEmpty()
-    cauHoiId: number;
+  @IsInt()
+  @IsNotEmpty()
+  cauHoiId: number;
 
-    @IsString()
-    @IsOptional()
-    cauTraLoiCuaHs?: string;
+  @IsString()
+  @IsOptional()
+  cauTraLoiCuaHs?: string;
 
-    // Optional: Auto-grading result if calculated immediately
-    @IsBoolean()
-    @IsOptional()
-    laDung?: boolean;
+  // Optional: Auto-grading result if calculated immediately
+  @IsBoolean()
+  @IsOptional()
+  laDung?: boolean;
 }

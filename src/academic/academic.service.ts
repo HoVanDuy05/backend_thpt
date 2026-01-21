@@ -16,7 +16,7 @@ import { UpdateDiemDto } from './dto/update-diem.dto';
 
 @Injectable()
 export class AcademicService {
-  constructor(private readonly prisma: PrismaService) { }
+  constructor(private readonly prisma: PrismaService) {}
 
   // --- Khoi ---
   createKhoi(dto: CreateKhoiDto) {
@@ -26,8 +26,8 @@ export class AcademicService {
   findAllKhoi() {
     return this.prisma.khoi.findMany({
       include: {
-        _count: { select: { lopHocs: true } }
-      }
+        _count: { select: { lopHocs: true } },
+      },
     });
   }
 
@@ -35,8 +35,8 @@ export class AcademicService {
     return this.prisma.khoi.findUnique({
       where: { id },
       include: {
-        lopHocs: true
-      }
+        lopHocs: true,
+      },
     });
   }
 
@@ -54,7 +54,7 @@ export class AcademicService {
     if (dto.dangKichHoat) {
       await this.prisma.namHoc.updateMany({
         where: { dangKichHoat: true },
-        data: { dangKichHoat: false }
+        data: { dangKichHoat: false },
       });
     }
     return this.prisma.namHoc.create({
@@ -66,10 +66,10 @@ export class AcademicService {
     return this.prisma.namHoc.findMany({
       include: {
         cacHocKy: true,
-        _count: { select: { cacLop: true } }
+        _count: { select: { cacLop: true } },
       },
       orderBy: { tenNamHoc: 'desc' },
-      ...params
+      ...params,
     });
   }
 
@@ -81,7 +81,7 @@ export class AcademicService {
     if (dto.dangKichHoat) {
       await this.prisma.namHoc.updateMany({
         where: { id: { not: id }, dangKichHoat: true },
-        data: { dangKichHoat: false }
+        data: { dangKichHoat: false },
       });
     }
     return this.prisma.namHoc.update({ where: { id }, data: dto });
@@ -98,12 +98,14 @@ export class AcademicService {
     // Auto-generate maMon if not provided
     if (!maMon) {
       if (khoiId) {
-        const khoi = await this.prisma.khoi.findUnique({ where: { id: khoiId } });
+        const khoi = await this.prisma.khoi.findUnique({
+          where: { id: khoiId },
+        });
         const prefix = khoi ? `K${khoi.maKhoi}` : 'SUB';
         // Simple abbreviation of tenMon: "Ngữ Văn" -> "NV"
         const abbr = tenMon
           .split(' ')
-          .map(w => w.charAt(0).toUpperCase())
+          .map((w) => w.charAt(0).toUpperCase())
           .join('')
           .replace(/[^A-Z]/g, '');
         const random = Math.floor(1000 + Math.random() * 9000); // 4 digit random
@@ -111,7 +113,7 @@ export class AcademicService {
       } else {
         const abbr = tenMon
           .split(' ')
-          .map(w => w.charAt(0).toUpperCase())
+          .map((w) => w.charAt(0).toUpperCase())
           .join('')
           .replace(/[^A-Z]/g, '');
         const random = Math.floor(1000 + Math.random() * 9000);
@@ -122,7 +124,7 @@ export class AcademicService {
     return this.prisma.monHoc.create({
       data: {
         ...createMonHocDto,
-        maMon
+        maMon,
       } as any,
     });
   }
@@ -144,7 +146,7 @@ export class AcademicService {
     const monHocs = await this.prisma.monHoc.findMany({
       where,
       include: { khoi: true }, // Include Khoi details
-      orderBy: { createdAt: 'desc' }
+      orderBy: { createdAt: 'desc' },
     });
 
     const monHocIds = monHocs.map((m) => m.id);
@@ -158,21 +160,27 @@ export class AcademicService {
       this.prisma.phanCongGv.groupBy({
         by: ['monHocId', 'giaoVienId'],
         where: { monHocId: { in: monHocIds } },
-        _count: { _all: true }
+        _count: { _all: true },
       }),
       this.prisma.phanCongGv.groupBy({
         by: ['monHocId', 'lopNamId'],
         where: { monHocId: { in: monHocIds } },
-        _count: { _all: true }
-      })
+        _count: { _all: true },
+      }),
     ]);
 
     for (const row of teachersBySubject) {
-      teacherCountMap.set(row.monHocId, (teacherCountMap.get(row.monHocId) || 0) + 1);
+      teacherCountMap.set(
+        row.monHocId,
+        (teacherCountMap.get(row.monHocId) || 0) + 1,
+      );
     }
 
     for (const row of classesBySubject) {
-      classCountMap.set(row.monHocId, (classCountMap.get(row.monHocId) || 0) + 1);
+      classCountMap.set(
+        row.monHocId,
+        (classCountMap.get(row.monHocId) || 0) + 1,
+      );
     }
 
     return monHocs.map((m) => ({
@@ -180,7 +188,7 @@ export class AcademicService {
       _count: {
         lopHoc: classCountMap.get(m.id) || 0,
         giaoVien: teacherCountMap.get(m.id) || 0,
-      }
+      },
     }));
   }
 
@@ -205,7 +213,7 @@ export class AcademicService {
         monHoc: true,
         lopNam: { include: { lopHoc: true, namHoc: true } },
         namHoc: true,
-      }
+      },
     });
   }
 
@@ -224,7 +232,7 @@ export class AcademicService {
         lopNam: { include: { lopHoc: true, namHoc: true } },
         namHoc: true,
       },
-      orderBy: { createdAt: 'desc' }
+      orderBy: { createdAt: 'desc' },
     });
   }
 
@@ -236,7 +244,7 @@ export class AcademicService {
         monHoc: true,
         lopNam: { include: { lopHoc: true, namHoc: true } },
         namHoc: true,
-      }
+      },
     });
   }
 
@@ -249,7 +257,7 @@ export class AcademicService {
         monHoc: true,
         lopNam: { include: { lopHoc: true, namHoc: true } },
         namHoc: true,
-      }
+      },
     });
   }
 
@@ -259,13 +267,15 @@ export class AcademicService {
 
   // --- Diem (Grades) ---
   private computeTrungBinh(giuaKy?: number, cuoiKy?: number) {
-    if (typeof giuaKy !== 'number' || typeof cuoiKy !== 'number') return undefined;
+    if (typeof giuaKy !== 'number' || typeof cuoiKy !== 'number')
+      return undefined;
     // 40% midterm + 60% final, rounded to 2 decimals
     return Math.round((giuaKy * 0.4 + cuoiKy * 0.6) * 100) / 100;
   }
 
   createDiem(dto: CreateDiemDto) {
-    const trungBinh = dto.trungBinh ?? this.computeTrungBinh(dto.giuaKy, dto.cuoiKy);
+    const trungBinh =
+      dto.trungBinh ?? this.computeTrungBinh(dto.giuaKy, dto.cuoiKy);
     return this.prisma.diem.create({
       data: {
         ...dto,
@@ -275,7 +285,7 @@ export class AcademicService {
         hocSinh: true,
         monHoc: true,
         hocKy: { include: { namHoc: true } },
-      }
+      },
     });
   }
 
@@ -292,7 +302,7 @@ export class AcademicService {
         monHoc: true,
         hocKy: { include: { namHoc: true } },
       },
-      orderBy: { createdAt: 'desc' }
+      orderBy: { createdAt: 'desc' },
     });
   }
 
@@ -303,12 +313,14 @@ export class AcademicService {
         hocSinh: true,
         monHoc: true,
         hocKy: { include: { namHoc: true } },
-      }
+      },
     });
   }
 
   updateDiem(id: number, dto: UpdateDiemDto) {
-    const trungBinh = (dto as any).trungBinh ?? this.computeTrungBinh((dto as any).giuaKy, (dto as any).cuoiKy);
+    const trungBinh =
+      (dto as any).trungBinh ??
+      this.computeTrungBinh((dto as any).giuaKy, (dto as any).cuoiKy);
     return this.prisma.diem.update({
       where: { id },
       data: {
@@ -319,7 +331,7 @@ export class AcademicService {
         hocSinh: true,
         monHoc: true,
         hocKy: { include: { namHoc: true } },
-      }
+      },
     });
   }
 
@@ -341,9 +353,9 @@ export class AcademicService {
         cacLopNam: {
           include: {
             namHoc: true,
-            gvChuNhiem: true
-          }
-        }
+            gvChuNhiem: true,
+          },
+        },
       },
       ...params,
     });
@@ -357,9 +369,9 @@ export class AcademicService {
         cacLopNam: {
           include: {
             namHoc: true,
-            gvChuNhiem: true
-          }
-        }
+            gvChuNhiem: true,
+          },
+        },
       },
     });
   }
@@ -369,8 +381,8 @@ export class AcademicService {
   async getAvailableStudentsForYear(yearId: number) {
     // 1. Get all students
     // 2. Filter out students who are already in a class for this year
-    // Note: This can be optimized with a raw query or clever where clause, 
-    // but for now we'll do: Find all students who do NOT have a HocSinhLopNam entry 
+    // Note: This can be optimized with a raw query or clever where clause,
+    // but for now we'll do: Find all students who do NOT have a HocSinhLopNam entry
     // linked to a LopNam that is linked to this NamHoc.
 
     return this.prisma.nguoiDung.findMany({
@@ -380,18 +392,18 @@ export class AcademicService {
           cacLopNam: {
             none: {
               lopNam: {
-                namHocId: yearId
-              }
-            }
-          }
-        }
+                namHocId: yearId,
+              },
+            },
+          },
+        },
       },
       include: {
-        hoSoHocSinh: true
+        hoSoHocSinh: true,
       },
       orderBy: {
-        hoTen: 'asc'
-      }
+        hoTen: 'asc',
+      },
     });
   }
 
@@ -404,11 +416,11 @@ export class AcademicService {
     // Verify LopNam exists
     const lopNam = await this.prisma.lopNam.findUnique({
       where: { id: classId },
-      include: { namHoc: true }
+      include: { namHoc: true },
     });
 
     if (!lopNam) {
-      // It might be a LopHoc ID passed, let's try to find the LopNam for this LopHoc + NamHoc? 
+      // It might be a LopHoc ID passed, let's try to find the LopNam for this LopHoc + NamHoc?
       // But for "Add Student", we really need the specific LopNam instance.
       // Let's assume the controller will pass the valid LopNam ID.
       throw new Error(`Class (LopNam) with ID ${classId} not found.`);
@@ -417,7 +429,7 @@ export class AcademicService {
     // Logic: Ensure student isn't already in another class for this year?
     // The query 'getAvailable' excludes them, but we should double check or just try/catch unique constraint.
     // The Schema has @@unique([hocSinhId, lopNamId]), preventing dups in SAME class.
-    // To prevent dups in SAME YEAR (different class), we rely on the `getAvailable` filter 
+    // To prevent dups in SAME YEAR (different class), we rely on the `getAvailable` filter
     // OR we could enforce it here for safety.
 
     // Let's enforce safety:
@@ -426,13 +438,15 @@ export class AcademicService {
     const studentsInYear = await this.prisma.hocSinhLopNam.findMany({
       where: {
         hocSinh: { userId: { in: studentIds } },
-        lopNam: { namHocId: yearId }
+        lopNam: { namHocId: yearId },
       },
-      select: { hocSinh: { select: { userId: true } } }
+      select: { hocSinh: { select: { userId: true } } },
     });
 
-    const invalidUserIds = studentsInYear.map(s => s.hocSinh.userId);
-    const validUserIds = studentIds.filter(id => !invalidUserIds.includes(id));
+    const invalidUserIds = studentsInYear.map((s) => s.hocSinh.userId);
+    const validUserIds = studentIds.filter(
+      (id) => !invalidUserIds.includes(id),
+    );
 
     // We need 'hocSinhId' (from HoSoHocSinh table), not 'userId'.
     // The input `studentIds` are likely `userId` or `hoSoHocSinh.id`?
@@ -441,21 +455,25 @@ export class AcademicService {
 
     const profiles = await this.prisma.hoSoHocSinh.findMany({
       where: { userId: { in: validUserIds } },
-      select: { id: true }
+      select: { id: true },
     });
 
-    const createData = profiles.map(p => ({
+    const createData = profiles.map((p) => ({
       hocSinhId: p.id,
       lopNamId: classId,
-      trangThai: 'DANG_HOC' as const // Enforce literal type
+      trangThai: 'DANG_HOC' as const, // Enforce literal type
     }));
 
     if (createData.length === 0) {
-      return { count: 0, message: 'No valid students to add (all already in a class for this year).' };
+      return {
+        count: 0,
+        message:
+          'No valid students to add (all already in a class for this year).',
+      };
     }
 
     return this.prisma.hocSinhLopNam.createMany({
-      data: createData
+      data: createData,
     });
   }
 
@@ -472,29 +490,32 @@ export class AcademicService {
     // 1. Get all LopNam from source year
     const sourceLopNams = await this.prisma.lopNam.findMany({
       where: { namHocId: fromNamHocId },
-      include: { lopHoc: true }
+      include: { lopHoc: true },
     });
 
     if (sourceLopNams.length === 0) {
-      throw new Error("Không tìm thấy lớp học nào trong năm học nguồn.");
+      throw new Error('Không tìm thấy lớp học nào trong năm học nguồn.');
     }
 
     // 2. Create LopNam for target year (reuse same LopHoc)
-    const dataToCreate = sourceLopNams.map(ln => ({
-      lopId: ln.lopId,  // Reuse same class structure
+    const dataToCreate = sourceLopNams.map((ln) => ({
+      lopId: ln.lopId, // Reuse same class structure
       namHocId: toNamHocId,
       // Don't copy gvChuNhiemId - teachers reassigned each year
     }));
 
     // 3. Filter out existing to avoid duplicates
     const existing = await this.prisma.lopNam.findMany({
-      where: { namHocId: toNamHocId }
+      where: { namHocId: toNamHocId },
     });
-    const existingLopIds = new Set(existing.map(ln => ln.lopId));
-    const finalData = dataToCreate.filter(d => !existingLopIds.has(d.lopId));
+    const existingLopIds = new Set(existing.map((ln) => ln.lopId));
+    const finalData = dataToCreate.filter((d) => !existingLopIds.has(d.lopId));
 
     if (finalData.length === 0) {
-      return { count: 0, message: "Tất cả các lớp đã tồn tại trong năm học đích." };
+      return {
+        count: 0,
+        message: 'Tất cả các lớp đã tồn tại trong năm học đích.',
+      };
     }
 
     return this.prisma.lopNam.createMany({
@@ -508,7 +529,7 @@ export class AcademicService {
     if (dto.dangKichHoat) {
       await this.prisma.hocKy.updateMany({
         where: { dangKichHoat: true },
-        data: { dangKichHoat: false }
+        data: { dangKichHoat: false },
       });
     }
     return this.prisma.hocKy.create({ data: dto });
@@ -525,7 +546,7 @@ export class AcademicService {
       where,
       include: { namHoc: true },
       orderBy: { ngayBatDau: 'asc' },
-      ...otherParams
+      ...otherParams,
     });
   }
 
@@ -537,7 +558,7 @@ export class AcademicService {
     if (dto.dangKichHoat) {
       await this.prisma.hocKy.updateMany({
         where: { id: { not: id }, dangKichHoat: true },
-        data: { dangKichHoat: false }
+        data: { dangKichHoat: false },
       });
     }
     return this.prisma.hocKy.update({ where: { id }, data: dto });
@@ -555,7 +576,7 @@ export class AcademicService {
         lopHoc: true,
         namHoc: true,
         gvChuNhiem: true,
-      }
+      },
     });
   }
 
@@ -573,19 +594,19 @@ export class AcademicService {
         namHoc: true,
         gvChuNhiem: {
           include: {
-            nguoiDung: true
-          }
+            nguoiDung: true,
+          },
         },
         hocSinhs: {
           include: {
             hocSinh: {
               include: {
-                nguoiDung: true
-              }
-            }
-          }
+                nguoiDung: true,
+              },
+            },
+          },
         },
-        _count: { select: { hocSinhs: true } }
+        _count: { select: { hocSinhs: true } },
       },
       orderBy: { id: 'desc' },
       ...otherParams,
@@ -600,24 +621,24 @@ export class AcademicService {
         namHoc: true,
         gvChuNhiem: {
           include: {
-            nguoiDung: true
-          }
+            nguoiDung: true,
+          },
         },
         hocSinhs: {
           include: {
             hocSinh: {
               include: {
-                nguoiDung: true
-              }
-            }
+                nguoiDung: true,
+              },
+            },
           },
           orderBy: {
             hocSinh: {
-              hoTen: 'asc'
-            }
-          }
+              hoTen: 'asc',
+            },
+          },
         },
-        _count: { select: { hocSinhs: true } }
+        _count: { select: { hocSinhs: true } },
       },
     });
   }
@@ -630,7 +651,7 @@ export class AcademicService {
         lopHoc: true,
         namHoc: true,
         gvChuNhiem: true,
-      }
+      },
     });
   }
 

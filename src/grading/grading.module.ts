@@ -7,4 +7,4 @@ import { GradingController } from './grading.controller';
   providers: [GradingService],
   exports: [GradingService], // Exported for AppController
 })
-export class GradingModule { }
+export class GradingModule {}

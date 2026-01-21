@@ -564,6 +564,7 @@ model BaiViet {
   noiDung     String      @map("noi_dung") @db.LongText
   anhBia      String?     @map("anh_bia") @db.VarChar(255)
   loai        LoaiBaiViet @default(TIN_TUC) @map("loai")
+  doiTuong    Json?       @map("doi_tuong") // Targeted roles e.g. ["HOC_SINH", "GIAO_VIEN"]
   daXuatBan   Boolean     @default(false) @map("da_xuat_ban")
   luotXem     Int         @default(0) @map("luot_xem")
   nguoiTaoId  Int?        @map("nguoi_tao_id")

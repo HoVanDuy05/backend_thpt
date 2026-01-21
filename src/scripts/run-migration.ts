@@ -5,58 +5,58 @@ import * as path from 'path';
 const prisma = new PrismaClient();
 
 async function runMigration() {
+  try {
+    console.log('🚀 Starting manual migration...\n');
+
+    // Step 1: Add khoi_lop column
+    console.log('Step 1: Adding khoi_lop column to lop_hoc...');
     try {
-        console.log('🚀 Starting manual migration...\n');
+      await prisma.$executeRaw`ALTER TABLE lop_hoc ADD COLUMN khoi_lop INT NULL AFTER ten_lop`;
+      console.log('✅ Column added');
+    } catch (e: any) {
+      if (e.message.includes('Duplicate column')) {
+        console.log('⚠️  Column already exists, skipping');
+      } else throw e;
+    }
 
-        // Step 1: Add khoi_lop column
-        console.log('Step 1: Adding khoi_lop column to lop_hoc...');
-        try {
-            await prisma.$executeRaw`ALTER TABLE lop_hoc ADD COLUMN khoi_lop INT NULL AFTER ten_lop`;
-            console.log('✅ Column added');
-        } catch (e: any) {
-            if (e.message.includes('Duplicate column')) {
-                console.log('⚠️  Column already exists, skipping');
-            } else throw e;
-        }
+    // Step 2: Add mo_ta column
+    console.log('\nStep 2: Adding mo_ta column to lop_hoc...');
+    try {
+      await prisma.$executeRaw`ALTER TABLE lop_hoc ADD COLUMN mo_ta TEXT NULL AFTER khoi_lop`;
+      console.log('✅ Column added');
+    } catch (e: any) {
+      if (e.message.includes('Duplicate column')) {
+        console.log('⚠️  Column already exists, skipping');
+      } else throw e;
+    }
 
-        // Step 2: Add mo_ta column
-        console.log('\nStep 2: Adding mo_ta column to lop_hoc...');
-        try {
-            await prisma.$executeRaw`ALTER TABLE lop_hoc ADD COLUMN mo_ta TEXT NULL AFTER khoi_lop`;
-            console.log('✅ Column added');
-        } catch (e: any) {
-            if (e.message.includes('Duplicate column')) {
-                console.log('⚠️  Column already exists, skipping');
-            } else throw e;
-        }
-
-        // Step 3: Populate khoi_lop from ten_lop
-        console.log('\nStep 3: Populating khoi_lop from ten_lop...');
-        await prisma.$executeRaw`
+    // Step 3: Populate khoi_lop from ten_lop
+    console.log('\nStep 3: Populating khoi_lop from ten_lop...');
+    await prisma.$executeRaw`
       UPDATE lop_hoc 
       SET khoi_lop = CAST(SUBSTRING(ten_lop, 1, 2) AS UNSIGNED)
       WHERE ten_lop REGEXP '^[0-9]{2}' AND khoi_lop IS NULL
     `;
-        await prisma.$executeRaw`
+    await prisma.$executeRaw`
       UPDATE lop_hoc 
       SET khoi_lop = CAST(SUBSTRING(ten_lop, 1, 1) AS UNSIGNED)
       WHERE khoi_lop IS NULL AND ten_lop REGEXP '^[0-9]'
     `;
-        console.log('✅ khoi_lop populated');
+    console.log('✅ khoi_lop populated');
 
-        // Step 4: Make khoi_lop NOT NULL
-        console.log('\nStep 4: Making khoi_lop NOT NULL...');
-        try {
-            await prisma.$executeRaw`ALTER TABLE lop_hoc MODIFY COLUMN khoi_lop INT NOT NULL`;
-            console.log('✅ Column constraint updated');
-        } catch (e: any) {
-            console.log('⚠️  Constraint already set or skipped');
-        }
+    // Step 4: Make khoi_lop NOT NULL
+    console.log('\nStep 4: Making khoi_lop NOT NULL...');
+    try {
+      await prisma.$executeRaw`ALTER TABLE lop_hoc MODIFY COLUMN khoi_lop INT NOT NULL`;
+      console.log('✅ Column constraint updated');
+    } catch (e: any) {
+      console.log('⚠️  Constraint already set or skipped');
+    }
 
-        // Step 5: Create lop_nam table
-        console.log('\nStep 5: Creating lop_nam table...');
-        try {
-            await prisma.$executeRawUnsafe(`
+    // Step 5: Create lop_nam table
+    console.log('\nStep 5: Creating lop_nam table...');
+    try {
+      await prisma.$executeRawUnsafe(`
         CREATE TABLE lop_nam (
           id INT NOT NULL AUTO_INCREMENT,
           lop_id INT NOT NULL,
@@ -73,16 +73,16 @@ async function runMigration() {
           CONSTRAINT lop_nam_gv_chu_nhiem_id_fkey FOREIGN KEY (gv_chu_nhiem_id) REFERENCES ho_so_giao_vien (id) ON DELETE SET NULL
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
       `);
-            console.log('✅ Table created');
-        } catch (e: any) {
-            if (e.message.includes('already exists')) {
-                console.log('⚠️  Table already exists, skipping');
-            } else throw e;
-        }
+      console.log('✅ Table created');
+    } catch (e: any) {
+      if (e.message.includes('already exists')) {
+        console.log('⚠️  Table already exists, skipping');
+      } else throw e;
+    }
 
-        // Step 6: Migrate data to lop_nam
-        console.log('\nStep 6: Migrating data to lop_nam...');
-        const result = await prisma.$executeRaw`
+    // Step 6: Migrate data to lop_nam
+    console.log('\nStep 6: Migrating data to lop_nam...');
+    const result = await prisma.$executeRaw`
       INSERT IGNORE INTO lop_nam (lop_id, nam_hoc_id, gv_chu_nhiem_id, si_so)
       SELECT 
         id as lop_id,
@@ -92,12 +92,12 @@ async function runMigration() {
       FROM lop_hoc
       WHERE nam_hoc_id IS NOT NULL
     `;
-        console.log(`✅ Migrated ${result} records`);
+    console.log(`✅ Migrated ${result} records`);
 
-        // Step 7: Create hoc_sinh_lop_nam table
-        console.log('\nStep 7: Creating hoc_sinh_lop_nam table...');
-        try {
-            await prisma.$executeRawUnsafe(`
+    // Step 7: Create hoc_sinh_lop_nam table
+    console.log('\nStep 7: Creating hoc_sinh_lop_nam table...');
+    try {
+      await prisma.$executeRawUnsafe(`
         CREATE TABLE hoc_sinh_lop_nam (
           id INT NOT NULL AUTO_INCREMENT,
           hoc_sinh_id INT NOT NULL,
@@ -113,16 +113,16 @@ async function runMigration() {
           CONSTRAINT hoc_sinh_lop_nam_lop_nam_id_fkey FOREIGN KEY (lop_nam_id) REFERENCES lop_nam (id) ON DELETE CASCADE
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
       `);
-            console.log('✅ Table created');
-        } catch (e: any) {
-            if (e.message.includes('already exists')) {
-                console.log('⚠️  Table already exists, skipping');
-            } else throw e;
-        }
+      console.log('✅ Table created');
+    } catch (e: any) {
+      if (e.message.includes('already exists')) {
+        console.log('⚠️  Table already exists, skipping');
+      } else throw e;
+    }
 
-        // Step 8: Migrate student assignments
-        console.log('\nStep 8: Migrating student assignments...');
-        const studentResult = await prisma.$executeRaw`
+    // Step 8: Migrate student assignments
+    console.log('\nStep 8: Migrating student assignments...');
+    const studentResult = await prisma.$executeRaw`
       INSERT IGNORE INTO hoc_sinh_lop_nam (hoc_sinh_id, lop_nam_id, trang_thai, ngay_vao)
       SELECT 
         hs.id as hoc_sinh_id,
@@ -134,12 +134,12 @@ async function runMigration() {
       INNER JOIN lop_nam ln ON ln.lop_id = lh.id AND ln.nam_hoc_id = lh.nam_hoc_id
       WHERE hs.lop_id IS NOT NULL
     `;
-        console.log(`✅ Migrated ${studentResult} student assignments`);
+    console.log(`✅ Migrated ${studentResult} student assignments`);
 
-        // Step 9: Create lich_hoc_new table
-        console.log('\nStep 9: Creating lich_hoc_new table...');
-        try {
-            await prisma.$executeRawUnsafe(`
+    // Step 9: Create lich_hoc_new table
+    console.log('\nStep 9: Creating lich_hoc_new table...');
+    try {
+      await prisma.$executeRawUnsafe(`
         CREATE TABLE lich_hoc_new (
           id INT NOT NULL AUTO_INCREMENT,
           lop_nam_id INT NOT NULL,
@@ -159,16 +159,16 @@ async function runMigration() {
           CONSTRAINT lich_hoc_new_gv_day_id_fkey FOREIGN KEY (gv_day_id) REFERENCES ho_so_giao_vien (id) ON DELETE SET NULL
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
       `);
-            console.log('✅ Table created');
-        } catch (e: any) {
-            if (e.message.includes('already exists')) {
-                console.log('⚠️  Table already exists, skipping');
-            } else throw e;
-        }
+      console.log('✅ Table created');
+    } catch (e: any) {
+      if (e.message.includes('already exists')) {
+        console.log('⚠️  Table already exists, skipping');
+      } else throw e;
+    }
 
-        // Step 10: Migrate schedule data
-        console.log('\nStep 10: Migrating schedule data...');
-        const scheduleResult = await prisma.$executeRaw`
+    // Step 10: Migrate schedule data
+    console.log('\nStep 10: Migrating schedule data...');
+    const scheduleResult = await prisma.$executeRaw`
       INSERT IGNORE INTO lich_hoc_new (lop_nam_id, mon_hoc_id, gv_day_id, thu, tiet_bat_dau, so_tiet, phong_hoc, ngay_tao)
       SELECT 
         ln.id as lop_nam_id,
@@ -184,38 +184,44 @@ async function runMigration() {
       INNER JOIN lop_nam ln ON ln.lop_id = l.id AND ln.nam_hoc_id = l.nam_hoc_id
       WHERE l.nam_hoc_id IS NOT NULL
     `;
-        console.log(`✅ Migrated ${scheduleResult} schedule records`);
+    console.log(`✅ Migrated ${scheduleResult} schedule records`);
 
-        console.log('\n✨ Migration completed successfully!');
-        console.log('\n📊 Verification:');
+    console.log('\n✨ Migration completed successfully!');
+    console.log('\n📊 Verification:');
 
-        // Verification queries
-        const classCount = await prisma.$queryRaw`SELECT COUNT(*) as count FROM lop_hoc`;
-        const classYearCount = await prisma.$queryRaw`SELECT COUNT(*) as count FROM lop_nam`;
-        const studentAssignmentCount = await prisma.$queryRaw`SELECT COUNT(*) as count FROM hoc_sinh_lop_nam`;
-        const oldScheduleCount = await prisma.$queryRaw`SELECT COUNT(*) as count FROM lich_hoc`;
-        const newScheduleCount = await prisma.$queryRaw`SELECT COUNT(*) as count FROM lich_hoc_new`;
+    // Verification queries
+    const classCount =
+      await prisma.$queryRaw`SELECT COUNT(*) as count FROM lop_hoc`;
+    const classYearCount =
+      await prisma.$queryRaw`SELECT COUNT(*) as count FROM lop_nam`;
+    const studentAssignmentCount =
+      await prisma.$queryRaw`SELECT COUNT(*) as count FROM hoc_sinh_lop_nam`;
+    const oldScheduleCount =
+      await prisma.$queryRaw`SELECT COUNT(*) as count FROM lich_hoc`;
+    const newScheduleCount =
+      await prisma.$queryRaw`SELECT COUNT(*) as count FROM lich_hoc_new`;
 
-        console.log(`- Classes (LopHoc): ${(classCount as any)[0].count}`);
-        console.log(`- Class Years (LopNam): ${(classYearCount as any)[0].count}`);
-        console.log(`- Student Assignments: ${(studentAssignmentCount as any)[0].count}`);
-        console.log(`- Old Schedules: ${(oldScheduleCount as any)[0].count}`);
-        console.log(`- New Schedules: ${(newScheduleCount as any)[0].count}`);
-
-    } catch (error) {
-        console.error('\n❌ Migration failed:', error);
-        throw error;
-    } finally {
-        await prisma.$disconnect();
-    }
+    console.log(`- Classes (LopHoc): ${(classCount as any)[0].count}`);
+    console.log(`- Class Years (LopNam): ${(classYearCount as any)[0].count}`);
+    console.log(
+      `- Student Assignments: ${(studentAssignmentCount as any)[0].count}`,
+    );
+    console.log(`- Old Schedules: ${(oldScheduleCount as any)[0].count}`);
+    console.log(`- New Schedules: ${(newScheduleCount as any)[0].count}`);
+  } catch (error) {
+    console.error('\n❌ Migration failed:', error);
+    throw error;
+  } finally {
+    await prisma.$disconnect();
+  }
 }
 
 runMigration()
-    .then(() => {
-        console.log('\n🎉 All done!');
-        process.exit(0);
-    })
-    .catch((error) => {
-        console.error('Fatal error:', error);
-        process.exit(1);
-    });
+  .then(() => {
+    console.log('\n🎉 All done!');
+    process.exit(0);
+  })
+  .catch((error) => {
+    console.error('Fatal error:', error);
+    process.exit(1);
+  });

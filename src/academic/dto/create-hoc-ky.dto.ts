@@ -1,23 +1,30 @@
-import { IsBoolean, IsDateString, IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
+import {
+  IsBoolean,
+  IsDateString,
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsString,
+} from 'class-validator';
 
 export class CreateHocKyDto {
-    @IsString()
-    @IsNotEmpty()
-    tenHocKy: string;
+  @IsString()
+  @IsNotEmpty()
+  tenHocKy: string;
 
-    @IsNumber()
-    @IsNotEmpty()
-    namHocId: number;
+  @IsNumber()
+  @IsNotEmpty()
+  namHocId: number;
 
-    @IsDateString()
-    @IsOptional()
-    ngayBatDau?: string;
+  @IsDateString()
+  @IsOptional()
+  ngayBatDau?: string;
 
-    @IsDateString()
-    @IsOptional()
-    ngayKetThuc?: string;
+  @IsDateString()
+  @IsOptional()
+  ngayKetThuc?: string;
 
-    @IsBoolean()
-    @IsOptional()
-    dangKichHoat?: boolean;
+  @IsBoolean()
+  @IsOptional()
+  dangKichHoat?: boolean;
 }

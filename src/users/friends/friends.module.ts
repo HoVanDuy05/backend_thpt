@@ -4,9 +4,9 @@ import { FriendsController } from './friends.controller';
 import { CommunicationModule } from '../../communication/communication.module';
 
 @Module({
-    imports: [forwardRef(() => CommunicationModule)],
-    providers: [FriendsService],
-    controllers: [FriendsController],
-    exports: [FriendsService],
+  imports: [forwardRef(() => CommunicationModule)],
+  providers: [FriendsService],
+  controllers: [FriendsController],
+  exports: [FriendsService],
 })
-export class FriendsModule { }
+export class FriendsModule {}

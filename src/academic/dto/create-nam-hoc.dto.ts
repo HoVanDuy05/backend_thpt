@@ -1,19 +1,25 @@
-import { IsBoolean, IsDateString, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import {
+  IsBoolean,
+  IsDateString,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+} from 'class-validator';
 
 export class CreateNamHocDto {
-    @IsString()
-    @IsNotEmpty()
-    tenNamHoc: string;
+  @IsString()
+  @IsNotEmpty()
+  tenNamHoc: string;
 
-    @IsDateString()
-    @IsOptional()
-    ngayBatDau?: string;
+  @IsDateString()
+  @IsOptional()
+  ngayBatDau?: string;
 
-    @IsDateString()
-    @IsOptional()
-    ngayKetThuc?: string;
+  @IsDateString()
+  @IsOptional()
+  ngayKetThuc?: string;
 
-    @IsBoolean()
-    @IsOptional()
-    dangKichHoat?: boolean;
+  @IsBoolean()
+  @IsOptional()
+  dangKichHoat?: boolean;
 }

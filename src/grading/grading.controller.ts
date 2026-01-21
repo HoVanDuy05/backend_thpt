@@ -1,4 +1,12 @@
-import { Body, Controller, Get, Post, Put, Delete, Param } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Post,
+  Put,
+  Delete,
+  Param,
+} from '@nestjs/common';
 import { GradingService } from './grading.service';
 import { CreateGradingDto } from './dto/create-grading.dto';
 import { UpdateGradingDto } from './dto/update-grading.dto';
@@ -8,7 +16,7 @@ import { VaiTro } from '@prisma/client';
 @Roles(VaiTro.GIAO_VIEN) // Only Teachers grade
 // @Controller('grading')
 export class GradingController {
-  constructor(private readonly gradingService: GradingService) { }
+  constructor(private readonly gradingService: GradingService) {}
 
   @Post()
   create(@Body() dto: CreateGradingDto) {

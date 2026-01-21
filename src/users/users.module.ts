@@ -12,4 +12,4 @@ import { FriendsModule } from './friends/friends.module';
   providers: [UsersService],
   exports: [UsersService],
 })
-export class UsersModule { }
+export class UsersModule {}

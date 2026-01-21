@@ -3,7 +3,15 @@ import { CreateQuestionDto } from './dto/create-question.dto';
 import { CreateExamDto } from './dto/create-exam.dto';
 import { UpdateQuestionDto } from './dto/update-question.dto';
 import { UpdateExamDto } from './dto/update-exam.dto';
-import { Body, Controller, Delete, Get, Param, Post, Put } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Post,
+  Put,
+} from '@nestjs/common';
 import { AssessmentsService } from './assessments.service';
 import { Roles } from '../common/decorators/roles.decorator';
 import { VaiTro } from '@prisma/client';
@@ -11,7 +19,7 @@ import { VaiTro } from '@prisma/client';
 @Roles(VaiTro.GIAO_VIEN, VaiTro.ADMIN) // Teachers and Admins manage assessments
 // @Controller('assessments')
 export class AssessmentsController {
-  constructor(private readonly assessmentsService: AssessmentsService) { }
+  constructor(private readonly assessmentsService: AssessmentsService) {}
 
   @Post('questions')
   createQuestion(@Body() dto: CreateQuestionDto) {
@@ -64,12 +72,18 @@ export class AssessmentsController {
   }
 
   @Post('exams/:id/questions')
-  addQuestionToExam(@Param('id') id: string, @Body() dto: AddQuestionToExamDto) {
+  addQuestionToExam(
+    @Param('id') id: string,
+    @Body() dto: AddQuestionToExamDto,
+  ) {
     return this.assessmentsService.addQuestionToExam(+id, dto);
   }
 
   @Delete('exams/:id/questions/:questionId')
-  removeQuestionFromExam(@Param('id') id: string, @Param('questionId') questionId: string) {
+  removeQuestionFromExam(
+    @Param('id') id: string,
+    @Param('questionId') questionId: string,
+  ) {
     return this.assessmentsService.removeQuestionFromExam(+id, +questionId);
   }
 }

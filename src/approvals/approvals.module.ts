@@ -5,9 +5,9 @@ import { ApprovalsController } from './approvals.controller';
 import { MailModule } from '../mail/mail.module';
 
 @Module({
-    imports: [MailModule],
-    providers: [ApprovalsService],
-    controllers: [ApprovalsController],
-    exports: [ApprovalsService],
+  imports: [MailModule],
+  providers: [ApprovalsService],
+  controllers: [ApprovalsController],
+  exports: [ApprovalsService],
 })
-export class ApprovalsModule { }
+export class ApprovalsModule {}

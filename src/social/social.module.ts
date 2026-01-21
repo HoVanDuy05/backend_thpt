@@ -5,9 +5,9 @@ import { FriendsModule } from '../users/friends/friends.module';
 import { CommunicationModule } from '../communication/communication.module';
 
 @Module({
-    imports: [FriendsModule, CommunicationModule],
-    providers: [SocialService],
-    controllers: [SocialController],
-    exports: [SocialService],
+  imports: [FriendsModule, CommunicationModule],
+  providers: [SocialService],
+  controllers: [SocialController],
+  exports: [SocialService],
 })
-export class SocialModule { }
+export class SocialModule {}

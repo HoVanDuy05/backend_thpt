@@ -9,19 +9,19 @@ import { ChatService } from './services/chat.service';
 import { WebsocketGateway } from './websocket.gateway';
 
 @Module({
-    imports: [
-        PrismaModule,
-        ConfigModule,
-        JwtModule.registerAsync({
-            imports: [ConfigModule],
-            useFactory: (configService: ConfigService) => ({
-                secret: configService.get('JWT_SECRET') || 'secretKey',
-            }),
-            inject: [ConfigService],
-        }),
-    ],
-    controllers: [NotificationController, ChatController],
-    providers: [NotificationService, ChatService, WebsocketGateway],
-    exports: [NotificationService, ChatService, WebsocketGateway],
+  imports: [
+    PrismaModule,
+    ConfigModule,
+    JwtModule.registerAsync({
+      imports: [ConfigModule],
+      useFactory: (configService: ConfigService) => ({
+        secret: configService.get('JWT_SECRET') || 'secretKey',
+      }),
+      inject: [ConfigService],
+    }),
+  ],
+  controllers: [NotificationController, ChatController],
+  providers: [NotificationService, ChatService, WebsocketGateway],
+  exports: [NotificationService, ChatService, WebsocketGateway],
 })
-export class CommunicationModule { }
+export class CommunicationModule {}

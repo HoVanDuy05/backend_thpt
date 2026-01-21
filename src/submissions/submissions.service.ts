@@ -5,7 +5,7 @@ import { SubmitAnswerDto } from './dto/submit-answer.dto';
 
 @Injectable()
 export class SubmissionsService {
-  constructor(private readonly prisma: PrismaService) { }
+  constructor(private readonly prisma: PrismaService) {}
 
   create(dto: CreateSubmissionDto) {
     return this.prisma.lichSuNopBai.create({
@@ -30,7 +30,7 @@ export class SubmissionsService {
         hocSinh: true,
         deKiemTra: true,
         chiTietTraLois: {
-          include: { nganHangCauHoi: true }
+          include: { nganHangCauHoi: true },
         },
       },
     });

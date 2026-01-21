@@ -10,7 +10,7 @@ export class UsersService {
   constructor(
     private prisma: PrismaService,
     private mailService: MailService,
-  ) { }
+  ) {}
 
   async create(createUserDto: CreateUserDto) {
     const taiKhoan = createUserDto.email.split('@')[0];
@@ -23,7 +23,9 @@ export class UsersService {
         taiKhoan,
       },
     });
-    this.mailService.sendWelcomeEmail(user).catch(err => console.error('Email failed:', err));
+    this.mailService
+      .sendWelcomeEmail(user)
+      .catch((err) => console.error('Email failed:', err));
     return user;
   }
 
@@ -58,7 +60,12 @@ export class UsersService {
 
     let nextNumber = 1;
     if (lastRecord) {
-      const lastId = prefix === 'HS' ? lastRecord.maSoHs : (prefix === 'GV' ? lastRecord.maSoGv : lastRecord.maSo);
+      const lastId =
+        prefix === 'HS'
+          ? lastRecord.maSoHs
+          : prefix === 'GV'
+            ? lastRecord.maSoGv
+            : lastRecord.maSo;
       const lastSeq = parseInt(lastId.slice(-3));
       nextNumber = lastSeq + 1;
     }
@@ -73,8 +80,13 @@ export class UsersService {
     const maSoHs = profileData.maSoHs || (await this.generateId('HS'));
 
     if (isNewAccount) {
-      const existingUser = await this.prisma.nguoiDung.findUnique({ where: { email } });
-      if (existingUser) throw new BadRequestException(`Email ${email} đã tồn tại trong hệ thống.`);
+      const existingUser = await this.prisma.nguoiDung.findUnique({
+        where: { email },
+      });
+      if (existingUser)
+        throw new BadRequestException(
+          `Email ${email} đã tồn tại trong hệ thống.`,
+        );
 
       const rawPassword = matKhau || this.generateRandomPassword();
       const hashedPassword = await bcrypt.hash(rawPassword, 10);
@@ -88,24 +100,31 @@ export class UsersService {
           vaiTro: 'HOC_SINH',
           kichHoat: true,
           hoTen: profileData.hoTen,
-        }
+        },
       });
 
       // Send email with credentials
-      this.mailService.sendAccountDetailsEmail(user, {
-        password: rawPassword,
-        role: 'HOC_SINH',
-        maSo: maSoHs,
-      }).catch(e => console.error(e));
+      this.mailService
+        .sendAccountDetailsEmail(user, {
+          password: rawPassword,
+          role: 'HOC_SINH',
+          maSo: maSoHs,
+        })
+        .catch((e) => console.error(e));
     } else {
       user = await this.prisma.nguoiDung.findUnique({ where: { email } });
-      if (!user) throw new BadRequestException(`Không tìm thấy người dùng có email ${email}.`);
+      if (!user)
+        throw new BadRequestException(
+          `Không tìm thấy người dùng có email ${email}.`,
+        );
 
       // Send profile confirmation email
-      this.mailService.sendAccountDetailsEmail(user, {
-        role: 'HOC_SINH',
-        maSo: maSoHs,
-      }).catch(e => console.error(e));
+      this.mailService
+        .sendAccountDetailsEmail(user, {
+          role: 'HOC_SINH',
+          maSo: maSoHs,
+        })
+        .catch((e) => console.error(e));
     }
 
     const profile = await this.prisma.hoSoHocSinh.create({
@@ -122,7 +141,9 @@ export class UsersService {
         diaChiTamTru: profileData.diaChiTamTru,
         soDienThoai: profileData.soDienThoai,
         cccd: profileData.cccd,
-        ngayCapCccd: profileData.ngayCapCccd ? new Date(profileData.ngayCapCccd) : null,
+        ngayCapCccd: profileData.ngayCapCccd
+          ? new Date(profileData.ngayCapCccd)
+          : null,
         noiCapCccd: profileData.noiCapCccd,
         hoTenCha: profileData.hoTenCha,
         ngheNghiepCha: profileData.ngheNghiepCha,
@@ -130,16 +151,18 @@ export class UsersService {
         hoTenMe: profileData.hoTenMe,
         ngheNghiepMe: profileData.ngheNghiepMe,
         sdtMe: profileData.sdtMe,
-        ngayNhapHoc: profileData.ngayNhapHoc ? new Date(profileData.ngayNhapHoc) : null,
+        ngayNhapHoc: profileData.ngayNhapHoc
+          ? new Date(profileData.ngayNhapHoc)
+          : null,
         trangThai: profileData.trangThai || 'DANG_HOC',
-        lopId: profileData.lopId
-      }
+        lopId: profileData.lopId,
+      },
     });
 
     // Update the NguoiDung record with the maSo for quick access
     await this.prisma.nguoiDung.update({
       where: { id: user.id },
-      data: { maSo: maSoHs }
+      data: { maSo: maSoHs },
     });
 
     return profile;
@@ -152,8 +175,13 @@ export class UsersService {
     const maSoGv = profileData.maSoGv || (await this.generateId('GV'));
 
     if (isNewAccount) {
-      const existingUser = await this.prisma.nguoiDung.findUnique({ where: { email } });
-      if (existingUser) throw new BadRequestException(`Email ${email} đã tồn tại trong hệ thống.`);
+      const existingUser = await this.prisma.nguoiDung.findUnique({
+        where: { email },
+      });
+      if (existingUser)
+        throw new BadRequestException(
+          `Email ${email} đã tồn tại trong hệ thống.`,
+        );
 
       const rawPassword = matKhau || this.generateRandomPassword();
       const hashedPassword = await bcrypt.hash(rawPassword, 10);
@@ -167,22 +195,29 @@ export class UsersService {
           vaiTro: 'GIAO_VIEN',
           kichHoat: true,
           hoTen: profileData.hoTen,
-        }
+        },
       });
 
-      this.mailService.sendAccountDetailsEmail(user, {
-        password: rawPassword,
-        role: 'GIAO_VIEN',
-        maSo: maSoGv,
-      }).catch(e => console.error(e));
+      this.mailService
+        .sendAccountDetailsEmail(user, {
+          password: rawPassword,
+          role: 'GIAO_VIEN',
+          maSo: maSoGv,
+        })
+        .catch((e) => console.error(e));
     } else {
       user = await this.prisma.nguoiDung.findUnique({ where: { email } });
-      if (!user) throw new BadRequestException(`Không tìm thấy người dùng có email ${email}.`);
+      if (!user)
+        throw new BadRequestException(
+          `Không tìm thấy người dùng có email ${email}.`,
+        );
 
-      this.mailService.sendAccountDetailsEmail(user, {
-        role: 'GIAO_VIEN',
-        maSo: maSoGv,
-      }).catch(e => console.error(e));
+      this.mailService
+        .sendAccountDetailsEmail(user, {
+          role: 'GIAO_VIEN',
+          maSo: maSoGv,
+        })
+        .catch((e) => console.error(e));
     }
 
     const profile = await this.prisma.hoSoGiaoVien.create({
@@ -196,17 +231,21 @@ export class UsersService {
         soDienThoai: profileData.soDienThoai,
         emailLienHe: profileData.emailLienHe,
         cccd: profileData.cccd,
-        ngayCapCccd: profileData.ngayCapCccd ? new Date(profileData.ngayCapCccd) : null,
+        ngayCapCccd: profileData.ngayCapCccd
+          ? new Date(profileData.ngayCapCccd)
+          : null,
         noiCapCccd: profileData.noiCapCccd,
         trinhDo: profileData.trinhDo || 'DAI_HOC',
         chuyenMon: profileData.chuyenMon,
-        ngayVaoLam: profileData.ngayVaoLam ? new Date(profileData.ngayVaoLam) : null
-      }
+        ngayVaoLam: profileData.ngayVaoLam
+          ? new Date(profileData.ngayVaoLam)
+          : null,
+      },
     });
 
     await this.prisma.nguoiDung.update({
       where: { id: user.id },
-      data: { maSo: maSoGv }
+      data: { maSo: maSoGv },
     });
 
     return profile;
@@ -218,8 +257,13 @@ export class UsersService {
     const maSo = profileData.maSo || (await this.generateId('NV'));
 
     if (isNewAccount) {
-      const existingUser = await this.prisma.nguoiDung.findUnique({ where: { email } });
-      if (existingUser) throw new BadRequestException(`Email ${email} đã tồn tại trong hệ thống.`);
+      const existingUser = await this.prisma.nguoiDung.findUnique({
+        where: { email },
+      });
+      if (existingUser)
+        throw new BadRequestException(
+          `Email ${email} đã tồn tại trong hệ thống.`,
+        );
 
       const rawPassword = matKhau || this.generateRandomPassword();
       const hashedPassword = await bcrypt.hash(rawPassword, 10);
@@ -233,22 +277,29 @@ export class UsersService {
           vaiTro: 'NHAN_VIEN',
           kichHoat: true,
           hoTen: profileData.hoTen,
-        }
+        },
       });
 
-      this.mailService.sendAccountDetailsEmail(user, {
-        password: rawPassword,
-        role: 'NHAN_VIEN',
-        maSo: maSo,
-      }).catch(e => console.error(e));
+      this.mailService
+        .sendAccountDetailsEmail(user, {
+          password: rawPassword,
+          role: 'NHAN_VIEN',
+          maSo: maSo,
+        })
+        .catch((e) => console.error(e));
     } else {
       user = await this.prisma.nguoiDung.findUnique({ where: { email } });
-      if (!user) throw new BadRequestException(`Không tìm thấy người dùng có email ${email}.`);
+      if (!user)
+        throw new BadRequestException(
+          `Không tìm thấy người dùng có email ${email}.`,
+        );
 
-      this.mailService.sendAccountDetailsEmail(user, {
-        role: 'NHAN_VIEN',
-        maSo: maSo,
-      }).catch(e => console.error(e));
+      this.mailService
+        .sendAccountDetailsEmail(user, {
+          role: 'NHAN_VIEN',
+          maSo: maSo,
+        })
+        .catch((e) => console.error(e));
     }
 
     const profile = await this.prisma.hoSoNhanVien.create({
@@ -261,13 +312,13 @@ export class UsersService {
         diaChi: profileData.diaChi,
         soDienThoai: profileData.soDienThoai,
         emailLienHe: profileData.emailLienHe,
-        cccd: profileData.cccd
-      }
+        cccd: profileData.cccd,
+      },
     });
 
     await this.prisma.nguoiDung.update({
       where: { id: user.id },
-      data: { maSo: maSo }
+      data: { maSo: maSo },
     });
 
     return profile;
@@ -297,7 +348,7 @@ export class UsersService {
         hoSoNhanVien: true,
         thanhVienToChucs: true,
       },
-      ...rest
+      ...rest,
     });
   }
 
@@ -340,8 +391,8 @@ export class UsersService {
                   include: {
                     lopHoc: {
                       include: {
-                        khoi: true
-                      }
+                        khoi: true,
+                      },
                     },
                     namHoc: true,
                     gvChuNhiem: {
@@ -353,36 +404,36 @@ export class UsersService {
                             email: true,
                             vaiTro: true,
                             hoTen: true,
-                            maSo: true
-                          }
-                        }
-                      }
-                    }
-                  }
-                }
+                            maSo: true,
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
               },
               orderBy: {
                 lopNam: {
                   namHoc: {
-                    ngayBatDau: 'desc' // Most recent first
-                  }
-                }
-              }
-            }
-          }
+                    ngayBatDau: 'desc', // Most recent first
+                  },
+                },
+              },
+            },
+          },
         },
         hoSoGiaoVien: {
           include: {
             lopNams: {
               include: {
                 lopHoc: true,
-                namHoc: true
-              }
-            }
-          }
+                namHoc: true,
+              },
+            },
+          },
         },
-        hoSoNhanVien: true
-      }
+        hoSoNhanVien: true,
+      },
     });
   }
 
@@ -399,7 +450,9 @@ export class UsersService {
     if (matKhau) updateData.matKhau = await bcrypt.hash(matKhau, 10);
 
     // Get current user to know their role
-    const userSnapshot = await this.prisma.nguoiDung.findUnique({ where: { id } });
+    const userSnapshot = await this.prisma.nguoiDung.findUnique({
+      where: { id },
+    });
     if (!userSnapshot) throw new BadRequestException('User not found');
 
     const role = vaiTro || userSnapshot.vaiTro;
@@ -411,18 +464,25 @@ export class UsersService {
     });
 
     // List of fields that belong to the base NguoiDung model, not the profile
-    const baseUserFields = ['email', 'matKhau', 'vaiTro', 'hoTen', 'isNewAccount', 'urlParams'];
+    const baseUserFields = [
+      'email',
+      'matKhau',
+      'vaiTro',
+      'hoTen',
+      'isNewAccount',
+      'urlParams',
+    ];
 
     // Sanitize profileUpdate: remove base user fields and any helper fields like isNewAccount
     const profileUpdate: any = {};
-    Object.keys(dto).forEach(key => {
+    Object.keys(dto).forEach((key) => {
       if (!baseUserFields.includes(key)) {
         profileUpdate[key] = dto[key];
       }
     });
 
     // Handle date strings and ensure they are valid Date objects or null
-    ['ngaySinh', 'ngayCapCccd', 'ngayNhapHoc', 'ngayVaoLam'].forEach(key => {
+    ['ngaySinh', 'ngayCapCccd', 'ngayNhapHoc', 'ngayVaoLam'].forEach((key) => {
       if (profileUpdate[key]) {
         const date = new Date(profileUpdate[key]);
         profileUpdate[key] = isNaN(date.getTime()) ? null : date;
@@ -433,20 +493,41 @@ export class UsersService {
 
     // Handle numeric IDs - ensure empty strings become null
     if (profileUpdate.lopId !== undefined) {
-      profileUpdate.lopId = profileUpdate.lopId === '' || profileUpdate.lopId === null ? null : Number(profileUpdate.lopId);
+      profileUpdate.lopId =
+        profileUpdate.lopId === '' || profileUpdate.lopId === null
+          ? null
+          : Number(profileUpdate.lopId);
     }
 
     if (role === 'HOC_SINH') {
       // Whitelist fields for HoSoHocSinh
       const hocSinhFields = [
-        'maSoHs', 'ngaySinh', 'gioiTinh', 'noiSinh', 'danToc', 'tonGiao',
-        'diaChiThuongTru', 'diaChiTamTru', 'soDienThoai', 'cccd', 'ngayCapCccd',
-        'noiCapCccd', 'hoTenCha', 'ngheNghiepCha', 'sdtCha', 'hoTenMe',
-        'ngheNghiepMe', 'sdtMe', 'ngayNhapHoc', 'trangThai', 'diaChi'
+        'maSoHs',
+        'ngaySinh',
+        'gioiTinh',
+        'noiSinh',
+        'danToc',
+        'tonGiao',
+        'diaChiThuongTru',
+        'diaChiTamTru',
+        'soDienThoai',
+        'cccd',
+        'ngayCapCccd',
+        'noiCapCccd',
+        'hoTenCha',
+        'ngheNghiepCha',
+        'sdtCha',
+        'hoTenMe',
+        'ngheNghiepMe',
+        'sdtMe',
+        'ngayNhapHoc',
+        'trangThai',
+        'diaChi',
       ];
       const sanitizedHsData: any = {};
-      hocSinhFields.forEach(f => {
-        if (profileUpdate[f] !== undefined) sanitizedHsData[f] = profileUpdate[f];
+      hocSinhFields.forEach((f) => {
+        if (profileUpdate[f] !== undefined)
+          sanitizedHsData[f] = profileUpdate[f];
       });
 
       await this.prisma.hoSoHocSinh.update({
@@ -455,12 +536,23 @@ export class UsersService {
       });
     } else if (role === 'GIAO_VIEN') {
       const giaoVienFields = [
-        'maSoGv', 'ngaySinh', 'gioiTinh', 'diaChi', 'soDienThoai', 'emailLienHe',
-        'cccd', 'ngayCapCccd', 'noiCapCccd', 'trinhDo', 'chuyenMon', 'ngayVaoLam'
+        'maSoGv',
+        'ngaySinh',
+        'gioiTinh',
+        'diaChi',
+        'soDienThoai',
+        'emailLienHe',
+        'cccd',
+        'ngayCapCccd',
+        'noiCapCccd',
+        'trinhDo',
+        'chuyenMon',
+        'ngayVaoLam',
       ];
       const sanitizedGvData: any = {};
-      giaoVienFields.forEach(f => {
-        if (profileUpdate[f] !== undefined) sanitizedGvData[f] = profileUpdate[f];
+      giaoVienFields.forEach((f) => {
+        if (profileUpdate[f] !== undefined)
+          sanitizedGvData[f] = profileUpdate[f];
       });
 
       await this.prisma.hoSoGiaoVien.update({
@@ -469,11 +561,18 @@ export class UsersService {
       });
     } else if (role === 'NHAN_VIEN') {
       const nhanVienFields = [
-        'maSo', 'ngaySinh', 'gioiTinh', 'diaChi', 'soDienThoai', 'emailLienHe', 'cccd'
+        'maSo',
+        'ngaySinh',
+        'gioiTinh',
+        'diaChi',
+        'soDienThoai',
+        'emailLienHe',
+        'cccd',
       ];
       const sanitizedNvData: any = {};
-      nhanVienFields.forEach(f => {
-        if (profileUpdate[f] !== undefined) sanitizedNvData[f] = profileUpdate[f];
+      nhanVienFields.forEach((f) => {
+        if (profileUpdate[f] !== undefined)
+          sanitizedNvData[f] = profileUpdate[f];
       });
 
       await this.prisma.hoSoNhanVien.update({
@@ -518,14 +617,14 @@ export class UsersService {
                     lopHoc: {
                       include: {
                         khoi: true,
-                      }
+                      },
                     },
                     gvChuNhiem: {
                       select: {
                         id: true,
                         hoTen: true,
-                        maSoGv: true
-                      }
+                        maSoGv: true,
+                      },
                     },
                     namHoc: true,
                   },
@@ -539,8 +638,8 @@ export class UsersService {
                   select: {
                     id: true,
                     hoTen: true,
-                    maSoGv: true
-                  }
+                    maSoGv: true,
+                  },
                 },
               },
             },
@@ -553,8 +652,8 @@ export class UsersService {
               include: {
                 lopHoc: true,
                 namHoc: true,
-              }
-            }
+              },
+            },
           },
         },
         hoSoNhanVien: true,

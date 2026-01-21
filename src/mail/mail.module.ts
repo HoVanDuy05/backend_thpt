@@ -8,34 +8,34 @@ import * as path from 'path';
 
 @Global()
 @Module({
-    imports: [
-        MailerModule.forRootAsync({
-            imports: [ConfigModule],
-            useFactory: async (config: ConfigService) => ({
-                transport: {
-                    host: config.get('MAIL_HOST') || 'smtp.gmail.com',
-                    port: parseInt(config.get('MAIL_PORT') || '587'),
-                    secure: config.get('MAIL_SECURE') === 'true', // true for 465, false for other ports
-                    auth: {
-                        user: config.get('MAIL_USER'),
-                        pass: config.get('MAIL_PASSWORD'),
-                    },
-                },
-                defaults: {
-                    from: `"No Reply" <${config.get('MAIL_FROM') || config.get('MAIL_USER')}>`,
-                },
-                template: {
-                    dir: path.join(__dirname, 'templates'),
-                    adapter: new EjsAdapter(),
-                    options: {
-                        strict: true,
-                    },
-                },
-            }),
-            inject: [ConfigService],
-        }),
-    ],
-    providers: [MailService, ResendMailService],
-    exports: [MailService, ResendMailService],
+  imports: [
+    MailerModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: async (config: ConfigService) => ({
+        transport: {
+          host: config.get('MAIL_HOST') || 'smtp.gmail.com',
+          port: parseInt(config.get('MAIL_PORT') || '587'),
+          secure: config.get('MAIL_SECURE') === 'true', // true for 465, false for other ports
+          auth: {
+            user: config.get('MAIL_USER'),
+            pass: config.get('MAIL_PASSWORD'),
+          },
+        },
+        defaults: {
+          from: `"No Reply" <${config.get('MAIL_FROM') || config.get('MAIL_USER')}>`,
+        },
+        template: {
+          dir: path.join(__dirname, 'templates'),
+          adapter: new EjsAdapter(),
+          options: {
+            strict: true,
+          },
+        },
+      }),
+      inject: [ConfigService],
+    }),
+  ],
+  providers: [MailService, ResendMailService],
+  exports: [MailService, ResendMailService],
 })
-export class MailModule { }
+export class MailModule {}

@@ -1,5 +1,19 @@
-import { Controller, Get, Post, Body, Param, Request, Query, ParseIntPipe } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Param,
+  Request,
+  Query,
+  ParseIntPipe,
+} from '@nestjs/common';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiBearerAuth,
+  ApiQuery,
+} from '@nestjs/swagger';
 import { ChatService } from '../services/chat.service';
 import { CreateChannelDto, CreateMessageDto } from '../dto/chat.dto';
 
@@ -7,39 +21,47 @@ import { CreateChannelDto, CreateMessageDto } from '../dto/chat.dto';
 @Controller('communication/chat')
 @ApiBearerAuth()
 export class ChatController {
-    constructor(private readonly chatService: ChatService) { }
+  constructor(private readonly chatService: ChatService) {}
 
-    @Post('channels')
-    @ApiOperation({ summary: 'Tạo kênh chat mới' })
-    createChannel(@Request() req, @Body() createChannelDto: CreateChannelDto) {
-        return this.chatService.createChannel(req.user.userId, createChannelDto);
-    }
+  @Post('channels')
+  @ApiOperation({ summary: 'Tạo kênh chat mới' })
+  createChannel(@Request() req, @Body() createChannelDto: CreateChannelDto) {
+    return this.chatService.createChannel(req.user.userId, createChannelDto);
+  }
 
-    @Get('channels')
-    @ApiOperation({ summary: 'Lấy danh sách kênh chat của tôi' })
-    getUserChannels(@Request() req) {
-        return this.chatService.getUserChannels(req.user.userId);
-    }
+  @Get('channels')
+  @ApiOperation({ summary: 'Lấy danh sách kênh chat của tôi' })
+  getUserChannels(@Request() req) {
+    return this.chatService.getUserChannels(req.user.userId);
+  }
 
-    @Get('channels/:id/messages')
-    @ApiOperation({ summary: 'Lấy tin nhắn trong kênh' })
-    @ApiQuery({ name: 'page', required: false, type: Number })
-    getMessages(@Request() req, @Param('id', ParseIntPipe) id: number, @Query('page') page?: number) {
-        return this.chatService.getMessages(id, req.user.userId, page || 1);
-    }
+  @Get('channels/:id/messages')
+  @ApiOperation({ summary: 'Lấy tin nhắn trong kênh' })
+  @ApiQuery({ name: 'page', required: false, type: Number })
+  getMessages(
+    @Request() req,
+    @Param('id', ParseIntPipe) id: number,
+    @Query('page') page?: number,
+  ) {
+    return this.chatService.getMessages(id, req.user.userId, page || 1);
+  }
 
-    @Post('messages')
-    @ApiOperation({ summary: 'Gửi tin nhắn' })
-    sendMessage(@Request() req, @Body() createMessageDto: CreateMessageDto) {
-        const referer = req.headers.referer || '';
-        const locale = referer.includes('/en/') ? 'en' : 'vi';
-        return this.chatService.sendMessage(req.user.userId, createMessageDto, locale);
-    }
+  @Post('messages')
+  @ApiOperation({ summary: 'Gửi tin nhắn' })
+  sendMessage(@Request() req, @Body() createMessageDto: CreateMessageDto) {
+    const referer = req.headers.referer || '';
+    const locale = referer.includes('/en/') ? 'en' : 'vi';
+    return this.chatService.sendMessage(
+      req.user.userId,
+      createMessageDto,
+      locale,
+    );
+  }
 
-    @Get('link-preview')
-    @ApiOperation({ summary: 'Lấy thông tin preview link' })
-    @ApiQuery({ name: 'url', required: true })
-    getLinkPreview(@Query('url') url: string) {
-        return this.chatService.getLinkPreview(url);
-    }
+  @Get('link-preview')
+  @ApiOperation({ summary: 'Lấy thông tin preview link' })
+  @ApiQuery({ name: 'url', required: true })
+  getLinkPreview(@Query('url') url: string) {
+    return this.chatService.getLinkPreview(url);
+  }
 }
