@@ -7,45 +7,71 @@ import {
   Param,
   Delete,
   UseGuards,
+  Query,
 } from '@nestjs/common';
 import { CalendarService } from './calendar.service';
-import { Prisma } from '@prisma/client';
+import { CreateCalendarDto, UpdateCalendarDto } from './calendar.dto';
+import { JwtAuthGuard } from '../../auth/jwt-auth.guard';
+import { RolesGuard } from '../../common/guards/roles.guard';
+import { Roles } from '../../common/decorators/roles.decorator';
+import { VaiTro } from '@prisma/client';
+import { GetUser } from '../../common/decorators/get-user.decorator';
 
 @Controller('calendar')
+@UseGuards(JwtAuthGuard, RolesGuard)
 export class CalendarController {
-  constructor(private readonly calendarService: CalendarService) {}
+  constructor(private readonly calendarService: CalendarService) { }
 
   @Post()
-  create(@Body() data: Prisma.LichHocCreateInput) {
+  @Roles(VaiTro.ADMIN, VaiTro.GIAO_VIEN)
+  create(@Body() data: CreateCalendarDto) {
     return this.calendarService.create(data);
   }
 
   @Get()
+  @Roles(VaiTro.ADMIN, VaiTro.GIAO_VIEN)
   findAll() {
     return this.calendarService.findAll();
   }
 
-  @Get('class/:id')
-  findByClass(@Param('id') id: string) {
-    return this.calendarService.findByClass(+id);
+  @Get('lopnam/:id')
+  @Roles(VaiTro.ADMIN, VaiTro.GIAO_VIEN)
+  findByLopNam(@Param('id') id: string) {
+    return this.calendarService.findByLopNam(+id);
   }
 
   @Get('teacher/:id')
+  @Roles(VaiTro.ADMIN, VaiTro.GIAO_VIEN)
   findByTeacher(@Param('id') id: string) {
     return this.calendarService.findByTeacher(+id);
   }
 
+  @Get('student/my-schedule')
+  @Roles(VaiTro.HOC_SINH)
+  findMySchedule(
+    @GetUser() user: any,
+    @Query('namHocId') namHocId?: string,
+  ) {
+    return this.calendarService.findByStudent(
+      user.hoSoHocSinh.id,
+      namHocId ? +namHocId : undefined,
+    );
+  }
+
   @Get(':id')
+  @Roles(VaiTro.ADMIN, VaiTro.GIAO_VIEN)
   findOne(@Param('id') id: string) {
     return this.calendarService.findOne(+id);
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() data: Prisma.LichHocUpdateInput) {
+  @Roles(VaiTro.ADMIN, VaiTro.GIAO_VIEN)
+  update(@Param('id') id: string, @Body() data: UpdateCalendarDto) {
     return this.calendarService.update(+id, data);
   }
 
   @Delete(':id')
+  @Roles(VaiTro.ADMIN)
   remove(@Param('id') id: string) {
     return this.calendarService.remove(+id);
   }

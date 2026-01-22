@@ -1,30 +1,55 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { Prisma } from '@prisma/client';
+import { CreateCalendarDto, UpdateCalendarDto } from './calendar.dto';
 
 @Injectable()
 export class CalendarService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
 
-  async create(data: Prisma.LichHocCreateInput) {
-    return this.prisma.lichHoc.create({
-      data,
-    });
-  }
-
-  async findAll() {
-    return this.prisma.lichHoc.findMany({
+  async create(data: CreateCalendarDto) {
+    console.log('Creating calendar entry with data:', JSON.stringify(data, null, 2));
+    return this.prisma.lichHocNew.create({
+      data: {
+        lopNamId: data.lopNamId,
+        monHocId: data.monHocId,
+        gvDayId: data.gvDayId,
+        thu: data.thu,
+        tietBatDau: data.tietBatDau,
+        soTiet: data.soTiet,
+        phongHoc: data.phongHoc,
+      },
       include: {
-        lopHoc: true,
+        lopNam: {
+          include: {
+            lopHoc: true,
+            namHoc: true,
+          },
+        },
         monHoc: true,
         gvDay: true,
       },
     });
   }
 
-  async findByClass(lopId: number) {
-    return this.prisma.lichHoc.findMany({
-      where: { lopId },
+  async findAll() {
+    return this.prisma.lichHocNew.findMany({
+      include: {
+        lopNam: {
+          include: {
+            lopHoc: true,
+            namHoc: true,
+          },
+        },
+        monHoc: true,
+        gvDay: true,
+      },
+    });
+  }
+
+  async findByLopNam(lopNamId: number) {
+    return this.prisma.lichHocNew.findMany({
+      where: { lopNamId },
       include: {
         monHoc: true,
         gvDay: true,
@@ -34,36 +59,101 @@ export class CalendarService {
   }
 
   async findByTeacher(gvDayId: number) {
-    return this.prisma.lichHoc.findMany({
+    return this.prisma.lichHocNew.findMany({
       where: { gvDayId },
       include: {
-        lopHoc: true,
+        lopNam: {
+          include: {
+            lopHoc: true,
+            namHoc: true,
+          },
+        },
         monHoc: true,
       },
       orderBy: [{ thu: 'asc' }, { tietBatDau: 'asc' }],
     });
   }
 
+  async findByStudent(hocSinhId: number, namHocId?: number) {
+    // Find student's current LopNam
+    const hocSinhLopNam = await this.prisma.hocSinhLopNam.findFirst({
+      where: {
+        hocSinhId,
+        ...(namHocId && {
+          lopNam: {
+            namHocId,
+          },
+        }),
+        trangThai: 'DANG_HOC',
+      },
+      include: {
+        lopNam: {
+          include: {
+            lopHoc: true,
+            namHoc: true,
+          },
+        },
+      },
+      orderBy: {
+        ngayVao: 'desc',
+      },
+    });
+
+    if (!hocSinhLopNam) {
+      return [];
+    }
+
+    return this.prisma.lichHocNew.findMany({
+      where: { lopNamId: hocSinhLopNam.lopNamId },
+      include: {
+        monHoc: true,
+        gvDay: true,
+        lopNam: {
+          include: {
+            lopHoc: true,
+            namHoc: true,
+          },
+        },
+      },
+      orderBy: [{ thu: 'asc' }, { tietBatDau: 'asc' }],
+    });
+  }
+
   async findOne(id: number) {
-    return this.prisma.lichHoc.findUnique({
+    return this.prisma.lichHocNew.findUnique({
       where: { id },
       include: {
-        lopHoc: true,
+        lopNam: {
+          include: {
+            lopHoc: true,
+            namHoc: true,
+          },
+        },
         monHoc: true,
         gvDay: true,
       },
     });
   }
 
-  async update(id: number, data: Prisma.LichHocUpdateInput) {
-    return this.prisma.lichHoc.update({
+  async update(id: number, data: UpdateCalendarDto) {
+    return this.prisma.lichHocNew.update({
       where: { id },
       data,
+      include: {
+        lopNam: {
+          include: {
+            lopHoc: true,
+            namHoc: true,
+          },
+        },
+        monHoc: true,
+        gvDay: true,
+      },
     });
   }
 
   async remove(id: number) {
-    return this.prisma.lichHoc.delete({
+    return this.prisma.lichHocNew.delete({
       where: { id },
     });
   }
