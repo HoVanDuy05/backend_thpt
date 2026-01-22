@@ -37,10 +37,17 @@ export class CalendarService {
     const where: any = {};
     if (query?.lopNamId) where.lopNamId = query.lopNamId;
     if (query?.from || query?.to) {
-      where.ngay = {
-        ...(query.from && { gte: new Date(query.from) }),
-        ...(query.to && { lte: new Date(query.to) }),
-      };
+      where.OR = [
+        {
+          ngay: {
+            ...(query.from && { gte: new Date(query.from) }),
+            ...(query.to && { lte: new Date(query.to) }),
+          },
+        },
+        {
+          ngay: null,
+        },
+      ];
     }
 
     return this.prisma.lichHocNew.findMany({
