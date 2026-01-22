@@ -57,13 +57,17 @@ export class CalendarController {
   @Get('student/my-schedule')
   @Roles(VaiTro.HOC_SINH)
   findMySchedule(
-    @GetUser() user: any,
+    @GetUser('userId') userId: number,
+    @Query('from') from?: string,
+    @Query('to') to?: string,
     @Query('namHocId') namHocId?: string,
   ) {
-    return this.calendarService.findByStudent(
-      user.hoSoHocSinh.id,
-      namHocId ? +namHocId : undefined,
-    );
+    return this.calendarService.findByStudent({
+      userId,
+      from,
+      to,
+      namHocId: namHocId ? +namHocId : undefined,
+    });
   }
 
   @Get(':id')
