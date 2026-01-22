@@ -407,6 +407,7 @@ model LichHocNew {
   tietBatDau Int      @map("tiet_bat_dau")
   soTiet     Int      @map("so_tiet")
   phongHoc   String?  @map("phong_hoc") @db.VarChar(50)
+  ngay       DateTime? @map("ngay") @db.Date
   ngayTao    DateTime @default(now()) @map("ngay_tao")
 
   // Relations

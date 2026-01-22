@@ -18,6 +18,7 @@ export class CalendarService {
         tietBatDau: data.tietBatDau,
         soTiet: data.soTiet,
         phongHoc: data.phongHoc,
+        ngay: data.ngay ? new Date(data.ngay) : null,
       },
       include: {
         lopNam: {
@@ -32,8 +33,18 @@ export class CalendarService {
     });
   }
 
-  async findAll() {
+  async findAll(query?: { from?: string; to?: string; lopNamId?: number }) {
+    const where: any = {};
+    if (query?.lopNamId) where.lopNamId = query.lopNamId;
+    if (query?.from || query?.to) {
+      where.ngay = {
+        ...(query.from && { gte: new Date(query.from) }),
+        ...(query.to && { lte: new Date(query.to) }),
+      };
+    }
+
     return this.prisma.lichHocNew.findMany({
+      where,
       include: {
         lopNam: {
           include: {
@@ -44,6 +55,7 @@ export class CalendarService {
         monHoc: true,
         gvDay: true,
       },
+      orderBy: [{ ngay: 'asc' }, { thu: 'asc' }, { tietBatDau: 'asc' }],
     });
   }
 

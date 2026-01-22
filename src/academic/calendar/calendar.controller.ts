@@ -30,8 +30,16 @@ export class CalendarController {
 
   @Get()
   @Roles(VaiTro.ADMIN, VaiTro.GIAO_VIEN)
-  findAll() {
-    return this.calendarService.findAll();
+  findAll(
+    @Query('from') from?: string,
+    @Query('to') to?: string,
+    @Query('lopNamId') lopNamId?: string,
+  ) {
+    return this.calendarService.findAll({
+      from,
+      to,
+      lopNamId: lopNamId ? +lopNamId : undefined,
+    });
   }
 
   @Get('lopnam/:id')
