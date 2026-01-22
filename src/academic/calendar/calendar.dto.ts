@@ -28,8 +28,11 @@ export class CreateCalendarDto {
     tietBatDau: number;
 
     @IsOptional()
-    @IsString()
-    phongHoc?: string;
+    @IsInt()
+    @Min(1)
+    @Max(5)
+    @Type(() => Number)
+    soTiet?: number;
 
     @IsOptional()
     @IsString()
