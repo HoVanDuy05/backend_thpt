@@ -16,10 +16,10 @@ export class CalendarService {
         gvDayId: data.gvDayId,
         thu: data.thu,
         tietBatDau: data.tietBatDau,
-        soTiet: data.soTiet,
+        soTiet: data.soTiet || 1,
         phongHoc: data.phongHoc,
         ngay: data.ngay ? new Date(data.ngay) : null,
-      },
+      } as any,
       include: {
         lopNam: {
           include: {
@@ -55,7 +55,11 @@ export class CalendarService {
         monHoc: true,
         gvDay: true,
       },
-      orderBy: [{ ngay: 'asc' }, { thu: 'asc' }, { tietBatDau: 'asc' }],
+      orderBy: [
+        { ngay: 'asc' } as any,
+        { thu: 'asc' },
+        { tietBatDau: 'asc' }
+      ],
     });
   }
 

@@ -36,6 +36,10 @@ export class CreateCalendarDto {
 
     @IsOptional()
     @IsString()
+    phongHoc?: string;
+
+    @IsOptional()
+    @IsString()
     ngay?: string;
 }
 
