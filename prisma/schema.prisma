@@ -88,8 +88,25 @@ model NguoiDung {
   cacBuocPheDuyetDuocGiao NguoiPheDuyetBuoc[]
   pushSubscriptions       PushSubscription[]
   thanhVienToChucs        ThanhVienToChuc[]
+  authenticators          UserAuthenticator[]
 
   @@map("nguoi_dung")
+}
+
+model UserAuthenticator {
+  id                   String   @id @default(uuid())
+  credentialID         String   @unique @map("credential_id") @db.VarChar(512)
+  credentialPublicKey  Bytes    @map("credential_public_key")
+  counter              BigInt   @default(0)
+  credentialDeviceType String   @map("credential_device_type") @db.VarChar(32)
+  credentialBackedUp   Boolean  @default(false) @map("credential_backed_up")
+  transports           String?  @map("transports") @db.VarChar(255)
+  userId               Int      @map("user_id")
+  user                 NguoiDung @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ngayTao              DateTime  @default(now()) @map("ngay_tao")
+
+  @@index([userId])
+  @@map("user_authenticator")
 }
 
 model PushSubscription {

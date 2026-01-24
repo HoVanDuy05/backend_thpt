@@ -27,7 +27,7 @@ export class AuthController {
   constructor(
     private authService: AuthService,
     private cloudinaryService: CloudinaryService,
-  ) {}
+  ) { }
 
   @Public()
   @Post('register')
@@ -157,5 +157,48 @@ export class AuthController {
     res.redirect(
       `${frontendUrl}/vi/auth/callback?token=${result.access_token}`,
     );
+  }
+
+  // WebAuthn Endpoints
+  @Post('webauthn/register/options')
+  @UseGuards(JwtAuthGuard)
+  async registerOptions(@Request() req) {
+    const userId = Number(req.user?.userId);
+    return this.authService.webAuthnService.generateRegistrationOptions(userId);
+  }
+
+  @Post('webauthn/register/verify')
+  @UseGuards(JwtAuthGuard)
+  async verifyRegistration(@Request() req, @Body() body: any) {
+    const userId = Number(req.user?.userId);
+    return this.authService.webAuthnService.verifyRegistration(userId, body);
+  }
+
+  @Public()
+  @Post('webauthn/login/options')
+  async loginOptions(@Body() body: { email: string }) {
+    if (!body.email) throw new BadRequestException('Email required');
+    return this.authService.webAuthnService.generateAuthenticationOptions(
+      body.email,
+    );
+  }
+
+  @Public()
+  @Post('webauthn/login/verify')
+  async verifyLogin(
+    @Body() body: { email: string; response: any },
+    @Req() req,
+  ) {
+    if (!body.email || !body.response)
+      throw new BadRequestException('Email and response required');
+    const { verified, user } =
+      await this.authService.webAuthnService.verifyAuthentication(
+        body.email,
+        body.response,
+      );
+
+    if (verified && user) {
+      return this.authService.generateTokenForUser(user, req);
+    }
   }
 }

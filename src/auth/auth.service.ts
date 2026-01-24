@@ -10,6 +10,7 @@ import { LoginDto } from './dto/login.dto';
 import { PrismaService } from '../prisma/prisma.service';
 import { MailService } from '../mail/mail.service';
 import { Request } from 'express';
+import { WebAuthnService } from './webauthn.service';
 
 @Injectable()
 export class AuthService {
@@ -18,7 +19,8 @@ export class AuthService {
     private jwtService: JwtService,
     private prisma: PrismaService,
     private mailService: MailService,
-  ) {}
+    public webAuthnService: WebAuthnService,
+  ) { }
 
   async validateUser(email: string, matKhau: string): Promise<any> {
     const user = await this.prisma.nguoiDung.findUnique({
@@ -111,6 +113,10 @@ export class AuthService {
       throw new UnauthorizedException('validation.invalid_credentials');
     }
 
+    return this.generateTokenForUser(user, req);
+  }
+
+  async generateTokenForUser(user: any, req?: Request) {
     // Check activation
     if (!user.kichHoat) {
       throw new UnauthorizedException('validation.account_not_activated');

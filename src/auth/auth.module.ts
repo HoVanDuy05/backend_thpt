@@ -11,6 +11,8 @@ import { MailModule } from '../mail/mail.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { CloudinaryModule } from '../common/cloudinary/cloudinary.module';
 
+import { WebAuthnService } from './webauthn.service';
+
 @Global()
 @Module({
   imports: [
@@ -29,8 +31,8 @@ import { CloudinaryModule } from '../common/cloudinary/cloudinary.module';
       inject: [ConfigService],
     }),
   ],
-  providers: [AuthService, JwtStrategy, GoogleStrategy],
+  providers: [AuthService, JwtStrategy, GoogleStrategy, WebAuthnService],
   controllers: [AuthController],
-  exports: [AuthService], // Export if needed elsewhere
+  exports: [AuthService, WebAuthnService],
 })
-export class AuthModule {}
+export class AuthModule { }
