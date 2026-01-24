@@ -1,5 +1,5 @@
 
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, BadRequestException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma/prisma.service';
 import {
@@ -36,6 +36,9 @@ export class WebAuthnService {
             where: { userId },
         });
 
+        // Convert stored IDs (Storage format -> Base64URL) if needed.
+        // Assuming we store as whatever verifyRegistration returns (which is usually Base64URL in v13, but let's be safe).
+
         const options = await generateRegistrationOptions({
             rpName: this.rpName,
             rpID: this.rpID,
@@ -43,7 +46,7 @@ export class WebAuthnService {
             userName: user.email || user.taiKhoan,
             attestationType: 'none',
             excludeCredentials: userAuthenticators.map((authenticator) => ({
-                id: isoUint8Array.fromHex(authenticator.credentialID),
+                id: authenticator.credentialID, // v13 expects string (Base64URL)
                 type: 'public-key',
                 transports: authenticator.transports
                     ? (authenticator.transports.split(',') as AuthenticatorTransport[])
@@ -62,7 +65,6 @@ export class WebAuthnService {
         // Let's store it temporarily in a new field on user or just re-verify with expectedChallenge (stateless challenge?)
         // SimpleWebAuthn recommends saving the challenge.
         // For this implementation, I will save the expected challenge in the User record (adding a temp field) or just update schema?
-        // Let's reuse 'maXacThuc' field temporarily or add a new field 'currentChallenge' to schema? 
         // Wait, adding a field to schema takes migration time.
         // I'll return the challenge and for verification, I'll trust the client sends back the challenge signed? No, that's insecure.
         // I MUST store the challenge.
@@ -92,26 +94,29 @@ export class WebAuthnService {
         });
 
         if (verified && registrationInfo) {
-            const { credentialID, credentialPublicKey, counter, credentialDeviceType, credentialBackedUp } = registrationInfo;
+            // v13 structure: credential { id, publicKey, counter } are inside 'credential' object
+            const { credential, credentialDeviceType, credentialBackedUp } = registrationInfo;
+            const { id: credentialID, publicKey: credentialPublicKey, counter } = credential;
 
-            // check if device exists
+            // Check if device exists
             const existing = await this.prisma.userAuthenticator.findFirst({
-                where: { credentialID: Buffer.from(credentialID).toString('base64') } // Store as base64 string or hex? Schema says String.
-                // Let's stick to base64url or hex. SimpleWebAuthn uses base64url usually.
-                // Let's use the isoBase64URL helpers from library if needed, or Buffer.
-                // Prisma Bytes -> Buffer.
+                where: { credentialID } // credentialID is Base64URL string from lib
             });
+
+            if (existing) {
+                throw new BadRequestException('Device already registered');
+            }
 
             // Save authenticator
             // Need to convert Uint8Array ID to string.
-            // Usually hex or base64url. 
-            // The schema credentialID is string. 
-            const credentialIDStr = Buffer.from(credentialID).toString('base64');
+            // Usually hex or base64url.
+            // The schema credentialID is string.
+            // const credentialIDStr = Buffer.from(credentialID).toString('base64');
 
             await this.prisma.userAuthenticator.create({
                 data: {
-                    credentialID: credentialIDStr,
-                    credentialPublicKey: Buffer.from(credentialPublicKey),
+                    credentialID, // Store as Base64URL string
+                    credentialPublicKey: Buffer.from(credentialPublicKey), // Store Uint8Array as Buffer
                     counter: BigInt(counter),
                     credentialDeviceType,
                     credentialBackedUp,
@@ -153,7 +158,7 @@ export class WebAuthnService {
         // For non-discoverable flow (safer defaults):
         const authenticators = await this.prisma.userAuthenticator.findMany({ where: { userId: user.id } });
         opts.allowCredentials = authenticators.map(auth => ({
-            id: Buffer.from(auth.credentialID, 'base64'), // Decode from string storage
+            id: auth.credentialID, // Already string
             type: 'public-key',
             transports: auth.transports ? (auth.transports.split(',') as AuthenticatorTransport[]) : undefined
         }));
@@ -182,7 +187,7 @@ export class WebAuthnService {
         if (!user || !user.maXacThuc) throw new UnauthorizedException('User/Challenge invalid');
 
         const authenticator = await this.prisma.userAuthenticator.findFirst({
-            where: { credentialID: body.id } // body.id is base64url usually in response
+            where: { credentialID: body.id } // body.id is the Credential ID (Base64URL)
         });
 
         if (!authenticator) throw new UnauthorizedException('Authenticator not found');
@@ -192,9 +197,9 @@ export class WebAuthnService {
             expectedChallenge: user.maXacThuc,
             expectedOrigin: this.origin,
             expectedRPID: this.rpID,
-            authenticator: {
-                credentialID: Buffer.from(authenticator.credentialID, 'base64'),
-                credentialPublicKey: authenticator.credentialPublicKey,
+            credential: { // Renamed from 'authenticator' to 'credential' in v13? Or just follow type error guidance
+                id: authenticator.credentialID,
+                publicKey: authenticator.credentialPublicKey, // Buffer is compatible with Uint8Array usually
                 counter: Number(authenticator.counter), // BigInt to number
                 transports: authenticator.transports ? (authenticator.transports.split(',') as AuthenticatorTransport[]) : undefined
             },
