@@ -17,7 +17,8 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     // console.log('JwtStrategy: Validating payload', payload);
     const userId = Number(payload?.sub);
     if (!userId || Number.isNaN(userId)) {
-      throw new UnauthorizedException('Invalid token');
+      console.error('JwtStrategy Error: Invalid sub in payload', payload);
+      throw new UnauthorizedException('Invalid token: missing or invalid sub claim');
     }
     return { userId, username: payload.username, role: payload.role };
   }

@@ -48,7 +48,7 @@ model NguoiDung {
   email       String?  @unique @db.VarChar(100)
   soDienThoai String?  @unique @map("so_dien_thoai") @db.VarChar(15)
   kichHoat    Boolean  @default(false) @map("kich_hoat")
-  maXacThuc   String?  @map("ma_xac_thuc") @db.VarChar(10)
+  maXacThuc   String?  @map("ma_xac_thuc") @db.Text
   googleId    String?  @unique @map("google_id") @db.VarChar(255)
   vaiTro      VaiTro   @map("vai_tro")
   hoTen       String?  @map("ho_ten") @db.VarChar(100)

@@ -10,6 +10,9 @@ import {
 } from '@simplewebauthn/server';
 import { isoUint8Array } from '@simplewebauthn/server/helpers';
 
+// Define the type locally if not exported
+type AuthenticatorTransport = 'usb' | 'nfc' | 'ble' | 'hybrid' | 'internal';
+
 @Injectable()
 export class WebAuthnService {
     private rpName = 'PMS School';
@@ -39,43 +42,42 @@ export class WebAuthnService {
         // Convert stored IDs (Storage format -> Base64URL) if needed.
         // Assuming we store as whatever verifyRegistration returns (which is usually Base64URL in v13, but let's be safe).
 
-        const options = await generateRegistrationOptions({
-            rpName: this.rpName,
-            rpID: this.rpID,
-            userID: isoUint8Array.fromUTF8String(user.id.toString()),
-            userName: user.email || user.taiKhoan,
-            attestationType: 'none',
-            excludeCredentials: userAuthenticators.map((authenticator) => ({
-                id: authenticator.credentialID, // v13 expects string (Base64URL)
-                type: 'public-key',
-                transports: authenticator.transports
-                    ? (authenticator.transports.split(',') as AuthenticatorTransport[])
-                    : undefined,
-            })),
-            authenticatorSelection: {
-                residentKey: 'preferred',
-                userVerification: 'preferred',
-                authenticatorAttachment: 'platform', // Enforce platform authenticator (TouchID/FaceID)
-            },
-        });
+        try {
+            const options = await generateRegistrationOptions({
+                rpName: this.rpName,
+                rpID: this.rpID,
+                userID: isoUint8Array.fromUTF8String(user.id.toString()),
+                userName: user.email || user.taiKhoan,
+                attestationType: 'none',
+                excludeCredentials: userAuthenticators.map((authenticator) => ({
+                    id: authenticator.credentialID, // v13 expects string (Base64URL)
+                    type: 'public-key',
+                    transports: authenticator.transports
+                        ? (authenticator.transports.split(',') as AuthenticatorTransport[])
+                        : undefined,
+                })),
+                authenticatorSelection: {
+                    residentKey: 'preferred',
+                    userVerification: 'preferred',
+                    authenticatorAttachment: 'platform', // Enforce platform authenticator (TouchID/FaceID)
+                },
+            });
 
-        // Save challenge to user session or temporary store (here storing in DB user record for simplicity, could be Redis)
-        // NOTE: In a real app, use Redis or a session store. For now, we'll return it and expect client to sign it.
-        // Ideally, we verify against a stored challenge.
-        // Let's store it temporarily in a new field on user or just re-verify with expectedChallenge (stateless challenge?)
-        // SimpleWebAuthn recommends saving the challenge.
-        // For this implementation, I will save the expected challenge in the User record (adding a temp field) or just update schema?
-        // Wait, adding a field to schema takes migration time.
-        // I'll return the challenge and for verification, I'll trust the client sends back the challenge signed? No, that's insecure.
-        // I MUST store the challenge.
-        // Let's use `maXacThuc` field on NguoiDung since it's a string and transient.
-        await this.prisma.nguoiDung.update({
-            where: { id: userId },
-            data: { maXacThuc: options.challenge },
-        });
+            // Save challenge
+            await this.prisma.nguoiDung.update({
+                where: { id: userId },
+                data: { maXacThuc: options.challenge },
+            });
 
-        return options;
+            return options;
+
+        } catch (error) {
+            console.error('WebAuthn Generate Error:', error);
+            throw new BadRequestException(`WebAuthn Error: ${error.message}`);
+        }
     }
+
+
 
     /**
      * 2. REGISTRATION - Verify Response

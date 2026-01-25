@@ -12,6 +12,7 @@ import {
   Patch,
   UploadedFiles,
   BadRequestException,
+  Logger,
 } from '@nestjs/common';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import { Public } from '../common/decorators/public.decorator';
@@ -24,10 +25,18 @@ import { CloudinaryService } from '../common/cloudinary/cloudinary.service';
 
 @Controller('auth')
 export class AuthController {
+  private readonly logger = new Logger(AuthController.name);
+
   constructor(
     private authService: AuthService,
     private cloudinaryService: CloudinaryService,
   ) { }
+
+  @Public()
+  @Get('ping')
+  ping() {
+    return { message: 'pong', timestamp: new Date().toISOString() };
+  }
 
   @Public()
   @Post('register')
@@ -66,9 +75,16 @@ export class AuthController {
   @Get('profile')
   getProfile(@Request() req) {
     // req.user is set by JwtStrategy
-    const userId = Number(req.user?.userId);
+    let userId = Number(req.user?.userId);
+
+    // Fallback if req.user is raw payload
+    if ((!userId || Number.isNaN(userId)) && req.user?.sub) {
+      userId = Number(req.user.sub);
+    }
+
     if (!userId || Number.isNaN(userId)) {
-      throw new BadRequestException('Invalid user id');
+      this.logger.error(`Profile Request Failed - Invalid UserID. Req.user: ${JSON.stringify(req.user)}`);
+      throw new BadRequestException(`validation.invalid_user_id | Missing ID in request context`);
     }
     return this.authService.getProfile(userId);
   }
@@ -76,9 +92,15 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @Patch('profile')
   updateProfile(@Request() req, @Body() body: any) {
-    const userId = Number(req.user?.userId);
+    let userId = Number(req.user?.userId);
+    // Fallback
+    if ((!userId || Number.isNaN(userId)) && req.user?.sub) {
+      userId = Number(req.user.sub);
+    }
+
     if (!userId || Number.isNaN(userId)) {
-      throw new BadRequestException('Invalid user id');
+      this.logger.error(`Update Profile Failed - Invalid UserID. Req.user: ${JSON.stringify(req.user)}`);
+      throw new BadRequestException('validation.invalid_user_id');
     }
     return this.authService.updateProfile(userId, body);
   }
@@ -96,9 +118,14 @@ export class AuthController {
     @UploadedFiles()
     files: { avatar?: Express.Multer.File[]; file?: Express.Multer.File[] },
   ) {
-    const userId = Number(req.user?.userId);
+    let userId = Number(req.user?.userId);
+    if ((!userId || Number.isNaN(userId)) && req.user?.sub) {
+      userId = Number(req.user.sub);
+    }
+
     if (!userId || Number.isNaN(userId)) {
-      throw new BadRequestException('Invalid user id');
+      this.logger.error(`Upload Avatar Failed - Invalid UserID. Req.user: ${JSON.stringify(req.user)}`);
+      throw new BadRequestException('validation.invalid_user_id');
     }
     const file = files?.avatar?.[0] || files?.file?.[0];
     if (!file) {
@@ -163,7 +190,15 @@ export class AuthController {
   @Post('webauthn/register/options')
   @UseGuards(JwtAuthGuard)
   async registerOptions(@Request() req) {
-    const userId = Number(req.user?.userId);
+    let userId = Number(req.user?.userId);
+    if ((!userId || Number.isNaN(userId)) && req.user?.sub) {
+      userId = Number(req.user.sub);
+    }
+
+    if (!userId || Number.isNaN(userId)) {
+      this.logger.error(`WebAuthn Register Options Failed - Invalid UserID. Req.user: ${JSON.stringify(req.user)}`);
+      throw new BadRequestException('validation.invalid_user_id');
+    }
     return this.authService.webAuthnService.generateRegistrationOptions(userId);
   }
 
