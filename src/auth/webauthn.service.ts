@@ -23,9 +23,11 @@ export class WebAuthnService {
         private prisma: PrismaService,
         private configService: ConfigService,
     ) {
-        // Default to localhost for dev, but configurable
-        this.rpID = this.configService.get('RP_ID') || 'localhost';
-        this.origin = this.configService.get('ORIGIN') || 'http://localhost:3000';
+        // Dynamic configuration for dev and production
+        // In production, use the actual domain (e.g., 'thpt-nguyen-hue.vercel.app')
+        // In dev, use 'localhost' or the actual IP if accessing from mobile
+        this.rpID = this.configService.get('RP_ID') || this.configService.get('FRONTEND_DOMAIN') || 'localhost';
+        this.origin = this.configService.get('ORIGIN') || this.configService.get('FRONTEND_URL') || 'http://localhost:3000';
     }
 
     /**
