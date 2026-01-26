@@ -20,7 +20,7 @@ export class ApprovalsService {
   constructor(
     private prisma: PrismaService,
     private mailService: ResendMailService,
-  ) {}
+  ) { }
 
   // ==========================================
   // FLOW MANAGEMENT (ADMIN)
@@ -362,12 +362,13 @@ export class ApprovalsService {
   }
 
   async getInstanceDetail(id: number) {
-    return this.prisma.phienQuyTrinh.findUnique({
+    const instance = await this.prisma.phienQuyTrinh.findUnique({
       where: { id },
       include: {
         quyTrinh: {
           include: {
             danhMuc: true,
+            cacTruong: { orderBy: { thuTu: 'asc' } },
             cacBuoc: {
               include: {
                 nguoiDuyets: {
@@ -401,6 +402,42 @@ export class ApprovalsService {
         },
       },
     });
+
+    if (!instance) return null;
+
+    // Transform form data into the requested "fields" structure
+    let submittedData = {};
+    try {
+      if (instance.duLieuForm) {
+        submittedData = JSON.parse(instance.duLieuForm);
+      }
+    } catch (e) {
+      console.error('Failed to parse duLieuForm for instance', id);
+    }
+
+    const fields = instance.quyTrinh.cacTruong.map((field) => {
+      const value = submittedData[field.id.toString()] || submittedData[field.tenTruong];
+
+      return {
+        submitContent: value || '',
+        submitFlowFieldID: field.id,
+        detailFlow: {
+          detailFlowId: field.id,
+          fieldName: field.nhan,
+          fieldValue: field.loai,
+          optional: (!field.batBuoc).toString(),
+          optionValue: field.tuyChon ? JSON.stringify(field.tuyChon) : '',
+          order: field.thuTu,
+          key: field.tenTruong,
+          parentKey: null
+        }
+      };
+    });
+
+    return {
+      ...instance,
+      fields // Injecting the transformed fields array
+    };
   }
 
   async getPendingApprovals(userId: number) {
