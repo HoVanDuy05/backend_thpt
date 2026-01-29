@@ -447,6 +447,8 @@ export class ApprovalsService {
     });
     if (!user) throw new NotFoundException('User not found');
 
+    const isAdmin = user.vaiTro === 'ADMIN';
+
     // 2. Find instances where current step is PENDING
     return this.prisma.phienQuyTrinh.findMany({
       where: {
@@ -454,25 +456,27 @@ export class ApprovalsService {
         buocPhiens: {
           some: {
             trangThai: TrangThaiBuocPhien.CHO_DUYET,
-            buoc: {
-              nguoiDuyets: {
-                some: {
-                  OR: [
-                    {
-                      loaiNguoiPheDuyet: LoaiNguoiPheDuyet.NGUOI_DUNG_CU_THE,
-                      approverId: userId,
-                    },
-                    {
-                      loaiNguoiPheDuyet: LoaiNguoiPheDuyet.VAI_TRO,
-                      approverRole: user.vaiTro, // e.g. 'GIAO_VIEN'
-                    },
-                    {
-                      loaiNguoiPheDuyet: LoaiNguoiPheDuyet.NGUOI_DUNG, // Anyone (rare case)
-                    },
-                  ],
+            ...(isAdmin ? {} : {
+              buoc: {
+                nguoiDuyets: {
+                  some: {
+                    OR: [
+                      {
+                        loaiNguoiPheDuyet: LoaiNguoiPheDuyet.NGUOI_DUNG_CU_THE,
+                        approverId: userId,
+                      },
+                      {
+                        loaiNguoiPheDuyet: LoaiNguoiPheDuyet.VAI_TRO,
+                        approverRole: user.vaiTro, // e.g. 'GIAO_VIEN'
+                      },
+                      {
+                        loaiNguoiPheDuyet: LoaiNguoiPheDuyet.NGUOI_DUNG, // Anyone (rare case)
+                      },
+                    ],
+                  },
                 },
               },
-            },
+            }),
           },
         },
       },
